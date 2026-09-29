@@ -16,13 +16,18 @@ from app.models.ollama import OllamaModelProvider
 class MockModelProvider(BaseModelProvider):
     """Offline test model provider for unit tests and deterministic simulation."""
 
-    def __init__(self, default_model: str = "mock-reasoner"):
+    def __init__(self, default_model: str = "mock-reasoner", responses: Optional[List[str]] = None):
         self.default_model = default_model
+        self.responses: List[str] = list(responses) if responses else []
 
     async def generate(self, request: ModelRequest) -> ModelResponse:
         model_name = request.model or self.default_model
+        if self.responses:
+            content = self.responses.pop(0)
+        else:
+            content = f"[FORGE SOVEREIGN MOCK] Processed {len(request.messages)} messages."
         return ModelResponse(
-            content=f"[FORGE SOVEREIGN MOCK] Processed {len(request.messages)} messages.",
+            content=content,
             model=model_name,
             usage=ModelUsage(prompt_tokens=10, completion_tokens=10, total_tokens=20),
             finish_reason="stop",

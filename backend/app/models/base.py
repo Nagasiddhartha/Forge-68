@@ -23,6 +23,7 @@ class ModelRequest(BaseModel):
     max_tokens: Optional[int] = None
     stream: bool = False
     stop: Optional[List[str]] = None
+    format: Optional[str] = None  # e.g. "json" for Ollama JSON schema mode
 
 
 class ModelUsage(BaseModel):

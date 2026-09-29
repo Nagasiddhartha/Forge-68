@@ -49,6 +49,8 @@ class OllamaModelProvider(BaseModelProvider):
             payload["options"]["num_predict"] = request.max_tokens
         if request.stop:
             payload["options"]["stop"] = request.stop
+        if request.format:
+            payload["format"] = request.format
 
         async with self._get_client() as client:
             resp = await client.post("/api/chat", json=payload)
@@ -87,6 +89,8 @@ class OllamaModelProvider(BaseModelProvider):
             payload["options"]["num_predict"] = request.max_tokens
         if request.stop:
             payload["options"]["stop"] = request.stop
+        if request.format:
+            payload["format"] = request.format
 
         async with self._get_client() as client:
             async with client.stream("POST", "/api/chat", json=payload) as response:

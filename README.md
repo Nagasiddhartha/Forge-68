@@ -39,3 +39,53 @@ npm install
 npm run dev
 ```
 Access UI at `http://localhost:3000`.
+
+---
+
+## Milestone History
+
+### Milestone 1 — Foundation
+Established monorepo structure, FastAPI backend (Python 3.12), Next.js frontend, model provider abstraction, Ollama integration with `qwen3:8b`, `/health` and `/api/v1/models` endpoints, and git repository.
+
+### Milestone 2 — Sovereign Policy Gateway + Tool Execution Boundary
+Implemented default-deny `PolicyGateway`, typed tool registry (`ToolRegistry`), the `equipment_history` industrial demonstration tool (R-204, P-201, E-301), evidence-producing `ExecutionEvent` audit records, and `/api/v1/tools`, `/api/v1/policy/evaluate`, `/api/v1/tools/execute` endpoints.
+
+### Milestone 3 — Model-to-Tool Evidence Loop
+
+Connects local `qwen3:8b` to the sovereign policy gateway and tool registry through a mandatory, policy-controlled evidence loop.
+
+```
+Qwen3 8B (Phase 1: Tool Decision)
+    ↓
+Structured Tool Request  (Pydantic validated, code-injection guarded)
+    ↓
+Policy Gateway           (DEFAULT-DENY evaluation via PolicyGateway)
+    ↓
+Tool Registry            (typed schema validation)
+    ↓
+Tool Execution           (approved handler only)
+    ↓
+Evidence Record          (EvidenceRecord: id, source, data, classification)
+    ↓
+Qwen3 8B (Phase 2: Evidence-Grounded Synthesis)
+    ↓
+Evidence-Grounded Response
+```
+
+> **The model does not have direct tool execution authority.**
+> Every tool invocation is mediated by the Policy Gateway.
+> A denied request never reaches the tool handler.
+
+**Key components added:**
+- `backend/app/core/schemas.py` — `ModelToolDecision`, `AgentQueryRequest`, `AgentQueryResponse`
+- `backend/app/core/prompts.py` — Constrained prompt templates and defensive JSON parser
+- `backend/app/core/reasoning.py` — `AgentReasoningService` orchestration service
+- `backend/app/verification/evidence.py` — `EvidenceRecord` schema
+- `POST /api/v1/agent/query` — End-to-end sovereign agent query API
+
+**API Usage Example:**
+```bash
+curl -s -X POST http://localhost:8000/api/v1/agent/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Show the maintenance history for R-204", "role": "ENGINEER", "requester": "engineer_ops"}'
+```

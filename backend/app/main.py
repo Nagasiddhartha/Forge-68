@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
+from app.core import AgentQueryRequest, AgentQueryResponse, agent_reasoning_service
 from app.models import get_model_provider
 from app.security import (
     PolicyDecision,
@@ -134,3 +135,14 @@ async def execute_tool(request: ToolInvocationRequest):
         )
 
     return result
+
+
+# =========================================================================
+# Milestone 3: Model-to-Tool Reasoning & Evidence Loop APIs
+# =========================================================================
+
+@app.post("/api/v1/agent/query", response_model=AgentQueryResponse, tags=["Agent"])
+async def query_agent(request: AgentQueryRequest) -> AgentQueryResponse:
+    """Execute end-to-end model reasoning, policy-controlled tool execution, and evidence-grounded response."""
+    return await agent_reasoning_service.process_query(request)
+
