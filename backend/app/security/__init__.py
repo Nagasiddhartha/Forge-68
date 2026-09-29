@@ -1,7 +1,35 @@
-"""FORGE Security and Policy Module.
+"""FORGE Security and Policy Module."""
 
-Responsible for:
-- Pre-execution action validation
-- Industrial safety boundary enforcement
-- Role-based authorization & permission tokens
-"""
+from app.security.events import (
+    ExecutionEvent,
+    ExecutionEventSink,
+    ExecutionStatus,
+    audit_event_sink,
+)
+from app.security.gateway import PolicyGateway, policy_gateway
+from app.security.models import (
+    DataClassification,
+    PolicyDecision,
+    PolicyDecisionType,
+    PolicyEvaluationRequest,
+    RiskLevel,
+    Role,
+)
+from app.security.policies import DEFAULT_POLICIES, PolicyRule
+
+__all__ = [
+    "Role",
+    "DataClassification",
+    "RiskLevel",
+    "PolicyDecisionType",
+    "PolicyEvaluationRequest",
+    "PolicyDecision",
+    "PolicyRule",
+    "DEFAULT_POLICIES",
+    "PolicyGateway",
+    "policy_gateway",
+    "ExecutionStatus",
+    "ExecutionEvent",
+    "ExecutionEventSink",
+    "audit_event_sink",
+]

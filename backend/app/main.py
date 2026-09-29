@@ -2,11 +2,25 @@
 
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.models import get_model_provider
+from app.security import (
+    PolicyDecision,
+    PolicyDecisionType,
+    PolicyEvaluationRequest,
+    policy_gateway,
+)
+from app.tools import (
+    ToolExecutionResult,
+    ToolInvocationRequest,
+    ToolMetadata,
+    execute_tool_with_policy,
+    tool_registry,
+)
 
 
 @asynccontextmanager
@@ -80,4 +94,43 @@ async def system_status() -> Dict[str, Any]:
             "default_model": settings.DEFAULT_MODEL,
             "online": model_online,
         },
+        "registered_tools_count": len(tool_registry.list_tools()),
     }
+
+
+# =========================================================================
+# Milestone 2: Policy & Industrial Tool APIs
+# =========================================================================
+
+@app.get("/api/v1/tools", response_model=List[ToolMetadata], tags=["Tools"])
+async def list_registered_tools() -> List[ToolMetadata]:
+    """List all registered sovereign industrial tools and their safety metadata."""
+    return tool_registry.list_tools()
+
+
+@app.post("/api/v1/policy/evaluate", response_model=PolicyDecision, tags=["Policy"])
+async def evaluate_policy(request: PolicyEvaluationRequest) -> PolicyDecision:
+    """Evaluate whether an agent or operator action is permitted by sovereign policy rules."""
+    return policy_gateway.evaluate(request)
+
+
+@app.post("/api/v1/tools/execute", response_model=ToolExecutionResult, tags=["Tools"])
+async def execute_tool(request: ToolInvocationRequest):
+    """Execute an industrial tool through the mandatory Policy Gateway boundary."""
+    result = execute_tool_with_policy(request)
+
+    if not result.success and result.decision.decision == PolicyDecisionType.DENY:
+        # Return 403 Forbidden with structured result for policy rejections
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content=result.model_dump(),
+        )
+
+    if not result.success:
+        # Tool execution error
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=result.model_dump(),
+        )
+
+    return result
