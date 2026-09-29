@@ -8,6 +8,16 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.core import AgentQueryRequest, AgentQueryResponse, agent_reasoning_service
+from app.knowledge import (
+    KnowledgeIngestRequest,
+    KnowledgeIngestResponse,
+    KnowledgeSearchRequest,
+    KnowledgeSearchResponse,
+    OcrRequiredError,
+    PathTraversalError,
+    UnsupportedFormatError,
+    knowledge_service,
+)
 from app.models import get_model_provider
 from app.security import (
     PolicyDecision,
@@ -22,6 +32,7 @@ from app.tools import (
     execute_tool_with_policy,
     tool_registry,
 )
+from app.verification.evidence import EvidenceRecord
 
 
 @asynccontextmanager
@@ -145,4 +156,55 @@ async def execute_tool(request: ToolInvocationRequest):
 async def query_agent(request: AgentQueryRequest) -> AgentQueryResponse:
     """Execute end-to-end model reasoning, policy-controlled tool execution, and evidence-grounded response."""
     return await agent_reasoning_service.process_query(request)
+
+
+# =========================================================================
+# Milestone 4: Industrial Knowledge Fabric APIs
+# =========================================================================
+
+@app.post("/api/v1/knowledge/ingest", response_model=KnowledgeIngestResponse, tags=["Knowledge"])
+async def ingest_knowledge_document(request: KnowledgeIngestRequest) -> KnowledgeIngestResponse:
+    """Ingest a local document (.txt, .md, .pdf), compute SHA-256, chunk and index vectors."""
+    try:
+        doc, chunks_count = await knowledge_service.ingest_document(
+            file_path=request.file_path,
+            classification=request.classification,
+            document_type=request.document_type,
+            equipment_ids=request.equipment_ids,
+        )
+        return KnowledgeIngestResponse(
+            status="success",
+            document=doc,
+            chunks_created=chunks_count,
+        )
+    except PathTraversalError as pte:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Path traversal rejected: {pte}")
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Document file not found: {fnf}")
+    except OcrRequiredError as ocr:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Scanned image PDF requires OCR: {ocr}")
+    except UnsupportedFormatError as ufe:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=f"Unsupported format: {ufe}")
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ingestion failed: {exc}")
+
+
+@app.post("/api/v1/knowledge/search", response_model=KnowledgeSearchResponse, tags=["Knowledge"])
+async def search_knowledge(request: KnowledgeSearchRequest) -> KnowledgeSearchResponse:
+    """Execute ranked similarity retrieval against local sovereign vector index."""
+    try:
+        results = await knowledge_service.search(
+            query=request.query,
+            top_k=request.top_k,
+            classification_filter=request.classification,
+        )
+        evidence = [EvidenceRecord.from_retrieval_result(r) for r in results]
+        return KnowledgeSearchResponse(
+            query=request.query,
+            total_results=len(results),
+            results=results,
+            evidence=evidence,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Search failed: {exc}")
 

@@ -58,3 +58,12 @@ data/storage/
 *.sqlite3
 *.db
 backend/app/artifacts/store/
+
+# Local Knowledge Indexes & Embeddings Cache
+backend/data/knowledge_index/
+backend/.knowledge_cache/
+*.npz
+*.npy
+embeddings.npz
+sentence_transformers/
+.cache/

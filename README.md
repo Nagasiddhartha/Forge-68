@@ -89,3 +89,43 @@ curl -s -X POST http://localhost:8000/api/v1/agent/query \
   -H "Content-Type: application/json" \
   -d '{"query": "Show the maintenance history for R-204", "role": "ENGINEER", "requester": "engineer_ops"}'
 ```
+
+### Milestone 4 — Industrial Knowledge Fabric (Local Document Retrieval)
+
+Provides local, air-gapped retrieval of organizational technical documents, turning passive text into verified evidence with full provenance tracking.
+
+```
+Documents (.txt, .md, .pdf)
+    ↓
+Local Ingestion (SHA-256 integrity digest, path traversal protection)
+    ↓
+Chunking (Deterministic boundary slicing & provenance retention)
+    ↓
+Local Embeddings (BaseEmbeddingProvider: BAAI/bge-m3 / Mock)
+    ↓
+Local Vector Index (NumPy Cosine Similarity Index)
+    ↓
+Ranked Retrieval (Top-k similarity scoring & classification filtering)
+    ↓
+EvidenceRecord (Direct conversion with provenance metadata)
+```
+
+> **FORGE does not send organizational documents to cloud inference services.**
+> All ingestion, hashing, chunking, embedding, vector search, and evidence conversion execute entirely on-premise.
+
+*Note: The current milestone does NOT yet include multimodal vision or OCR pipelines. Image-only or scanned PDFs are explicitly detected and reported as requiring OCR.*
+
+**Key components added:**
+- `backend/app/knowledge/models.py` — `KnowledgeDocument`, `DocumentChunk`, `RetrievalResult`
+- `backend/app/knowledge/ingestion.py` — Local ingestion pipeline for `.txt`, `.md`, `.pdf` with SHA-256 hashing and OCR detection
+- `backend/app/knowledge/chunker.py` — Deterministic chunker preserving document provenance metadata
+- `backend/app/knowledge/embeddings.py` — `BaseEmbeddingProvider`, `MockEmbeddingProvider`, `SentenceTransformerEmbeddingProvider`
+- `backend/app/knowledge/index.py` — Local in-memory `NumpyCosineVectorIndex`
+- `backend/app/knowledge/service.py` — `KnowledgeService` orchestrating ingest and query pipelines
+- `backend/app/verification/evidence.py` — Extended `EvidenceRecord` with `from_retrieval_result()`
+- `backend/data/demo/knowledge/` — 5 synthetic R-204 refinery documents (SOP, Inspection, Spec, Maintenance, Safety)
+- `POST /api/v1/knowledge/ingest` & `POST /api/v1/knowledge/search` — Typed Knowledge Fabric endpoints
+
+*Note: Ingestion is strictly explicit via `POST /api/v1/knowledge/ingest`. Application startup never mutates the knowledge index or ingests documents implicitly.*
+
+
