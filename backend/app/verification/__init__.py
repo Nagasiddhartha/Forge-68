@@ -1,5 +1,14 @@
-"""FORGE Verification & Evidence Module."""
+from app.verification.evidence import (
+    ConflictRecord,
+    EvidenceRecord,
+    EvidenceSet,
+    detect_evidence_conflicts,
+)
 
-from app.verification.evidence import EvidenceRecord
+__all__ = [
+    "ConflictRecord",
+    "EvidenceRecord",
+    "EvidenceSet",
+    "detect_evidence_conflicts",
+]
 
-__all__ = ["EvidenceRecord"]

@@ -128,4 +128,47 @@ EvidenceRecord (Direct conversion with provenance metadata)
 
 *Note: Ingestion is strictly explicit via `POST /api/v1/knowledge/ingest`. Application startup never mutates the knowledge index or ingests documents implicitly.*
 
+---
+
+### Milestone 5 — Unified Evidence-Grounded Agent
+
+Unifies local Qwen3 reasoning, the Industrial Tool Fabric, Industrial Knowledge Fabric, Sovereign Policy Gateway, and verified EvidenceSet into one controlled industrial agent workflow.
+
+```
+User
+ ↓
+Qwen3 Plan (direct / knowledge / tool / combined)
+ ↓
+Knowledge / Tools
+ ↓
+Policy (DEFAULT-DENY / Clearance Guard)
+ ↓
+Evidence Set (Verified Evidence & Policy Outcomes)
+ ↓
+Qwen3 (Evidence-Grounded Synthesis)
+ ↓
+Grounded Answer
+```
+
+> **The model proposes actions; FORGE policy determines whether those actions are permitted.**
+> The model is NEVER the authority that grants itself access. All protected operations continue through existing FORGE security boundaries.
+
+**Core Principles & Governance:**
+1. **Model Proposes, Policy Authorizes:** The model outputs a typed, structured `AgentPlan`. It cannot authorize actions, escalate its clearance, or directly invoke shell commands, Python scripts, filesystem operations, or industrial protocols.
+2. **Authoritative Document Classification:** The stored document classification is authoritative and immutable at query time. A plan cannot downgrade document classification (e.g. requesting `PUBLIC` cannot retrieve `RESTRICTED` documents), nor can an agent query escalate clearance beyond the requester's authorized clearance.
+3. **Execution-Scoped EvidenceSet:** Gathers verified tool execution records, knowledge retrieval results with provenance, policy decisions, and audit event identifiers into a single structured set.
+4. **Parameter Variance & Conflict Preservation:** Surfaces observable variances across distinct sources (e.g. normal operating pressure vs trip/MAWP thresholds) without speculative merging or hallucinated consensus.
+5. **Prompt Security & Data Isolation:** Prompts strictly separate authoritative system instructions from untrusted data (user queries, document texts, and tool outputs). Injected commands inside documents are treated strictly as inert textual data.
+
+**Key components added:**
+- `backend/app/core/schemas.py` — `AgentPlan`, `AgentActionType`, `KnowledgeQueryPlan`, `ToolCallPlan`, `AgentQueryResponse`
+- `backend/app/core/prompts.py` — `AGENT_PLAN_SYSTEM_PROMPT`, `UNIFIED_GROUNDED_SYNTHESIS_SYSTEM_PROMPT`, defensive `parse_agent_plan`
+- `backend/app/core/reasoning.py` — `AgentReasoningService` orchestrating the end-to-end unified planning, execution, and synthesis workflow
+- `backend/app/verification/evidence.py` — `EvidenceSet`, `ConflictRecord`, `detect_evidence_conflicts()`
+- `backend/app/security/events.py` — `AgentEventType`, `AgentTraceEvent` producing audit traces across all 9 lifecycle events
+- `backend/app/knowledge/index.py` & `backend/app/knowledge/service.py` — Clearance level bounding and classification enforcement
+- `tests/test_unified_agent.py` — 15 comprehensive unit, security, and integration tests covering Scenarios A through F and security safeguards
+- `POST /api/v1/agent/query` — Typed API endpoint returning structured plan, queries, tool calls, policy decisions, evidence set, and grounded response
+
+
 

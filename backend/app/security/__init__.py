@@ -1,6 +1,8 @@
 """FORGE Security and Policy Module."""
 
 from app.security.events import (
+    AgentEventType,
+    AgentTraceEvent,
     ExecutionEvent,
     ExecutionEventSink,
     ExecutionStatus,
@@ -32,4 +34,7 @@ __all__ = [
     "ExecutionEvent",
     "ExecutionEventSink",
     "audit_event_sink",
+    "AgentEventType",
+    "AgentTraceEvent",
 ]
+

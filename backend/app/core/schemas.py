@@ -1,13 +1,38 @@
-"""Structured schemas for model decision extraction and agent queries."""
+"""Structured schemas for model decision extraction, agent plans, and queries."""
 
 from enum import Enum
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, model_validator
 
 from app.security.models import DataClassification, PolicyDecision, Role
-from app.verification.evidence import EvidenceRecord
+from app.verification.evidence import EvidenceRecord, EvidenceSet
 
+
+def validate_no_code_injection(args: Any) -> None:
+    """Reject arbitrary Python, shell commands, or code execution patterns in tool arguments."""
+    forbidden_patterns = [
+        r"__import__",
+        r"\beval\s*\(",
+        r"\bexec\s*\(",
+        r"\bos\.system\b",
+        r"\bsubprocess\b",
+        r"\bsh\s+-c\b",
+        r"\bbash\s+-c\b",
+        r"\bpowershell\b",
+        r"<script\b",
+    ]
+    text_repr = str(args)
+    for pattern in forbidden_patterns:
+        if re.search(pattern, text_repr, re.IGNORECASE):
+            raise ValueError(
+                f"Security Exception: Suspicious code or shell execution pattern detected in arguments: '{pattern}'."
+            )
+
+
+# =========================================================================
+# Milestone 3: Legacy Model Decision Schemas (Maintained for Compatibility)
+# =========================================================================
 
 class ModelActionType(str, Enum):
     """Action category determined by the reasoning model."""
@@ -32,7 +57,7 @@ class ModelToolDecision(BaseModel):
                 raise ValueError("reason is required when action is 'tool_call'.")
             
             # Security guard against code injection in arguments
-            self._validate_no_code_injection(self.arguments)
+            validate_no_code_injection(self.arguments)
 
         elif self.action == ModelActionType.FINAL:
             if not self.answer or not self.answer.strip():
@@ -40,27 +65,103 @@ class ModelToolDecision(BaseModel):
 
         return self
 
-    @staticmethod
-    def _validate_no_code_injection(args: Any) -> None:
-        """Reject arbitrary Python, shell commands, or code execution patterns in tool arguments."""
-        forbidden_patterns = [
-            r"__import__",
-            r"\beval\s*\(",
-            r"\bexec\s*\(",
-            r"\bos\.system\b",
-            r"\bsubprocess\b",
-            r"\bsh\s+-c\b",
-            r"\bbash\s+-c\b",
-            r"\bpowershell\b",
-            r"<script\b",
-        ]
-        text_repr = str(args)
-        for pattern in forbidden_patterns:
-            if re.search(pattern, text_repr, re.IGNORECASE):
-                raise ValueError(
-                    f"Security Exception: Suspicious code or shell execution pattern detected in arguments: '{pattern}'."
-                )
 
+# =========================================================================
+# Milestone 5: Unified Structured Agent Plan
+# =========================================================================
+
+class AgentActionType(str, Enum):
+    """Unified operational action category determined by Qwen3."""
+    DIRECT = "direct"
+    KNOWLEDGE = "knowledge"
+    TOOL = "tool"
+    COMBINED = "combined"
+
+
+class KnowledgeQueryPlan(BaseModel):
+    """Structured knowledge retrieval request proposed in an AgentPlan."""
+    query: str = Field(..., description="Target retrieval search query")
+    classification: Optional[DataClassification] = Field(
+        default=None,
+        description="Target classification context (cannot weaken or override stored classification)"
+    )
+
+
+class ToolCallPlan(BaseModel):
+    """Structured industrial tool invocation proposed in an AgentPlan."""
+    tool_name: str = Field(..., description="Target registered tool name")
+    arguments: Dict[str, Any] = Field(default_factory=dict, description="Typed invocation arguments")
+
+    @model_validator(mode="after")
+    def validate_tool_call(self) -> "ToolCallPlan":
+        if not self.tool_name or not self.tool_name.strip():
+            raise ValueError("tool_name is required in tool call plan.")
+        validate_no_code_injection(self.arguments)
+        return self
+
+
+class AgentPlan(BaseModel):
+    """Typed, structured execution plan emitted by the sovereign reasoning model."""
+    action: AgentActionType
+    knowledge_queries: List[KnowledgeQueryPlan] = Field(
+        default_factory=list,
+        description="List of knowledge queries if knowledge retrieval is needed"
+    )
+    tool_calls: List[ToolCallPlan] = Field(
+        default_factory=list,
+        description="List of industrial tool invocations if tool execution is needed"
+    )
+    reasoning: Optional[str] = Field(
+        default=None,
+        description="Technical justification for proposed actions"
+    )
+    direct_answer: Optional[str] = Field(
+        default=None,
+        description="Direct response text if action is direct"
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_decision(cls, data: Any) -> Any:
+        """Seamlessly map legacy Milestone 3 tool_call / final JSON formats into AgentPlan."""
+        if isinstance(data, dict):
+            data = dict(data)
+            raw_action = str(data.get("action", "")).lower()
+            if raw_action == "tool_call":
+                data["action"] = "tool"
+                if "tool_name" in data and not data.get("tool_calls"):
+                    data["tool_calls"] = [{
+                        "tool_name": data["tool_name"],
+                        "arguments": data.get("arguments", {})
+                    }]
+                if "reason" in data and not data.get("reasoning"):
+                    data["reasoning"] = data["reason"]
+            elif raw_action in ("final", "direct_answer"):
+                data["action"] = "direct"
+                if "answer" in data and not data.get("direct_answer"):
+                    data["direct_answer"] = data["answer"]
+        return data
+
+    @model_validator(mode="after")
+    def validate_plan_requirements(self) -> "AgentPlan":
+        """Enforce strict presence of required queries or tool calls per action category."""
+        if self.action == AgentActionType.KNOWLEDGE:
+            if not self.knowledge_queries:
+                raise ValueError("Agent plan action 'knowledge' requires at least one query in knowledge_queries.")
+        elif self.action == AgentActionType.TOOL:
+            if not self.tool_calls:
+                raise ValueError("Agent plan action 'tool' requires at least one call in tool_calls.")
+        elif self.action == AgentActionType.COMBINED:
+            if not self.knowledge_queries:
+                raise ValueError("Agent plan action 'combined' requires at least one query in knowledge_queries.")
+            if not self.tool_calls:
+                raise ValueError("Agent plan action 'combined' requires at least one call in tool_calls.")
+        return self
+
+
+# =========================================================================
+# Query Request & Response Interfaces
+# =========================================================================
 
 class AgentQueryStatus(str, Enum):
     """Overall status of the agent query execution loop."""
@@ -84,12 +185,20 @@ class AgentQueryRequest(BaseModel):
 
 
 class AgentQueryResponse(BaseModel):
-    """Complete, auditable trace of the model-to-tool reasoning and evidence loop."""
+    """Complete, auditable trace of the unified evidence-grounded reasoning workflow."""
     query: str
     final_answer: str
+    status: AgentQueryStatus
+    plan: Optional[AgentPlan] = None
+    agent_plan: Optional[AgentPlan] = None
+    knowledge_queries: List[KnowledgeQueryPlan] = Field(default_factory=list)
+    tool_calls: List[ToolCallPlan] = Field(default_factory=list)
+    policy_decisions: List[PolicyDecision] = Field(default_factory=list)
+    evidence_set: Optional[EvidenceSet] = None
+    execution_event_id: Optional[str] = None
+
+    # Milestone 3 backward compatibility fields
     tool_call: Optional[Dict[str, Any]] = None
     policy_decision: Optional[PolicyDecision] = None
     tool_result: Optional[Dict[str, Any]] = None
     evidence: Optional[EvidenceRecord] = None
-    execution_event_id: Optional[str] = None
-    status: AgentQueryStatus

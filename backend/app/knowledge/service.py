@@ -63,6 +63,7 @@ class KnowledgeService:
         query: str,
         top_k: int = 5,
         classification_filter: Optional[Union[DataClassification, str]] = None,
+        max_classification: Optional[Union[DataClassification, str]] = None,
     ) -> List[RetrievalResult]:
         """Execute similarity search against local vector index without calling any LLM."""
         if not query or not query.strip():
@@ -73,6 +74,7 @@ class KnowledgeService:
             query_embedding=query_vec,
             top_k=top_k,
             classification_filter=classification_filter,
+            max_classification=max_classification,
         )
         return results
 
@@ -81,15 +83,18 @@ class KnowledgeService:
         query: str,
         top_k: int = 5,
         classification_filter: Optional[Union[DataClassification, str]] = None,
+        max_classification: Optional[Union[DataClassification, str]] = None,
     ) -> List[EvidenceRecord]:
         """Search local index and convert ranked results directly to verified EvidenceRecords."""
         results = await self.search(
             query=query,
             top_k=top_k,
             classification_filter=classification_filter,
+            max_classification=max_classification,
         )
         evidence_list = [EvidenceRecord.from_retrieval_result(r) for r in results]
         return evidence_list
+
 
     def get_document(self, document_id: str) -> Optional[KnowledgeDocument]:
         """Retrieve stored document metadata by ID."""

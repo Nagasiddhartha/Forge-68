@@ -11,6 +11,15 @@ from app.knowledge.models import DocumentChunk, RetrievalResult
 from app.security.models import DataClassification
 
 
+CLASSIFICATION_LEVELS: Dict[str, int] = {
+    "PUBLIC": 1,
+    "INTERNAL": 2,
+    "CONFIDENTIAL": 3,
+    "RESTRICTED": 4,
+    "CRITICAL": 5,
+}
+
+
 class VectorIndex(ABC):
     """Abstract vector index interface."""
 
@@ -25,8 +34,9 @@ class VectorIndex(ABC):
         query_embedding: List[float],
         top_k: int = 5,
         classification_filter: Optional[Union[DataClassification, str]] = None,
+        max_classification: Optional[Union[DataClassification, str]] = None,
     ) -> List[RetrievalResult]:
-        """Perform top-k cosine similarity search, optionally filtered by classification."""
+        """Perform top-k cosine similarity search, optionally filtered and bounded by classification."""
         pass
 
     @abstractmethod
@@ -93,6 +103,7 @@ class NumpyCosineVectorIndex(VectorIndex):
         query_embedding: List[float],
         top_k: int = 5,
         classification_filter: Optional[Union[DataClassification, str]] = None,
+        max_classification: Optional[Union[DataClassification, str]] = None,
     ) -> List[RetrievalResult]:
         if not self._chunks or self._embeddings is None:
             return []
@@ -115,16 +126,33 @@ class NumpyCosineVectorIndex(VectorIndex):
                 else str(classification_filter).upper()
             )
 
+        max_level_int: Optional[int] = None
+        if max_classification:
+            max_key = (
+                max_classification.value
+                if isinstance(max_classification, DataClassification)
+                else str(max_classification).upper()
+            )
+            max_level_int = CLASSIFICATION_LEVELS.get(max_key)
+
         for idx, score in enumerate(scores):
             chunk = self._chunks[idx]
-            if filter_str:
-                chunk_class = chunk.metadata.get("classification")
-                if isinstance(chunk_class, DataClassification):
-                    chunk_class = chunk_class.value
-                elif chunk_class:
-                    chunk_class = str(chunk_class).upper()
+            chunk_class = chunk.metadata.get("classification")
+            chunk_str = (
+                chunk_class.value
+                if isinstance(chunk_class, DataClassification)
+                else str(chunk_class).upper() if chunk_class else "INTERNAL"
+            )
 
-                if chunk_class and chunk_class != filter_str:
+            # Enforce maximum classification clearance level
+            if max_level_int is not None:
+                chunk_level = CLASSIFICATION_LEVELS.get(chunk_str, 2)
+                if chunk_level > max_level_int:
+                    continue
+
+            # Exact classification filter
+            if filter_str:
+                if chunk_str != filter_str:
                     continue
 
             candidates.append((idx, float(score)))
@@ -143,6 +171,7 @@ class NumpyCosineVectorIndex(VectorIndex):
             )
 
         return results
+
 
     def save(self, directory: Union[str, Path]) -> None:
         target_dir = Path(directory)

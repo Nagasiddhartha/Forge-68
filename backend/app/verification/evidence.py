@@ -86,3 +86,121 @@ class EvidenceRecord(BaseModel):
             classification=classification,
             verified=True,
         )
+
+
+class ConflictRecord(BaseModel):
+    """Observable parameter variance or factual contrast detected between evidence sources."""
+    metric_or_topic: str = Field(..., description="Subject or metric (e.g., pressure, status, date)")
+    source_a: str = Field(..., description="Source reference A")
+    value_a: str = Field(..., description="Value reported by source A")
+    source_b: str = Field(..., description="Source reference B")
+    value_b: str = Field(..., description="Value reported by source B")
+    description: str = Field(..., description="Analysis note on semantic roles or observed discrepancy")
+
+
+class EvidenceSet(BaseModel):
+    """Execution-scoped collection of verified evidence records and policy decisions."""
+    tool_evidence: list[EvidenceRecord] = Field(default_factory=list)
+    knowledge_evidence: list[EvidenceRecord] = Field(default_factory=list)
+    policy_decisions: list[Any] = Field(default_factory=list)
+    execution_identifiers: list[str] = Field(default_factory=list)
+    detected_conflicts: list[ConflictRecord] = Field(default_factory=list)
+
+    @property
+    def all_evidence(self) -> list[EvidenceRecord]:
+        """Aggregate list of all captured evidence records."""
+        return self.tool_evidence + self.knowledge_evidence
+
+    @property
+    def is_empty(self) -> bool:
+        """True if no tool or knowledge evidence was collected."""
+        return len(self.tool_evidence) == 0 and len(self.knowledge_evidence) == 0
+
+    def add_tool_evidence(self, record: EvidenceRecord) -> None:
+        """Register verified tool execution evidence."""
+        self.tool_evidence.append(record)
+        if record.tool_execution_id and record.tool_execution_id not in self.execution_identifiers:
+            self.execution_identifiers.append(record.tool_execution_id)
+
+    def add_knowledge_evidence(self, record: EvidenceRecord) -> None:
+        """Register verified knowledge retrieval evidence."""
+        self.knowledge_evidence.append(record)
+        if record.tool_execution_id and record.tool_execution_id not in self.execution_identifiers:
+            self.execution_identifiers.append(record.tool_execution_id)
+
+    def add_policy_decision(self, decision: Any, execution_id: Optional[str] = None) -> None:
+        """Register policy evaluation outcome."""
+        self.policy_decisions.append(decision)
+        if execution_id and execution_id not in self.execution_identifiers:
+            self.execution_identifiers.append(execution_id)
+
+
+def detect_evidence_conflicts(evidence_items: list[EvidenceRecord]) -> list[ConflictRecord]:
+    """Basic deterministic conflict and parameter variance detection across evidence records.
+
+    Surfaces observable variances in metrics (such as pressure, temperature, status, dates)
+    without inventing speculative resolution, preserving distinct semantic roles and provenance.
+    """
+    import re
+    conflicts: list[ConflictRecord] = []
+    if len(evidence_items) < 2:
+        return conflicts
+
+    # Patterns for key industrial metrics and states
+    patterns = {
+        "pressure": re.compile(r"(\b\d+(?:\.\d+)?\s*(?:bar(?:\s+gauge)?|psi|kPa|MPa)\b)", re.IGNORECASE),
+        "temperature": re.compile(r"(\b\d+(?:\.\d+)?\s*(?:°C|deg\s*C|K|°F)\b)", re.IGNORECASE),
+        "status": re.compile(r"\b(OPERATIONAL|MAINTENANCE_REQUIRED|OUT_OF_SERVICE|DECOMMISSIONED|STANDBY)\b", re.IGNORECASE),
+        "last_inspection": re.compile(r"last_inspection_date['\":\s]+(\d{4}-\d{2}-\d{2})", re.IGNORECASE),
+    }
+
+    # Extract observed values per source
+    extracted_per_source: list[tuple[str, dict[str, list[str]]]] = []
+    for item in evidence_items:
+        payload_str = str(item.retrieved_data)
+        if item.retrieved_text:
+            payload_str += " " + item.retrieved_text
+
+        source_ref = item.source_reference
+        if item.filename:
+            source_ref = f"{item.filename} ({source_ref})"
+
+        found_metrics: dict[str, list[str]] = {}
+        for metric, pat in patterns.items():
+            matches = list(set(pat.findall(payload_str)))
+            if matches:
+                found_metrics[metric] = matches
+        extracted_per_source.append((source_ref, found_metrics))
+
+    # Compare pairs
+    seen_pairs: set[tuple[str, str, str]] = set()
+    for i in range(len(extracted_per_source)):
+        src_a, metrics_a = extracted_per_source[i]
+        for j in range(i + 1, len(extracted_per_source)):
+            src_b, metrics_b = extracted_per_source[j]
+            for metric in metrics_a:
+                if metric in metrics_b:
+                    vals_a = metrics_a[metric]
+                    vals_b = metrics_b[metric]
+                    # If values differ between sources
+                    for va in vals_a:
+                        for vb in vals_b:
+                            if va.strip().lower() != vb.strip().lower():
+                                pair_key = (metric, min(src_a, src_b), max(src_a, src_b))
+                                if pair_key not in seen_pairs:
+                                    seen_pairs.add(pair_key)
+                                    conflicts.append(
+                                        ConflictRecord(
+                                            metric_or_topic=metric,
+                                            source_a=src_a,
+                                            value_a=va.strip(),
+                                            source_b=src_b,
+                                            value_b=vb.strip(),
+                                            description=(
+                                                f"Multiple distinct {metric} values observed across sources ({va.strip()} vs {vb.strip()}). "
+                                                f"Semantic roles may differ (e.g., normal operating vs MAWP/trip limit, or different component timestamps)."
+                                            ),
+                                        )
+                                    )
+    return conflicts
+
