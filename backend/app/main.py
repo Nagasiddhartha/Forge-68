@@ -346,4 +346,34 @@ async def get_audit_events(limit: int = 100) -> Dict[str, Any]:
     }
 
 
+# =========================================================================
+# Milestone 9: Industrial Mission & Demo Harness APIs
+# =========================================================================
+
+from app.demo import (
+    DemoRunRequest,
+    DemoRunResponse,
+    DemoScenarioMetadata,
+    demo_orchestration_service,
+)
+
+
+@app.get("/api/v1/demo/scenarios", response_model=List[DemoScenarioMetadata], tags=["Demo"])
+async def list_demo_scenarios() -> List[DemoScenarioMetadata]:
+    """List four typed, repeatable industrial demo scenarios for judge evaluation."""
+    return demo_orchestration_service.list_scenarios()
+
+
+@app.post("/api/v1/demo/run", response_model=DemoRunResponse, tags=["Demo"])
+async def run_demo_scenario(request: DemoRunRequest) -> DemoRunResponse:
+    """Execute end-to-end industrial mission through real M1-M8 services."""
+    try:
+        return await demo_orchestration_service.run_scenario(request)
+    except ValueError as ve:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Demo execution failed: {str(exc)}")
+
+
+
 

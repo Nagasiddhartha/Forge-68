@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import ValidationError
 
 from app.tools.base import BaseTool, ToolDefinition, ToolMetadata
-from app.tools.industrial.equipment import EquipmentHistoryTool
+from app.tools.industrial.equipment import EquipmentHistoryTool, PressureReliefCalibrationTool
 
 
 class ToolRegistry:
@@ -60,6 +60,8 @@ class ToolRegistry:
         return tool.output_model(**result)
 
 
-# Global default registry initialized with safe demonstration tool
+# Global default registry initialized with safe demonstration tool and critical-risk tool
 tool_registry = ToolRegistry()
 tool_registry.register(EquipmentHistoryTool())
+tool_registry.register(PressureReliefCalibrationTool())
+

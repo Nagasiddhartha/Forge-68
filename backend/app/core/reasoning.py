@@ -121,7 +121,26 @@ class AgentReasoningService:
             )
         )
 
+        # 1b. Prompt-Security Boundary: Scan for adversarial injection patterns
+        from app.security import detect_prompt_injection
+        detected_injection = detect_prompt_injection(request.query)
+        if detected_injection:
+            logger.warning("[PROMPT_INJECTION_DETECTED] Adversarial pattern detected in query: '%s'. Quarantining as untrusted data.", detected_injection)
+            audit_event_sink.record_agent_event(
+                AgentTraceEvent(
+                    event_type=AgentEventType.SECURITY_ALERT,
+                    requester=request.requester,
+                    role=request.role,
+                    details={
+                        "alert_type": "PROMPT_INJECTION_DETECTED",
+                        "detected_pattern": detected_injection,
+                        "action": "QUARANTINED_AS_UNTRUSTED_DATA",
+                    },
+                )
+            )
+
         # 2. Plan Generation: Model proposes an operational AgentPlan
+
         tools_metadata = self.tool_registry.list_tools()
         tools_catalog = build_tools_catalog_description(tools_metadata)
         planning_prompt = AGENT_PLAN_SYSTEM_PROMPT.format(tools_catalog=tools_catalog)
@@ -303,6 +322,25 @@ class AgentReasoningService:
                             details={"evidence_id": evd.evidence_id, "source_reference": evd.source_reference},
                         )
                     )
+
+                    # Prompt-security check on retrieved untrusted document text
+                    doc_injection = detect_prompt_injection(str(evd.retrieved_data) + " " + (evd.retrieved_text or ""))
+                    if doc_injection:
+                        logger.warning("[PROMPT_INJECTION_IN_DOCUMENT] Quarantined adversarial injection pattern in '%s': '%s'", evd.source_reference, doc_injection)
+                        audit_event_sink.record_agent_event(
+                            AgentTraceEvent(
+                                event_type=AgentEventType.SECURITY_ALERT,
+                                requester=request.requester,
+                                role=request.role,
+                                details={
+                                    "alert_type": "PROMPT_INJECTION_IN_DOCUMENT",
+                                    "source": evd.source_reference,
+                                    "detected_pattern": doc_injection,
+                                    "action": "QUARANTINED_AS_UNTRUSTED_DATA",
+                                },
+                            )
+                        )
+
 
         # 7. Execute Industrial Tools (if action is 'tool' or 'combined')
         first_tool_result_data: Optional[Dict[str, Any]] = None

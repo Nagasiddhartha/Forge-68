@@ -19,6 +19,8 @@ from app.security.models import (
 )
 from app.security.policies import DEFAULT_POLICIES, PolicyRule
 
+from app.security.injection import INJECTION_PATTERNS, detect_prompt_injection
+
 __all__ = [
     "Role",
     "DataClassification",
@@ -36,5 +38,8 @@ __all__ = [
     "audit_event_sink",
     "AgentEventType",
     "AgentTraceEvent",
+    "detect_prompt_injection",
+    "INJECTION_PATTERNS",
 ]
+
 

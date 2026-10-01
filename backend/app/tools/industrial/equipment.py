@@ -175,3 +175,63 @@ class EquipmentHistoryTool(BaseTool):
             output_model=EquipmentHistoryOutput,
             handler=execute_equipment_history,
         )
+
+
+class PressureReliefCalibrationInput(BaseModel):
+    """Input payload for emergency pressure relief valve calibration."""
+    equipment_id: str = Field(
+        ...,
+        description="Target industrial equipment tag (e.g. R-204)",
+        pattern=r"^[A-Z]-[0-9]{3}$"
+    )
+    target_setpoint_bar: float = Field(
+        ...,
+        description="Calibrated relief valve opening pressure setpoint in bar gauge"
+    )
+    technician_id: Optional[str] = Field(
+        default="TECH-UNAUTHORIZED",
+        description="Technician ID requesting calibration"
+    )
+
+
+class PressureReliefCalibrationOutput(BaseModel):
+    """Output confirmation of relief valve calibration."""
+    equipment_id: str
+    status: str
+    calibrated_setpoint_bar: float
+    message: str
+
+
+# Deterministic execution tracker to mathematically prove denied actions NEVER run
+CALIBRATION_EXECUTION_COUNTER = {"count": 0}
+
+
+def execute_pressure_relief_calibration(input_data: PressureReliefCalibrationInput) -> PressureReliefCalibrationOutput:
+    """Execute pressure relief valve calibration (Critical risk)."""
+    CALIBRATION_EXECUTION_COUNTER["count"] += 1
+    return PressureReliefCalibrationOutput(
+        equipment_id=input_data.equipment_id,
+        status="CALIBRATED",
+        calibrated_setpoint_bar=input_data.target_setpoint_bar,
+        message=f"Pressure relief valve PRV-204 calibrated to setpoint {input_data.target_setpoint_bar} bar gauge.",
+    )
+
+
+class PressureReliefCalibrationTool(BaseTool):
+    """Critical-risk industrial tool requiring supervisor approval and restricted roles."""
+
+    @property
+    def definition(self) -> ToolDefinition:
+        return ToolDefinition(
+            name="calibrate_pressure_relief_valve",
+            version="1.0.0",
+            description="Calibrate the emergency pressure relief valve (PRV-204) on Reactor R-204. High-risk actuation requiring explicit supervisor approval.",
+            risk_level=RiskLevel.CRITICAL,
+            allowed_roles=[Role.SECURITY_OFFICER, Role.ADMIN],
+            allowed_classifications=[DataClassification.RESTRICTED, DataClassification.CRITICAL],
+            approval_required=True,
+            input_model=PressureReliefCalibrationInput,
+            output_model=PressureReliefCalibrationOutput,
+            handler=execute_pressure_relief_calibration,
+        )
+
