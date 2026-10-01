@@ -14,7 +14,7 @@ from app.knowledge.index import CLASSIFICATION_LEVELS
 from app.security import DataClassification, PolicyDecisionType, Role
 from app.tools.registry import tool_registry
 from app.verification.calculations import CalculationEngine, CalculationResult
-from app.verification.evidence import ConflictRecord, EvidenceRecord, EvidenceSet
+from app.verification.evidence import ConflictRecord, EvidenceRecord, EvidenceSet, detect_evidence_conflicts
 from app.verification.models import VerificationCheck, VerificationResult, VerificationStatus
 
 logger = logging.getLogger("forge.verification.engine")
@@ -40,6 +40,9 @@ class VerificationEngine:
 
         """Run all verification checks and produce a typed VerificationResult."""
         evidence_set = evidence_set or EvidenceSet()
+        if not evidence_set.detected_conflicts and len(evidence_set.all_evidence) >= 2:
+            evidence_set.detected_conflicts = detect_evidence_conflicts(evidence_set.all_evidence)
+
         calculations = calculations or []
         checks: List[VerificationCheck] = []
 
@@ -105,6 +108,12 @@ class VerificationEngine:
             examined_ids.append(t_evd.evidence_id)
             if not t_evd.tool_name or not t_evd.tool_execution_id or not t_evd.source_reference:
                 missing_provenance.append(f"Tool record '{t_evd.evidence_id}' lacks tool name/execution ID/source")
+
+        # Check visual evidence
+        for v_evd in getattr(evidence_set, "visual_evidence", []):
+            examined_ids.append(v_evd.evidence_id)
+            if not v_evd.source_reference or not v_evd.source_image_hash or not v_evd.finding_id:
+                missing_provenance.append(f"Visual record '{v_evd.evidence_id}' lacks source reference/image hash/finding ID")
 
         if missing_provenance:
             return VerificationCheck(
@@ -276,10 +285,15 @@ class VerificationEngine:
         # Check for genuine contradictions: same semantic parameter, differing values
         for conflict in evidence_set.detected_conflicts:
             desc = conflict.description.lower()
-            # If both sources claim the EXACT same role (e.g. both claim "normal operating" or contradictory status)
-            if "normal" in conflict.source_a.lower() and "normal" in conflict.source_b.lower():
+            src_a = conflict.source_a.lower()
+            src_b = conflict.source_b.lower()
+            # If both sources claim the EXACT same role, or visual gauge observation contrasts with baseline
+            if ("normal" in src_a and "normal" in src_b) or \
+               ("gauge" in src_a or "gauge" in src_b) or \
+               ("visual" in src_a or "visual" in src_b) or \
+               ("contradiction" in desc):
                 genuine_contradictions.append(
-                    f"Conflicting normal values for {conflict.metric_or_topic}: '{conflict.value_a}' vs '{conflict.value_b}'"
+                    f"Parameter variance or operational deviation for {conflict.metric_or_topic}: '{conflict.value_a}' vs '{conflict.value_b}'"
                 )
             elif conflict.metric_or_topic == "status" and conflict.value_a != conflict.value_b:
                 genuine_contradictions.append(

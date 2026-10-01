@@ -215,5 +215,50 @@ Final Response
 - `tests/test_verification.py` — 20 comprehensive unit, security, and end-to-end tests covering Scenarios A through H and all verification security constraints
 - `POST /api/v1/agent/query` — Exposes complete verification result payload alongside plan, evidence, and response
 
+---
+
+### Milestone 7 — Multimodal Engineering Intelligence
+
+Adds a bounded, sovereign multimodal intelligence layer capable of analyzing engineering imagery (inspection photographs, gauge faces, P&ID diagrams, structural defects), validating observations into structured Pydantic schemas, and integrating findings into the unified `EvidenceSet` and `VerificationEngine`.
+
+```
+Image (PNG / JPEG / WebP)
+   ↓
+Ingestion & Validation (Magic bytes, SHA-256 digest, max size, path traversal protection)
+   ↓
+Sovereign Vision Provider (Ollama Qwen2.5-VL / Mock - Strictly Local)
+   ↓
+Structured Visual Findings (Empirical observations: type, reading, unit, severity, confidence)
+   ↓
+Evidence Conversion (EvidenceRecord with cryptographic source image hash)
+   ↓
+Verification Engine (Audited against specs, baselines, and parameter variance)
+   ↓
+Grounded Agent Synthesis (Qwen3)
+```
+
+> **The vision model is strictly an empirical OBSERVER, not a final engineering verifier.**
+> It reports physical observations, gauge dial readings, and surface anomalies. It is strictly prohibited from declaring equipment certified "safe to operate" or bypassing safety policy. All safety determinations remain bounded by deterministic limits and independent verification checks.
+
+**Core Principles & Architecture:**
+1. **100% Local Inference:** Vision execution connects exclusively to sovereign runtimes (local Ollama with multimodal models such as `qwen2.5-vl:7b` or `MockVisionProvider`). Cloud vision APIs (OpenAI, Anthropic, Google Gemini, Azure) are strictly blocked with explicit sovereignty rejection errors.
+2. **Strict Ingestion Validation:** Supports PNG, JPEG, and WebP with mandatory magic-byte inspection, file size bounds (`MAX_IMAGE_SIZE_BYTES`), deterministic SHA-256 content hashing, and path traversal prevention.
+3. **Structured Visual Findings:** Vision output is constrained to typed JSON and validated against `VisualFinding` (tracking `finding_type`, `description`, `equipment_id`, `location`, `severity`, `observed_value`, `unit`, `confidence`, `source_image_hash`, and `provenance`).
+4. **Prompt Injection & Data Isolation:** All text, tags, and annotations found inside images are treated strictly as observational DATA, never executable instructions. Suspicious executable patterns (`eval`, `exec`, `os.system`, shell invocations) are rejected at the schema boundary.
+5. **Unified Evidence & Verification Integration:** Findings are converted to `EvidenceRecord`s (`source_type="visual_inspection"`) and appended to `EvidenceSet.visual_evidence`. They participate in `VerificationEngine` provenance checks, classification clearance checks, and parameter variance detection (e.g. flagging gauge readings exceeding normal operating baselines for engineering review).
+6. **Audit Event Traceability:** Ingestion and analysis emit `VISION_ANALYSIS_REQUESTED`, `EVIDENCE_CREATED`, and `VISION_ANALYSIS_COMPLETED` audit events into the immutable event sink.
+
+**Key components added:**
+- `backend/app/vision/models.py` — `FindingType`, `SeverityLevel`, `ImageProvenance`, `VisualProvenance`, `VisualFinding`, `VisionAnalyzeRequest`, `VisionAnalyzeResponse`
+- `backend/app/vision/ingestion.py` — Magic bytes detection, dimension parsing, size limit enforcement, and safe path loading for PNG, JPEG, WebP
+- `backend/app/vision/prompts.py` — Defensive system prompts and robust JSON parser with reasoning tag stripping and anti-injection guards
+- `backend/app/vision/provider.py` — `BaseVisionProvider` abstraction, `OllamaVisionProvider`, and deterministic `MockVisionProvider`
+- `backend/app/vision/service.py` — `VisionService` orchestrating ingestion, clearance authorization, provider execution, and evidence creation
+- `backend/app/verification/evidence.py` — Extended `EvidenceRecord` and `EvidenceSet` with visual evidence models and conflict detection
+- `backend/app/verification/engine.py` — Provenance and parameter consistency verification checks for visual evidence
+- `backend/data/demo/images/` — Synthetic industrial test imagery (`r204_pressure_gauge.png`, `r204_inspection_corrosion.png`, `sample_jpeg.jpg`, `sample_webp.webp`)
+- `tests/test_vision.py` — 21 comprehensive unit, security, and integration tests
+- `POST /api/v1/vision/analyze` — Typed API endpoint for engineering imagery analysis
+
 
 

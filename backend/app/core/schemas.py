@@ -189,6 +189,8 @@ class AgentQueryRequest(BaseModel):
         description="Data classification level of the query context"
     )
     has_approval: bool = Field(default=False, description="Whether human/supervisor approval is present")
+    image_path: Optional[str] = Field(default=None, description="Optional path to local engineering image for multimodal reasoning")
+    image_base64: Optional[str] = Field(default=None, description="Optional base64 encoded image for multimodal reasoning")
 
 
 class AgentQueryResponse(BaseModel):

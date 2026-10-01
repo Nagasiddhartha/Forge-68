@@ -73,6 +73,7 @@ from app.verification import (
     detect_evidence_conflicts,
     verification_engine,
 )
+from app.vision import VisionService, vision_service
 
 logger = logging.getLogger("forge.core.reasoning")
 logger.setLevel(logging.INFO)
@@ -88,12 +89,14 @@ class AgentReasoningService:
         registry: Optional[ToolRegistry] = None,
         knowledge: Optional[KnowledgeService] = None,
         verifier: Optional[VerificationEngine] = None,
+        vision: Optional[VisionService] = None,
     ):
         self.model_provider = model_provider or get_model_provider()
         self.policy_gateway = gateway or policy_gateway
         self.tool_registry = registry or tool_registry
         self.knowledge_service = knowledge or knowledge_service
         self.verification_engine = verifier or verification_engine
+        self.vision_service = vision or vision_service
 
     async def process_query(self, request: AgentQueryRequest) -> AgentQueryResponse:
         """Execute the unified, sovereign, evidence-grounded and verified agent workflow."""
@@ -215,6 +218,24 @@ class AgentReasoningService:
         last_event_id: Optional[str] = None
         has_tool_error = False
         all_tools_denied = True if plan.tool_calls else False
+
+        # Multimodal Visual Intelligence ingestion (if image context is provided in query request)
+        if request.image_path or request.image_base64:
+            try:
+                import base64
+                img_data = base64.b64decode(request.image_base64) if request.image_base64 else None
+                vis_resp = await self.vision_service.analyze_image(
+                    image_bytes=img_data,
+                    file_path=request.image_path,
+                    classification=request.classification,
+                    role=request.role,
+                    requester=request.requester,
+                    prompt=request.query,
+                )
+                for evd in vis_resp.evidence_records:
+                    evidence_set.add_visual_evidence(evd)
+            except Exception as vis_err:
+                logger.warning("[MULTIMODAL_INGESTION_SKIPPED] Visual processing skipped: %s", vis_err)
 
         # 6. Execute Knowledge Retrieval (if action is 'knowledge' or 'combined')
         if plan.action in (AgentActionType.KNOWLEDGE, AgentActionType.COMBINED):

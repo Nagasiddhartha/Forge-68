@@ -33,6 +33,14 @@ from app.tools import (
     tool_registry,
 )
 from app.verification.evidence import EvidenceRecord
+from app.vision import (
+    ImageSizeLimitError,
+    PathTraversalError as VisionPathTraversalError,
+    UnsupportedImageType,
+    VisionAnalyzeRequest,
+    VisionAnalyzeResponse,
+    vision_service,
+)
 
 
 @asynccontextmanager
@@ -207,4 +215,30 @@ async def search_knowledge(request: KnowledgeSearchRequest) -> KnowledgeSearchRe
         )
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Search failed: {exc}")
+
+
+# =========================================================================
+# Milestone 7: Multimodal Engineering Intelligence APIs
+# =========================================================================
+
+@app.post("/api/v1/vision/analyze", response_model=VisionAnalyzeResponse, tags=["Vision"])
+async def analyze_vision_image(request: VisionAnalyzeRequest) -> VisionAnalyzeResponse:
+    """Analyze engineering imagery, validate observations, and generate sovereign evidence."""
+    try:
+        return await vision_service.process_request(request)
+    except UnsupportedImageType as uit:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=f"Unsupported image type: {uit}")
+    except ImageSizeLimitError as isle:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=f"Image size limit exceeded: {isle}")
+    except VisionPathTraversalError as pte:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Path traversal rejected: {pte}")
+    except PermissionError as pe:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Clearance boundary rejected: {pe}")
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Image file not found: {fnf}")
+    except ValueError as ve:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Validation failed: {ve}")
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Vision analysis failed: {exc}")
+
 

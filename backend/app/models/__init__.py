@@ -64,6 +64,15 @@ def get_model_provider(provider_name: Optional[str] = None) -> BaseModelProvider
     return provider_cls()
 
 
+from app.vision.provider import (
+    BaseVisionProvider,
+    MockVisionProvider,
+    OllamaVisionProvider,
+    VisionRequest,
+    VisionResponse,
+    get_vision_provider,
+)
+
 __all__ = [
     "BaseModelProvider",
     "ModelMessage",
@@ -74,4 +83,10 @@ __all__ = [
     "OllamaModelProvider",
     "MockModelProvider",
     "get_model_provider",
+    "BaseVisionProvider",
+    "OllamaVisionProvider",
+    "MockVisionProvider",
+    "VisionRequest",
+    "VisionResponse",
+    "get_vision_provider",
 ]

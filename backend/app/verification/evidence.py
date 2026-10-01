@@ -36,6 +36,13 @@ class EvidenceRecord(BaseModel):
     retrieval_score: Optional[float] = Field(default=None, description="Relevance similarity score")
     retrieved_text: Optional[str] = Field(default=None, description="Extracted text payload of document chunk")
 
+    # Multimodal Visual Intelligence extensions (backwards-compatible)
+    source_image_hash: Optional[str] = Field(default=None, description="Cryptographic SHA-256 digest of analyzed source image")
+    finding_id: Optional[str] = Field(default=None, description="Identifier of the visual finding")
+    equipment_id: Optional[str] = Field(default=None, description="Target equipment identifier if detected")
+    finding_type: Optional[str] = Field(default=None, description="Type of visual finding or anomaly")
+    severity: Optional[str] = Field(default=None, description="Severity tier of the observation")
+
     @classmethod
     def from_retrieval_result(cls, result: Any) -> "EvidenceRecord":
         """Convert a knowledge fabric RetrievalResult to a verified EvidenceRecord."""
@@ -87,6 +94,38 @@ class EvidenceRecord(BaseModel):
             verified=True,
         )
 
+    @classmethod
+    def from_visual_finding(cls, finding: Any, provenance: Any) -> "EvidenceRecord":
+        """Convert a validated VisualFinding into an auditable EvidenceRecord."""
+        finding_id = getattr(finding, "finding_id", f"vfnd-{uuid.uuid4().hex[:10]}")
+        sha256 = getattr(provenance, "sha256_hash", getattr(finding, "source_image_hash", ""))
+        classification = getattr(provenance, "classification", DataClassification.INTERNAL)
+        description = getattr(finding, "description", "")
+        raw_type = getattr(finding, "finding_type", "GENERAL_OBSERVATION")
+        type_str = raw_type.value if hasattr(raw_type, "value") else str(raw_type)
+        raw_sev = getattr(finding, "severity", "INFO")
+        sev_str = raw_sev.value if hasattr(raw_sev, "value") else str(raw_sev)
+
+        finding_data = finding.model_dump() if hasattr(finding, "model_dump") else dict(finding)
+
+        return cls(
+            evidence_id=f"evd-{uuid.uuid4().hex[:12]}",
+            source_type="visual_inspection",
+            source_reference=f"img:{sha256[:12]}#{finding_id}",
+            tool_name="vision_analysis",
+            tool_execution_id=f"vis-{finding_id}",
+            retrieved_data=finding_data,
+            retrieved_text=description,
+            classification=classification,
+            verified=True,
+            source_image_hash=sha256,
+            finding_id=finding_id,
+            equipment_id=getattr(finding, "equipment_id", None),
+            finding_type=type_str,
+            severity=sev_str,
+            filename=getattr(provenance, "filename", None),
+        )
+
 
 class ConflictRecord(BaseModel):
     """Observable parameter variance or factual contrast detected between evidence sources."""
@@ -102,6 +141,7 @@ class EvidenceSet(BaseModel):
     """Execution-scoped collection of verified evidence records and policy decisions."""
     tool_evidence: list[EvidenceRecord] = Field(default_factory=list)
     knowledge_evidence: list[EvidenceRecord] = Field(default_factory=list)
+    visual_evidence: list[EvidenceRecord] = Field(default_factory=list)
     policy_decisions: list[Any] = Field(default_factory=list)
     execution_identifiers: list[str] = Field(default_factory=list)
     detected_conflicts: list[ConflictRecord] = Field(default_factory=list)
@@ -109,12 +149,12 @@ class EvidenceSet(BaseModel):
     @property
     def all_evidence(self) -> list[EvidenceRecord]:
         """Aggregate list of all captured evidence records."""
-        return self.tool_evidence + self.knowledge_evidence
+        return self.tool_evidence + self.knowledge_evidence + self.visual_evidence
 
     @property
     def is_empty(self) -> bool:
-        """True if no tool or knowledge evidence was collected."""
-        return len(self.tool_evidence) == 0 and len(self.knowledge_evidence) == 0
+        """True if no tool, knowledge, or visual evidence was collected."""
+        return len(self.tool_evidence) == 0 and len(self.knowledge_evidence) == 0 and len(self.visual_evidence) == 0
 
     def add_tool_evidence(self, record: EvidenceRecord) -> None:
         """Register verified tool execution evidence."""
@@ -125,6 +165,12 @@ class EvidenceSet(BaseModel):
     def add_knowledge_evidence(self, record: EvidenceRecord) -> None:
         """Register verified knowledge retrieval evidence."""
         self.knowledge_evidence.append(record)
+        if record.tool_execution_id and record.tool_execution_id not in self.execution_identifiers:
+            self.execution_identifiers.append(record.tool_execution_id)
+
+    def add_visual_evidence(self, record: EvidenceRecord) -> None:
+        """Register verified multimodal visual observation evidence."""
+        self.visual_evidence.append(record)
         if record.tool_execution_id and record.tool_execution_id not in self.execution_identifiers:
             self.execution_identifiers.append(record.tool_execution_id)
 

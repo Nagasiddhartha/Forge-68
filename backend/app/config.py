@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     CHUNK_SIZE: int = Field(default=500, description="Default document chunk character size")
     CHUNK_OVERLAP: int = Field(default=50, description="Default document chunk character overlap")
 
+    # Vision Layer Configuration
+    VISION_PROVIDER: str = Field(default="mock", description="Local vision model provider: mock or ollama")
+    DEFAULT_VISION_MODEL: str = Field(default="qwen2.5-vl:7b", description="Default local multimodal vision model tag")
+    MAX_IMAGE_SIZE_BYTES: int = Field(default=10 * 1024 * 1024, description="Maximum allowed image size in bytes (10MB)")
+    IMAGE_BASE_DIR: str = Field(default="data/demo/images", description="Allowed root path for local image ingestion")
+
     @property
     def cors_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
