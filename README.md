@@ -417,13 +417,57 @@ When inspecting any scenario run in the AI Workspace:
 
 ---
 
+### Milestone 10 — Sovereignty & Adversarial Security Hardening
+
+Establishes a formal adversarial test matrix demonstrating that FORGE's sovereignty, policy, evidence, filesystem, calculation, and verification boundaries cannot be bypassed by model output, forged provenance, or untrusted data. Exposes typed matrix and report services (`GET /api/v1/security/matrix`, `GET /api/v1/security/report`) and extends the Sovereignty View with real-time boundary verification.
+
+---
+
+## Security Boundary Demonstration
+
+FORGE enforces explicit local-only, policy, provenance, classification, and execution boundaries that are covered by the implemented adversarial test suite.
+
+The security matrix consists of 10 automated, repeatable adversarial probes executed against FORGE's service boundaries without external dependencies:
+
+| Test ID | Threat Category | Protected Boundary | Expected Result | Evidence of Enforcement | Current Limitations |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **SEC-001** | Cloud Model Provider | Model Sovereignty Interface | Explicit sovereignty violation; zero external AI calls | `EXTERNAL_REQUEST_COUNTER["count"] == 0`; `SovereigntyViolationError` raised; `SECURITY_ALERT` emitted | Protects against runtime SDK requests; does not intercept external network sockets at the OS kernel level. |
+| **SEC-002** | Unauthorized Critical Tool | Policy Gateway (Default-Deny) | PolicyGateway DENY; tool handler unexecuted | `CALIBRATION_EXECUTION_COUNTER["count"] == 0`; `PolicyDecisionType.DENY` returned; `BLOCKED_BY_POLICY` logged | Role membership is session/token-based; full SSO/MFA enterprise identity provider is out of scope. |
+| **SEC-003** | Prompt Injection | Input Security Boundary | Quarantined as untrusted data; zero tool execution | All 7 adversarial patterns intercepted; `unauthorized_tool_counter == 0`; `SECURITY_ALERT` recorded | Heuristic and regular expression pattern matcher; novel indirect semantic injections require continuous pattern updates. |
+| **SEC-004** | Fabricated Evidence Provenance | Evidence Provenance Store & Verification Engine | Rejection of forged provenance; excluded from EvidenceSet | `FabricatedProvenanceError` raised; `trusted_evidence_count == 0`; `VerificationStatus.FAILED` | Validates hash structure, prefix alignment, and document references; does not check external cryptographic PKI certificates. |
+| **SEC-005** | Classification Escalation / Downgrade | Classification Gateway & Verification Engine | Access denied; model text cannot mutate classification | `VerificationStatus.FAILED`; evidence record classification immutable; zero authority for model claims | Enforces clearance ceiling on known classifications; dynamic clearance re-delegation is not supported. |
+| **SEC-006** | Path Traversal | Filesystem Ingestion Sandbox | Traversal sequences and out-of-root paths rejected | `PathTraversalError` raised on `../` and absolute paths; outside file access counter is 0 | Bounded to configured `KNOWLEDGE_BASE_DIR` and `IMAGE_BASE_DIR`; symlink escape detection relies on OS resolution. |
+| **SEC-007** | Arbitrary Python / Calculation Injection | Deterministic Calculation Engine | Injection payloads rejected; only registered calcs run | `ValueError` raised on `import`, `eval`, `exec`, `os.system`, `subprocess`; zero code eval | Only registered arithmetic routines (`pressure_variance`, `margin`, `corrosion`, `thickness`) are supported. |
+| **SEC-008** | Shell Execution | Tool Registry & Policy Gateway | Rejected; no generic shell execution mechanism | `tool_registry.get(cmd) is None`; `KeyError` on registry execution; 100% PolicyGateway DENY | Confined to registered industrial tools; no general-purpose bash/powershell runner is exposed in the application. |
+| **SEC-009** | Vision Safety-Clearance Assertion | Multimodal Observer Principle & Verification Engine | Vision observation cannot establish operational clearance | `VisualFinding` raises `Observer boundary violation`; `VerificationEngine` status is not `VERIFIED` without telemetry | Vision model provides sensory observations only; cannot replace physical instrumentation or engineering signoff. |
+| **SEC-010** | Verification Bypass | Deterministic Verification Engine | Verification status recomputed deterministically | Supplied claim `verification_status="VERIFIED"` is ignored; computed status is `INSUFFICIENT_EVIDENCE` | Verification requires structured supporting evidence; free-form narrative queries without telemetry require manual review. |
+
+### Running the Security Test Suite
+
+To execute the adversarial security suite and inspect boundary proofs:
+
+```bash
+cd backend
+.venv\Scripts\pytest.exe -v tests/test_security_hardening.py
+```
+
+To fetch the full programmatic security report via API:
+
+```bash
+curl -s http://localhost:8000/api/v1/security/report
+```
+
+---
+
 ### Disclaimer & Known Limitations
 
 > **SYNTHETIC DATA DISCLAIMER:**
 > All refinery assets (Reactor R-204, Pump P-201, Exchanger E-301), pressure gauge readings, inspection measurements, corrosion logs, ultrasonic reports, and adversarial security advisories used in FORGE are **100% synthetic demonstration fixtures**. They do not represent real-world industrial installations or proprietary refinery telemetry.
 
 **Known Limitations & Bounded Scope:**
-1. **Deterministic Demonstration Harness:** The demo harness runs in a deterministic execution mode by default using pre-validated mock responses to ensure reliable, reproducible evaluation for judges without depending on model randomness or active GPU daemons. Live Ollama mode can be selected by passing `deterministic=False`.
-2. **Audit Ledger Backend:** The audit trail is currently file-backed and memory-buffered. While tamper-evident and cryptographically hashed, it does not currently write to an immutable hardware security module (HSM) or distributed ledger.
-3. **No Field Actuation:** FORGE does NOT connect to physical PLCs, DCS networks, Modbus, or OPC-UA fieldbuses. All tool interactions occur within bounded in-memory software sandboxes.
+1. **Adversarial Test Scope:** FORGE enforces explicit local-only, policy, provenance, classification, and execution boundaries that are covered by the implemented adversarial test suite. The system does not claim to be mathematically unbreakable, formally verified secure, or guaranteed against all future zero-day vulnerabilities.
+2. **Deterministic Demonstration Harness:** The demo harness runs in a deterministic execution mode by default using pre-validated mock responses to ensure reliable, reproducible evaluation for judges without depending on model randomness or active GPU daemons. Live Ollama mode can be selected by passing `deterministic=False`.
+3. **Audit Ledger Backend:** The audit trail is currently file-backed and memory-buffered. While tamper-evident and cryptographically hashed, it does not currently write to an immutable hardware security module (HSM) or distributed ledger.
+4. **No Field Actuation:** FORGE does NOT connect to physical PLCs, DCS networks, Modbus, or OPC-UA fieldbuses. All tool interactions occur within bounded in-memory software sandboxes.
+
 

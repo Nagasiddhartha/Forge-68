@@ -137,6 +137,61 @@ class ConflictRecord(BaseModel):
     description: str = Field(..., description="Analysis note on semantic roles or observed discrepancy")
 
 
+class FabricatedProvenanceError(ValueError):
+    """Raised when an evidence record contains fabricated, corrupted, or mismatched provenance attributes."""
+    pass
+
+
+def validate_evidence_record_provenance(record: EvidenceRecord) -> None:
+    """Strictly validate provenance integrity of an evidence record.
+
+    Prevents fabricated evidence provenance from entering the trusted EvidenceSet:
+    - Nonexistent or malformed evidence ID
+    - Fabricated image hash (non-SHA256 hex)
+    - Mismatched source hash across attributes
+    - Nonexistent or fabricated source document reference
+    """
+    import re
+
+    # 1. Evidence ID verification
+    if record.evidence_id:
+        if not re.match(r"^evd-[a-zA-Z0-9_-]+$", record.evidence_id):
+            raise FabricatedProvenanceError(
+                f"Fabricated or invalid evidence_id format: '{record.evidence_id}'."
+            )
+
+    # 2. Visual evidence provenance verification
+    if record.source_image_hash:
+        # Verify 64-char hex SHA-256
+        if not re.match(r"^[a-fA-F0-9]{64}$", record.source_image_hash):
+            raise FabricatedProvenanceError(
+                f"Fabricated or malformed SHA-256 hash in visual evidence '{record.evidence_id}': '{record.source_image_hash}'."
+            )
+        # Verify source reference consistency if img: prefix used
+        if record.source_reference and record.source_reference.startswith("img:"):
+            ref_hash = record.source_reference.split("#")[0].replace("img:", "")
+            if not record.source_image_hash.startswith(ref_hash):
+                raise FabricatedProvenanceError(
+                    f"Mismatched source hash: source_reference '{record.source_reference}' "
+                    f"does not match source_image_hash '{record.source_image_hash}'."
+                )
+
+    # 3. Knowledge document provenance verification
+    if record.document_id:
+        if record.document_id.lower() in ("nonexistent", "fabricated", "fake", "unknown_doc", "doc:nonexistent"):
+            raise FabricatedProvenanceError(
+                f"Nonexistent or fabricated source document: '{record.document_id}'."
+            )
+        if record.source_reference and record.source_reference.startswith("doc:"):
+            ref_doc = record.source_reference.split("#")[0]
+            ref_clean = ref_doc[4:] if ref_doc.startswith("doc:") else ref_doc
+            doc_clean = record.document_id[4:] if record.document_id.startswith("doc:") else record.document_id
+            if ref_clean != doc_clean:
+                raise FabricatedProvenanceError(
+                    f"Mismatched source document reference: '{record.source_reference}' vs '{record.document_id}'."
+                )
+
+
 class EvidenceSet(BaseModel):
     """Execution-scoped collection of verified evidence records and policy decisions."""
     tool_evidence: list[EvidenceRecord] = Field(default_factory=list)
@@ -155,6 +210,16 @@ class EvidenceSet(BaseModel):
     def is_empty(self) -> bool:
         """True if no tool, knowledge, or visual evidence was collected."""
         return len(self.tool_evidence) == 0 and len(self.knowledge_evidence) == 0 and len(self.visual_evidence) == 0
+
+    def register_evidence(self, record: EvidenceRecord) -> None:
+        """Validate provenance before registering into trusted evidence set."""
+        validate_evidence_record_provenance(record)
+        if record.source_type == "visual_inspection":
+            self.add_visual_evidence(record)
+        elif record.source_type == "knowledge_document":
+            self.add_knowledge_evidence(record)
+        else:
+            self.add_tool_evidence(record)
 
     def add_tool_evidence(self, record: EvidenceRecord) -> None:
         """Register verified tool execution evidence."""

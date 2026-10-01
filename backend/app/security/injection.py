@@ -10,14 +10,23 @@ from typing import List, Optional
 # Standard adversarial instruction patterns targeting industrial AI agents
 INJECTION_PATTERNS = [
     r"ignore\s+(?:all\s+)?previous\s+instructions",
+    r"ignore\s+(?:all\s+)?safety\s+rules",
     r"disregard\s+(?:all\s+)?(?:previous\s+)?instructions",
     r"system\s+override",
     r"bypass\s+policy(?:\s+gateway)?",
     r"bypass\s+safety(?:\s+checks)?",
     r"execute\s+(?:the\s+)?(?:maintenance\s+|actuation\s+|valve\s+|arbitrary\s+)?tool",
+    r"you\s+are\s+now\s+(?:an?\s+)?(?:administrator|admin|root|supervisor)",
+    r"call\s+(?:the\s+)?(?:calibration|maintenance|relief\s+valve)\s+tool",
+    r"run\s+this\s+command",
     r"administrative\s+override",
     r"grant\s+root\s+access",
     r"disable\s+safety\s+interlocks",
+    r"<\|im_start\|>system",
+    r"\[system\]",
+    r"<<SYS>>",
+    r"role:\s*system",
+    r"(?:^|\n)\s*system:\s*",
 ]
 
 COMPILED_PATTERNS: List[re.Pattern] = [

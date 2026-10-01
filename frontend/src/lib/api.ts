@@ -523,3 +523,40 @@ export async function runDemoScenario(request: DemoRunRequest): Promise<DemoRunR
   });
 }
 
+// =========================================================================
+// Milestone 10: Security Boundary Matrix & Report Types
+// =========================================================================
+
+export interface SecurityTestResult {
+  security_test_id: string;
+  attack_category: string;
+  attempted_action: string;
+  boundary_under_test: string;
+  expected_outcome: string;
+  actual_outcome: string;
+  status: "BLOCKED" | "QUARANTINED" | "REJECTED" | "ENFORCED" | string;
+  passed: boolean;
+  audit_event?: string;
+  execution_evidence: Record<string, unknown>;
+}
+
+export interface SecurityBoundaryReport {
+  report_title: string;
+  timestamp: string;
+  total_tests: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  boundary_violations: number;
+  results: SecurityTestResult[];
+}
+
+export async function fetchSecurityReport(): Promise<SecurityBoundaryReport> {
+  return apiFetch<SecurityBoundaryReport>("/api/v1/security/report");
+}
+
+export async function fetchSecurityMatrix(): Promise<SecurityTestResult[]> {
+  return apiFetch<SecurityTestResult[]>("/api/v1/security/matrix");
+}
+
+

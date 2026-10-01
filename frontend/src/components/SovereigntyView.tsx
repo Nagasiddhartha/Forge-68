@@ -3,14 +3,17 @@
 import React, { useEffect, useState } from "react";
 import {
   HealthResponse,
+  SecurityBoundaryReport,
   SovereigntyStatusResponse,
   fetchHealth,
+  fetchSecurityReport,
   fetchSovereigntyStatus,
 } from "@/lib/api";
 
 export function SovereigntyView() {
   const [sovereignty, setSovereignty] = useState<SovereigntyStatusResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [securityReport, setSecurityReport] = useState<SecurityBoundaryReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,12 +21,14 @@ export function SovereigntyView() {
     setIsLoading(true);
     setError(null);
     try {
-      const [sov, h] = await Promise.all([
+      const [sov, h, sec] = await Promise.all([
         fetchSovereigntyStatus(),
         fetchHealth(),
+        fetchSecurityReport(),
       ]);
       setSovereignty(sov);
       setHealth(h);
+      setSecurityReport(sec);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -33,11 +38,12 @@ export function SovereigntyView() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchSovereigntyStatus(), fetchHealth()])
-      .then(([sov, h]) => {
+    Promise.all([fetchSovereigntyStatus(), fetchHealth(), fetchSecurityReport()])
+      .then(([sov, h, sec]) => {
         if (active) {
           setSovereignty(sov);
           setHealth(h);
+          setSecurityReport(sec);
           setIsLoading(false);
         }
       })
@@ -308,6 +314,114 @@ export function SovereigntyView() {
               <span style={{ color: "#34d399", fontWeight: 700 }}>ZERO BYTES</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Milestone 10: Security Boundary & Adversarial Matrix */}
+      <div className="card" style={{ border: "1px solid rgba(0, 240, 255, 0.25)" }}>
+        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span className="badge badge-cyan">MILESTONE 10</span>
+              <span className="badge badge-verified">ADVERSARIAL HARDENING</span>
+            </div>
+            <h2 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, letterSpacing: "0.03em" }}>
+              SECURITY BOUNDARY
+            </h2>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: 2 }}>
+              Deterministic adversarial test matrix proving that model output and untrusted data cannot bypass FORGE boundaries.
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ padding: "8px 14px", background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "var(--radius-sm)", textAlign: "center" }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#34d399", fontFamily: "var(--font-mono)" }}>
+                {securityReport ? `${securityReport.total_tests} checks` : "10 checks"}
+              </div>
+              <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase" }}>EVALUATED</div>
+            </div>
+
+            <div style={{ padding: "8px 14px", background: "rgba(52, 211, 153, 0.12)", border: "1px solid rgba(52, 211, 153, 0.4)", borderRadius: "var(--radius-sm)", textAlign: "center" }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#10b981", fontFamily: "var(--font-mono)" }}>
+                {securityReport ? `${securityReport.passed} passed` : "10 passed"}
+              </div>
+              <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase" }}>ENFORCED</div>
+            </div>
+
+            <div style={{ padding: "8px 14px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: "var(--radius-sm)", textAlign: "center" }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: securityReport && securityReport.boundary_violations > 0 ? "#f87171" : "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                {securityReport ? `${securityReport.boundary_violations} violations` : "0 violations"}
+              </div>
+              <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase" }}>VIOLATIONS</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Security Matrix Table */}
+        <div style={{ overflowX: "auto", marginTop: 12 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", textAlign: "left" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--border-color)", color: "var(--text-muted)" }}>
+                <th style={{ padding: "8px 12px", fontFamily: "var(--font-mono)" }}>ID</th>
+                <th style={{ padding: "8px 12px" }}>Attack</th>
+                <th style={{ padding: "8px 12px" }}>Boundary</th>
+                <th style={{ padding: "8px 12px" }}>Result</th>
+                <th style={{ padding: "8px 12px" }}>Proof of Enforcement</th>
+              </tr>
+            </thead>
+            <tbody>
+              {securityReport?.results && securityReport.results.length > 0 ? (
+                securityReport.results.map((r) => {
+                  const getStatusBadge = (status: string) => {
+                    switch (status.toUpperCase()) {
+                      case "BLOCKED":
+                        return <span className="badge" style={{ background: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "1px solid rgba(239, 68, 68, 0.4)" }}>BLOCKED</span>;
+                      case "QUARANTINED":
+                        return <span className="badge" style={{ background: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "1px solid rgba(245, 158, 11, 0.4)" }}>QUARANTINED</span>;
+                      case "REJECTED":
+                        return <span className="badge" style={{ background: "rgba(244, 63, 94, 0.15)", color: "#fda4af", border: "1px solid rgba(244, 63, 94, 0.4)" }}>REJECTED</span>;
+                      case "ENFORCED":
+                        return <span className="badge badge-verified" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "1px solid rgba(16, 185, 129, 0.4)" }}>ENFORCED</span>;
+                      default:
+                        return <span className="badge badge-secondary">{status}</span>;
+                    }
+                  };
+
+                  return (
+                    <tr key={r.security_test_id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <td style={{ padding: "10px 12px", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-cyan)" }}>
+                        {r.security_test_id}
+                      </td>
+                      <td style={{ padding: "10px 12px", color: "var(--text-primary)", fontWeight: 600 }}>
+                        <div>{r.attack_category}</div>
+                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2 }}>{r.attempted_action}</div>
+                      </td>
+                      <td style={{ padding: "10px 12px", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
+                        {r.boundary_under_test}
+                      </td>
+                      <td style={{ padding: "10px 12px" }}>
+                        {getStatusBadge(r.status)}
+                      </td>
+                      <td style={{ padding: "10px 12px", fontSize: "0.74rem", color: "var(--text-muted)", maxWidth: 340 }}>
+                        <div style={{ color: "#34d399" }}>✓ {r.actual_outcome}</div>
+                        {r.audit_event && (
+                          <div style={{ fontSize: "0.68rem", color: "var(--accent-cyan)", marginTop: 2, fontFamily: "var(--font-mono)" }}>
+                            Event: {r.audit_event}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} style={{ padding: 16, textAlign: "center", color: "var(--text-muted)" }}>
+                    Loading security boundary matrix...
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

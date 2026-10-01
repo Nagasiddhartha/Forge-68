@@ -20,6 +20,11 @@ from app.security.models import (
 from app.security.policies import DEFAULT_POLICIES, PolicyRule
 
 from app.security.injection import INJECTION_PATTERNS, detect_prompt_injection
+from app.security.matrix import (
+    SecurityBoundaryReport,
+    SecurityTestResult,
+    run_security_matrix,
+)
 
 __all__ = [
     "Role",
@@ -40,6 +45,9 @@ __all__ = [
     "AgentTraceEvent",
     "detect_prompt_injection",
     "INJECTION_PATTERNS",
+    "SecurityTestResult",
+    "SecurityBoundaryReport",
+    "run_security_matrix",
 ]
 
 

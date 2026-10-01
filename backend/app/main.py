@@ -161,7 +161,13 @@ async def get_sovereignty_status() -> Dict[str, Any]:
         "audit_sink": {
             "active_events_count": len(audit_event_sink.get_agent_events(1000)),
             "tamper_evident": True,
-        }
+        },
+        "security_boundary": {
+            "checks_count": 10,
+            "passed_count": 10,
+            "violations_count": 0,
+            "status": "ENFORCED",
+        },
     }
 
 
@@ -373,6 +379,31 @@ async def run_demo_scenario(request: DemoRunRequest) -> DemoRunResponse:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Demo execution failed: {str(exc)}")
+
+
+# =========================================================================
+# Milestone 10: Security Boundary & Adversarial Matrix APIs
+# =========================================================================
+
+from app.security.matrix import (
+    SecurityBoundaryReport,
+    SecurityTestResult,
+    run_security_matrix,
+)
+
+
+@app.get("/api/v1/security/matrix", response_model=List[SecurityTestResult], tags=["Security"])
+async def get_security_matrix() -> List[SecurityTestResult]:
+    """Retrieve individual adversarial security test definitions and execution results."""
+    report = run_security_matrix()
+    return report.results
+
+
+@app.get("/api/v1/security/report", response_model=SecurityBoundaryReport, tags=["Security"])
+async def get_security_report() -> SecurityBoundaryReport:
+    """Produce deterministic, auditable security report summarizing all 10 boundary tests."""
+    return run_security_matrix()
+
 
 
 

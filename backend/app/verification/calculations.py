@@ -25,19 +25,25 @@ class CalculationType(str, Enum):
 def _check_no_code_injection(val: Any) -> None:
     forbidden_patterns = [
         r"__import__",
-        r"\beval\s*\(",
-        r"\bexec\s*\(",
+        r"\bimport\s+os\b",
+        r"\bimport\b",
+        r"\beval\b",
+        r"\bexec\b",
         r"\bos\.system\b",
+        r"\bos\.",
         r"\bsubprocess\b",
         r"\bsh\s+-c\b",
         r"\bbash\s+-c\b",
+        r"\bcmd(?:\.exe)?\b",
         r"\bpowershell\b",
+        r"\bbash\b",
+        r"\bsh\b",
         r"<script\b",
     ]
     text_repr = str(val)
     for pattern in forbidden_patterns:
         if re.search(pattern, text_repr, re.IGNORECASE):
-            raise ValueError(f"Security Exception: Suspicious expression detected in calculation inputs: '{pattern}'")
+            raise ValueError(f"Security Exception: Suspicious expression detected in calculation payload: '{pattern}'")
 
 
 class PressureVarianceInputs(BaseModel):
@@ -124,6 +130,7 @@ class CalculationEngine:
     ) -> CalculationResult:
         """Validate inputs and compute deterministic engineering result."""
         evidence_ids = evidence_ids or []
+        _check_no_code_injection(calculation)
         _check_no_code_injection(inputs)
 
         # Normalize calculation name

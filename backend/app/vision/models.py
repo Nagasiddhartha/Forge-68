@@ -127,6 +127,8 @@ class VisualFinding(BaseModel):
         combined_text = f"{self.description} {self.raw_observation or ''}".lower()
         forbidden_conclusions = [
             "equipment is verified safe to operate",
+            "safe to operate",
+            "operational clearance",
             "certified operational clearance",
             "overriding safety shutdown",
             "authorizing full pressure",

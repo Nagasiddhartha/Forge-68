@@ -34,28 +34,35 @@ def validate_secure_path(
     """Validate that file_path exists, is a regular file, and does not escape allowed root."""
     raw_path_str = str(file_path)
 
-    # Reject obvious traversal sequences before path resolution
-    if ".." in raw_path_str.replace("\\", "/").split("/"):
+    # Reject traversal sequences across POSIX and Windows separators before path resolution
+    norm_path = raw_path_str.replace("\\", "/")
+    if (
+        ".." in norm_path.split("/")
+        or "../" in norm_path
+        or "/.." in norm_path
+        or norm_path.startswith("..")
+        or "..\\" in raw_path_str
+    ):
         raise PathTraversalError(f"Directory traversal detected in path: {file_path}")
 
     path_obj = Path(file_path).resolve()
 
-    if not path_obj.exists():
-        raise FileNotFoundError(f"File not found: {file_path}")
-
-    if not path_obj.is_file():
-        raise ValueError(f"Path is not a regular file: {file_path}")
-
+    # Enforce base directory boundary
     base_dir = allowed_base_dir or settings.KNOWLEDGE_BASE_DIR
     if base_dir:
         base_obj = Path(base_dir).resolve()
-        # If base_obj exists or is defined, ensure file is within it
         try:
             path_obj.relative_to(base_obj)
         except ValueError:
             raise PathTraversalError(
                 f"Access denied: Path '{path_obj}' is outside allowed knowledge root '{base_obj}'"
             )
+
+    if not path_obj.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    if not path_obj.is_file():
+        raise ValueError(f"Path is not a regular file: {file_path}")
 
     return path_obj
 

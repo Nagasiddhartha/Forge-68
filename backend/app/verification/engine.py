@@ -76,6 +76,11 @@ class VerificationEngine:
         chk_grounding = self._check_grounding_support(query, evidence_set, calculations, draft_response, plan)
         checks.append(chk_grounding)
 
+        # 8. Operational Clearance Authority Check (Observer Boundary)
+        chk_auth = self._check_operational_authority(evidence_set)
+        if chk_auth:
+            checks.append(chk_auth)
+
         # Compute Overall Status
         overall_status = self._aggregate_status(checks)
 
@@ -93,27 +98,44 @@ class VerificationEngine:
         )
 
     def _check_provenance(self, evidence_set: EvidenceSet) -> VerificationCheck:
-        """Verify that every evidence item contains complete provenance attributes."""
+        """Verify that every evidence item contains complete, authentic, and un-fabricated provenance attributes."""
+        from app.verification.evidence import FabricatedProvenanceError, validate_evidence_record_provenance
+
         missing_provenance: List[str] = []
+        fabricated_provenance: List[str] = []
         examined_ids: List[str] = []
+
+        # Validate all evidence items against fabricated provenance rules
+        for evd in evidence_set.all_evidence:
+            examined_ids.append(evd.evidence_id)
+            try:
+                validate_evidence_record_provenance(evd)
+            except FabricatedProvenanceError as e:
+                fabricated_provenance.append(f"Record '{evd.evidence_id}': {str(e)}")
 
         # Check knowledge evidence
         for k_evd in evidence_set.knowledge_evidence:
-            examined_ids.append(k_evd.evidence_id)
             if not k_evd.document_id or not k_evd.chunk_id or not k_evd.filename or not k_evd.source_reference:
                 missing_provenance.append(f"Knowledge record '{k_evd.evidence_id}' lacks document ID/chunk/source")
 
         # Check tool evidence
         for t_evd in evidence_set.tool_evidence:
-            examined_ids.append(t_evd.evidence_id)
             if not t_evd.tool_name or not t_evd.tool_execution_id or not t_evd.source_reference:
                 missing_provenance.append(f"Tool record '{t_evd.evidence_id}' lacks tool name/execution ID/source")
 
         # Check visual evidence
         for v_evd in getattr(evidence_set, "visual_evidence", []):
-            examined_ids.append(v_evd.evidence_id)
             if not v_evd.source_reference or not v_evd.source_image_hash or not v_evd.finding_id:
                 missing_provenance.append(f"Visual record '{v_evd.evidence_id}' lacks source reference/image hash/finding ID")
+
+        if fabricated_provenance:
+            return VerificationCheck(
+                check_type="PROVENANCE",
+                status=VerificationStatus.FAILED,
+                description=f"Fabricated provenance detected: {'; '.join(fabricated_provenance)}",
+                evidence_ids=examined_ids,
+                details={"fabricated_provenance": fabricated_provenance, "missing": missing_provenance},
+            )
 
         if missing_provenance:
             return VerificationCheck(
@@ -447,6 +469,30 @@ class VerificationEngine:
             description=f"All {len(claimed_metrics)} metric claim(s) in response are supported by verified evidence or calculations.",
             details={"verified_claims_count": len(claimed_metrics)},
         )
+
+    def _check_operational_authority(self, evidence_set: EvidenceSet) -> Optional[VerificationCheck]:
+        """Verify that vision observations cannot usurp deterministic engineering authority for operational clearance."""
+        visual_clearance_claims = []
+        for v_evd in getattr(evidence_set, "visual_evidence", []):
+            text = (str(v_evd.retrieved_data) + " " + (v_evd.retrieved_text or "")).lower()
+            if "safe to operate" in text or "operational clearance" in text or "authorized for operation" in text:
+                visual_clearance_claims.append(v_evd.evidence_id)
+
+        if visual_clearance_claims:
+            # Check if there is independent engineering tool/maintenance evidence validating operation
+            has_tool_telemetry = any(te.tool_name == "equipment_history" for te in evidence_set.tool_evidence)
+            if not has_tool_telemetry:
+                return VerificationCheck(
+                    check_type="OPERATIONAL_AUTHORITY",
+                    status=VerificationStatus.NEEDS_REVIEW,
+                    description=(
+                        "Observer boundary enforced: Vision observation claims operational safety/clearance, "
+                        "which cannot independently establish operational clearance without authorized engineering telemetry."
+                    ),
+                    evidence_ids=visual_clearance_claims,
+                    details={"visual_clearance_claims": visual_clearance_claims},
+                )
+        return None
 
     def _aggregate_status(self, checks: List[VerificationCheck]) -> VerificationStatus:
         """Deterministically determine overall verification status based on discrete check outcomes."""
