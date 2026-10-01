@@ -15,6 +15,16 @@ from app.models.base import (
 )
 
 
+class OllamaUnavailableError(RuntimeError):
+    """Raised when the local Ollama service cannot be contacted."""
+    pass
+
+
+class LocalModelNotFoundError(RuntimeError):
+    """Raised when the requested model is not found in the local Ollama library."""
+    pass
+
+
 class OllamaModelProvider(BaseModelProvider):
     """Sovereign model provider connecting to a local Ollama instance."""
 
@@ -52,27 +62,38 @@ class OllamaModelProvider(BaseModelProvider):
         if request.format:
             payload["format"] = request.format
 
-        async with self._get_client() as client:
-            resp = await client.post("/api/chat", json=payload)
-            resp.raise_for_status()
-            data = resp.json()
+        try:
+            async with self._get_client() as client:
+                resp = await client.post("/api/chat", json=payload)
+                if resp.status_code == 404:
+                    raise LocalModelNotFoundError(
+                        f"Local model '{target_model}' not found in Ollama library. "
+                        f"Manual command to install: 'ollama pull {target_model}'. Zero external cloud calls permitted."
+                    )
+                resp.raise_for_status()
+                data = resp.json()
 
-            message_data = data.get("message", {})
-            content = message_data.get("content", "")
+                message_data = data.get("message", {})
+                content = message_data.get("content", "")
 
-            # Ollama returns token counts in prompt_eval_count and eval_count
-            usage = ModelUsage(
-                prompt_tokens=data.get("prompt_eval_count", 0),
-                completion_tokens=data.get("eval_count", 0),
-                total_tokens=data.get("prompt_eval_count", 0) + data.get("eval_count", 0),
-            )
+                usage = ModelUsage(
+                    prompt_tokens=data.get("prompt_eval_count", 0),
+                    completion_tokens=data.get("eval_count", 0),
+                    total_tokens=data.get("prompt_eval_count", 0) + data.get("eval_count", 0),
+                )
 
-            return ModelResponse(
-                content=content,
-                model=target_model,
-                usage=usage,
-                finish_reason="stop" if data.get("done") else None,
-            )
+                return ModelResponse(
+                    content=content,
+                    model=target_model,
+                    usage=usage,
+                    finish_reason="stop" if data.get("done") else None,
+                )
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            raise OllamaUnavailableError(
+                f"Local Ollama service is unreachable at {self.base_url}. Ensure 'ollama serve' is running locally. "
+                f"External cloud AI fallback is strictly prohibited by FORGE sovereignty policies."
+            ) from exc
+
 
     async def generate_stream(self, request: ModelRequest) -> AsyncIterator[StreamChunk]:
         """Execute streaming chat completion via local Ollama instance."""

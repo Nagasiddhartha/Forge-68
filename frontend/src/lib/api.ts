@@ -140,7 +140,9 @@ export interface AgentQueryResponse {
   evidence_set?: EvidenceSet;
   verification?: VerificationResult;
   execution_event_id?: string;
+  timing?: DemoExecutionTiming;
 }
+
 
 export interface ImageProvenance {
   image_id: string;
@@ -508,8 +510,50 @@ export interface DemoRunResponse extends AgentQueryResponse {
   }>;
   visual_findings: VisualFinding[];
   calculations: CalculationResult[];
+  timing?: DemoExecutionTiming;
   is_synthetic: boolean;
   synthetic_notice: string;
+}
+
+export interface DemoExecutionTiming {
+  total_duration_ms: number;
+  planning_duration_ms: number;
+  knowledge_retrieval_duration_ms: number;
+  tool_execution_duration_ms: number;
+  vision_duration_ms: number;
+  verification_duration_ms: number;
+  synthesis_duration_ms: number;
+}
+
+export interface DemoResetResponse {
+  status: string;
+  cleared_audit_events_count: number;
+  cleared_security_events_count: number;
+  reset_counters: Record<string, number>;
+  knowledge_documents_preserved: number;
+  equipment_records_preserved: number;
+  models_preserved: boolean;
+  message: string;
+}
+
+export interface PreflightCheckResult {
+  component: string;
+  status: "READY" | "WARNING" | "MISSING" | "FAILED";
+  detected_value: string;
+  requirement: string;
+  message: string;
+  manual_fix_command?: string | null;
+}
+
+export interface PreflightReport {
+  timestamp: string;
+  all_ready: boolean;
+  deterministic_fallback_ready: boolean;
+  runtime_mode: string;
+  reasoning_status: string;
+  vision_status: string;
+  summary: string;
+  checks: PreflightCheckResult[];
 }
 
 export async function fetchDemoScenarios(): Promise<DemoScenarioMetadata[]> {
@@ -522,6 +566,25 @@ export async function runDemoScenario(request: DemoRunRequest): Promise<DemoRunR
     body: JSON.stringify(request),
   });
 }
+
+export async function resetDemo(): Promise<DemoResetResponse> {
+  return apiFetch<DemoResetResponse>("/api/v1/demo/reset", {
+    method: "POST",
+  });
+}
+
+export async function fetchPreflightReport(): Promise<PreflightReport> {
+  return apiFetch<PreflightReport>("/api/v1/system/preflight");
+}
+
+export async function fetchDiagnostics(): Promise<{
+  preflight: PreflightReport;
+  reasoning: Record<string, unknown>;
+  vision: Record<string, unknown>;
+}> {
+  return apiFetch("/api/v1/system/diagnostics");
+}
+
 
 // =========================================================================
 // Milestone 10: Security Boundary Matrix & Report Types

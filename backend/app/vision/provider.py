@@ -68,6 +68,16 @@ class BaseVisionProvider(ABC):
 VisionProvider = BaseVisionProvider
 
 
+class OllamaVisionUnavailableError(RuntimeError):
+    """Raised when the local Ollama vision service cannot be reached."""
+    pass
+
+
+class VisionModelNotFoundError(RuntimeError):
+    """Raised when the local vision model is not installed."""
+    pass
+
+
 class OllamaVisionProvider(BaseVisionProvider):
     """Sovereign multimodal vision provider connecting to local Ollama instance (e.g. Qwen2.5-VL)."""
 
@@ -109,17 +119,28 @@ class OllamaVisionProvider(BaseVisionProvider):
             },
         }
 
-        async with self._get_client() as client:
-            resp = await client.post("/api/chat", json=payload)
-            resp.raise_for_status()
-            data = resp.json()
+        try:
+            async with self._get_client() as client:
+                resp = await client.post("/api/chat", json=payload)
+                if resp.status_code == 404:
+                    raise VisionModelNotFoundError(
+                        f"Vision model '{target_model}' not found in Ollama library. "
+                        f"Manual command to install: 'ollama pull {target_model}'. Zero external cloud calls permitted."
+                    )
+                resp.raise_for_status()
+                data = resp.json()
 
-            raw_text = data.get("message", {}).get("content", "")
-            usage = VisionUsage(
-                prompt_tokens=data.get("prompt_eval_count", 0),
-                completion_tokens=data.get("eval_count", 0),
-                total_tokens=data.get("prompt_eval_count", 0) + data.get("eval_count", 0),
-            )
+                raw_text = data.get("message", {}).get("content", "")
+                usage = VisionUsage(
+                    prompt_tokens=data.get("prompt_eval_count", 0),
+                    completion_tokens=data.get("eval_count", 0),
+                    total_tokens=data.get("prompt_eval_count", 0) + data.get("eval_count", 0),
+                )
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            raise OllamaVisionUnavailableError(
+                f"Local Ollama vision service is unreachable at {self.base_url}. Ensure 'ollama serve' is running. "
+                f"External cloud AI fallback is strictly prohibited."
+            ) from exc
 
         findings = parse_visual_findings(
             raw_output=raw_text,
@@ -136,6 +157,7 @@ class OllamaVisionProvider(BaseVisionProvider):
             provider="ollama",
             usage=usage,
         )
+
 
     async def health_check(self) -> bool:
         try:

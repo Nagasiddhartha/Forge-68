@@ -13,6 +13,7 @@ interface NavigationProps {
   clearance: DataClassification;
   onChangeClearance: (c: DataClassification) => void;
   backendOnline: boolean;
+  modelProviderOnline?: boolean;
   version: string;
 }
 
@@ -24,6 +25,7 @@ export function Navigation({
   clearance,
   onChangeClearance,
   backendOnline,
+  modelProviderOnline = false,
   version,
 }: NavigationProps) {
   const tabs: Array<{ id: NavTab; label: string; tag: string }> = [
@@ -69,19 +71,32 @@ export function Navigation({
               letterSpacing: "0.05em",
               fontFamily: "var(--font-mono)",
             }}>
-              SOVEREIGN INDUSTRIAL CONTROL PLANE v{version}
+              SOVEREIGN CONTROL PLANE v{version}
             </span>
           </div>
 
-          <span className="badge badge-cyan">
+          <span className="badge badge-cyan" title="100% sovereign air-gapped runtime with zero cloud dependencies">
             AIR-GAPPED SOVEREIGN
           </span>
 
-          <span className={backendOnline ? "badge badge-verified" : "badge badge-failed"}>
-            <span className={backendOnline ? "pulse-emerald" : "pulse-rose"} />
-            {backendOnline ? "BACKEND ONLINE" : "OFFLINE / DISCONNECTED"}
-          </span>
+          {!backendOnline ? (
+            <span className="badge badge-failed">
+              <span className="pulse-rose" />
+              BACKEND OFFLINE
+            </span>
+          ) : modelProviderOnline ? (
+            <span className="badge badge-verified" title="Local Ollama instance connected for live Qwen inference">
+              <span className="pulse-emerald" />
+              LIVE LOCAL INFERENCE
+            </span>
+          ) : (
+            <span className="badge badge-cyan" title="Deterministic offline test & mission harness active">
+              <span className="pulse-cyan" />
+              DETERMINISTIC DEMO MODE
+            </span>
+          )}
         </div>
+
 
         {/* Security Persona Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

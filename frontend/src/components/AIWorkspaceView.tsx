@@ -11,8 +11,10 @@ import {
   VisionAnalyzeResponse,
   analyzeVision,
   queryAgent,
+  resetDemo,
   runDemoScenario,
 } from "@/lib/api";
+
 import { ExecutionTrace } from "@/components/ExecutionTrace";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { VerificationPanel } from "@/components/VerificationPanel";
@@ -43,6 +45,28 @@ export function AIWorkspaceView({
   const [demoResponse, setDemoResponse] = useState<DemoRunResponse | null>(null);
   const [visionDirectResult, setVisionDirectResult] = useState<VisionAnalyzeResponse | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<"TRACE" | "EVIDENCE" | "VERIFICATION" | "VISION">("TRACE");
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+
+  const handleResetDemo = async () => {
+    setIsResetting(true);
+    setError(null);
+    try {
+      const res = await resetDemo();
+      setResponse(null);
+      setDemoResponse(null);
+      setActiveScenarioId(null);
+      setVisionDirectResult(null);
+      setResetMessage(
+        `Demo reset successfully: ${res.cleared_audit_events_count} transient trace events cleared. ${res.knowledge_documents_preserved} Knowledge Fabric documents preserved intact.`
+      );
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
 
   const demoScenarios = [
     {
@@ -224,14 +248,65 @@ export function AIWorkspaceView({
             <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.95rem" }}>
               DEMO SCENARIOS (END-TO-END INDUSTRIAL MISSION)
             </span>
-            <span className="badge badge-cyan">MILESTONE 9</span>
+            <span className="badge badge-cyan">MILESTONE 9 & 11</span>
             <span className="badge badge-verified">DETERMINISTIC HARNESS</span>
           </div>
 
-          <div style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
-            ASSET: <span style={{ color: "var(--accent-cyan)", fontWeight: 700 }}>REACTOR R-204</span> (AIR-GAPPED SYNTHETIC)
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
+              ASSET: <span style={{ color: "var(--accent-cyan)", fontWeight: 700 }}>REACTOR R-204</span> (AIR-GAPPED SYNTHETIC)
+            </div>
+
+            <button
+              onClick={handleResetDemo}
+              disabled={isLoading || isResetting}
+              className="btn-secondary"
+              style={{
+                fontSize: "0.72rem",
+                padding: "4px 10px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                borderColor: "rgba(239, 68, 68, 0.4)",
+                color: "#f87171",
+                cursor: isResetting ? "not-allowed" : "pointer",
+              }}
+              title="Safely reset transient execution state, audit logs, and security alerts. Knowledge documents remain intact."
+            >
+              {isResetting ? "RESETTING..." : "↺ RESET DEMO"}
+            </button>
           </div>
         </div>
+
+        {resetMessage && (
+          <div style={{
+            margin: "8px 16px 0",
+            padding: "8px 14px",
+            background: "rgba(16, 185, 129, 0.12)",
+            border: "1px solid rgba(16, 185, 129, 0.35)",
+            borderRadius: "var(--radius-sm)",
+            fontSize: "0.78rem",
+            color: "var(--accent-emerald)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}>
+            <span>✓ {resetMessage}</span>
+            <button
+              onClick={() => setResetMessage(null)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--text-muted)",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
 
         <div style={{
           display: "grid",
@@ -521,6 +596,35 @@ export function AIWorkspaceView({
               </span>
             </div>
           </div>
+
+          {/* Monotonic Runtime Latency Diagnostics */}
+          {response?.timing && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+              padding: "8px 12px",
+              background: "rgba(56, 189, 248, 0.05)",
+              border: "1px solid rgba(56, 189, 248, 0.2)",
+              borderRadius: "var(--radius-sm)",
+              fontSize: "0.74rem",
+              fontFamily: "var(--font-mono)",
+              marginTop: 10,
+            }}>
+              <span style={{ color: "var(--accent-cyan)", fontWeight: 700 }}>
+                RUNTIME TIMING:
+              </span>
+              <span>Total: <strong style={{ color: "var(--text-primary)" }}>{response.timing.total_duration_ms.toFixed(1)}ms</strong></span>
+              {response.timing.planning_duration_ms > 0 && <span>Plan: {response.timing.planning_duration_ms.toFixed(1)}ms</span>}
+              {response.timing.vision_duration_ms > 0 && <span>Vision: {response.timing.vision_duration_ms.toFixed(1)}ms</span>}
+              {response.timing.knowledge_retrieval_duration_ms > 0 && <span>Knowledge: {response.timing.knowledge_retrieval_duration_ms.toFixed(1)}ms</span>}
+              {response.timing.tool_execution_duration_ms > 0 && <span>Tool: {response.timing.tool_execution_duration_ms.toFixed(1)}ms</span>}
+              {response.timing.verification_duration_ms > 0 && <span>Verification: {response.timing.verification_duration_ms.toFixed(1)}ms</span>}
+              {response.timing.synthesis_duration_ms > 0 && <span>Synthesis: {response.timing.synthesis_duration_ms.toFixed(1)}ms</span>}
+            </div>
+          )}
+
 
           {/* Policy Denial Callout if applicable */}
           {isPolicyDenied && (

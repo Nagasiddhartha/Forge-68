@@ -69,8 +69,10 @@ export function SovereigntyView() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
               <span className="badge badge-cyan">AIR-GAP LEVEL 4</span>
-              <span className="badge badge-verified">SOVEREIGNTY ENFORCED</span>
-              <span className="badge badge-secondary">ZERO PUBLIC CLOUD EGRESS</span>
+              <span className="badge badge-verified">LOCAL-ONLY INFERENCE ENFORCED</span>
+              <span className="badge badge-secondary">NO EXTERNAL AI/API PROVIDERS CONFIGURED</span>
+              <span className="badge badge-deny">DEFAULT-DENY POLICY</span>
+
             </div>
             <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
               FORGE Sovereign Air-Gap & Runtime Governance

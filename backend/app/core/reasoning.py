@@ -29,7 +29,9 @@ Structured Agent Plan (AgentPlan: direct / knowledge / tool / combined / calcula
 import json
 import logging
 import re
+import time
 from typing import Any, Dict, List, Optional
+
 
 from app.core.prompts import (
     AGENT_PLAN_SYSTEM_PROMPT,
@@ -100,6 +102,14 @@ class AgentReasoningService:
 
     async def process_query(self, request: AgentQueryRequest) -> AgentQueryResponse:
         """Execute the unified, sovereign, evidence-grounded and verified agent workflow."""
+        t_start = time.perf_counter()
+        planning_duration_ms = 0.0
+        knowledge_retrieval_duration_ms = 0.0
+        tool_execution_duration_ms = 0.0
+        vision_duration_ms = 0.0
+        verification_duration_ms = 0.0
+        synthesis_duration_ms = 0.0
+
         # 1. Structured trace & log: AGENT_REQUEST
         logger.info(
             "[AGENT_REQUEST] Query: '%s' | Requester: '%s' | Role: '%s' | Clearance: '%s'",
@@ -154,18 +164,31 @@ class AgentReasoningService:
             format="json",
         )
 
+        t_plan_start = time.perf_counter()
         model_resp = await self.model_provider.generate(plan_request)
 
         # 3. Parse and defensively validate the AgentPlan
         try:
             plan: AgentPlan = parse_agent_plan(model_resp.content)
+            planning_duration_ms = (time.perf_counter() - t_plan_start) * 1000.0
         except Exception as exc:
+            planning_duration_ms = (time.perf_counter() - t_plan_start) * 1000.0
             logger.warning("[AGENT_PLAN_FAILED] Malformed agent plan: %s", str(exc))
             return AgentQueryResponse(
                 query=request.query,
                 final_answer=f"Failed to parse structured model decision: {str(exc)}",
                 status=AgentQueryStatus.INVALID_MODEL_OUTPUT,
+                timing={
+                    "total_duration_ms": round((time.perf_counter() - t_start) * 1000.0, 2),
+                    "planning_duration_ms": round(planning_duration_ms, 2),
+                    "knowledge_retrieval_duration_ms": 0.0,
+                    "tool_execution_duration_ms": 0.0,
+                    "vision_duration_ms": 0.0,
+                    "verification_duration_ms": 0.0,
+                    "synthesis_duration_ms": 0.0,
+                },
             )
+
 
         logger.info(
             "[AGENT_PLAN_CREATED] Action: '%s' | Queries: %d | Tools: %d | Calcs: %d | Reasoning: '%s'",
@@ -201,10 +224,13 @@ class AgentReasoningService:
                     ],
                     temperature=0.2,
                 )
+                t_synth_start = time.perf_counter()
                 direct_resp = await self.model_provider.generate(direct_req)
                 final_answer = direct_resp.content
+                synthesis_duration_ms = (time.perf_counter() - t_synth_start) * 1000.0
 
             # Direct verification
+            t_verif_start = time.perf_counter()
             direct_verification = self.verification_engine.verify(
                 query=request.query,
                 plan=plan,
@@ -213,6 +239,7 @@ class AgentReasoningService:
                 requester_classification=request.classification,
                 draft_response=final_answer,
             )
+            verification_duration_ms = (time.perf_counter() - t_verif_start) * 1000.0
 
             logger.info("[AGENT_FINAL_RESPONSE] Emitted direct response.")
             audit_event_sink.record_agent_event(
@@ -230,7 +257,17 @@ class AgentReasoningService:
                 plan=plan,
                 agent_plan=plan,
                 verification=direct_verification,
+                timing={
+                    "total_duration_ms": round((time.perf_counter() - t_start) * 1000.0, 2),
+                    "planning_duration_ms": round(planning_duration_ms, 2),
+                    "knowledge_retrieval_duration_ms": 0.0,
+                    "tool_execution_duration_ms": 0.0,
+                    "vision_duration_ms": 0.0,
+                    "verification_duration_ms": round(verification_duration_ms, 2),
+                    "synthesis_duration_ms": round(synthesis_duration_ms, 2),
+                },
             )
+
 
         # 5. Initialize Execution-Scoped EvidenceSet
         evidence_set = EvidenceSet()
@@ -241,6 +278,7 @@ class AgentReasoningService:
         # Multimodal Visual Intelligence ingestion (if image context is provided in query request)
         if request.image_path or request.image_base64:
             try:
+                t_vis_start = time.perf_counter()
                 import base64
                 img_data = base64.b64decode(request.image_base64) if request.image_base64 else None
                 vis_resp = await self.vision_service.analyze_image(
@@ -251,10 +289,12 @@ class AgentReasoningService:
                     requester=request.requester,
                     prompt=request.query,
                 )
+                vision_duration_ms = (time.perf_counter() - t_vis_start) * 1000.0
                 for evd in vis_resp.evidence_records:
                     evidence_set.add_visual_evidence(evd)
             except Exception as vis_err:
                 logger.warning("[MULTIMODAL_INGESTION_SKIPPED] Visual processing skipped: %s", vis_err)
+
 
         # 6. Execute Knowledge Retrieval (if action is 'knowledge' or 'combined')
         if plan.action in (AgentActionType.KNOWLEDGE, AgentActionType.COMBINED):
@@ -290,12 +330,15 @@ class AgentReasoningService:
                     else:
                         effective_filter = kq.classification
 
+                t_kn_start = time.perf_counter()
                 results = await self.knowledge_service.search_as_evidence(
                     query=kq.query,
                     top_k=5,
                     classification_filter=effective_filter,
                     max_classification=request.classification,
                 )
+                knowledge_retrieval_duration_ms += (time.perf_counter() - t_kn_start) * 1000.0
+
 
                 logger.info(
                     "[KNOWLEDGE_RETRIEVAL_COMPLETED] Query: '%s' | Chunks retrieved: %d",
@@ -369,13 +412,16 @@ class AgentReasoningService:
                     has_approval=request.has_approval,
                 )
 
+                t_tl_start = time.perf_counter()
                 exec_result = execute_tool_with_policy(
                     tool_invoc_req,
                     gateway=self.policy_gateway,
                     registry=self.tool_registry,
                 )
+                tool_execution_duration_ms += (time.perf_counter() - t_tl_start) * 1000.0
                 last_event_id = exec_result.event_id
                 evidence_set.add_policy_decision(exec_result.decision, exec_result.event_id)
+
 
                 logger.info(
                     "[POLICY_EVALUATED] Tool: '%s' | Decision: '%s' | Policy ID: '%s' | Reason: '%s'",
@@ -472,6 +518,7 @@ class AgentReasoningService:
             )
         )
 
+        t_vf_start = time.perf_counter()
         verification_result = self.verification_engine.verify(
             query=request.query,
             plan=plan,
@@ -480,6 +527,8 @@ class AgentReasoningService:
             requester_classification=request.classification,
             calculations=calculations,
         )
+        verification_duration_ms = (time.perf_counter() - t_vf_start) * 1000.0
+
 
         for chk in verification_result.checks:
             logger.info(
@@ -550,6 +599,15 @@ class AgentReasoningService:
                 policy_decision=evidence_set.policy_decisions[0] if evidence_set.policy_decisions else None,
                 tool_result=None,
                 evidence=None,
+                timing={
+                    "total_duration_ms": round((time.perf_counter() - t_start) * 1000.0, 2),
+                    "planning_duration_ms": round(planning_duration_ms, 2),
+                    "knowledge_retrieval_duration_ms": round(knowledge_retrieval_duration_ms, 2),
+                    "tool_execution_duration_ms": round(tool_execution_duration_ms, 2),
+                    "vision_duration_ms": round(vision_duration_ms, 2),
+                    "verification_duration_ms": round(verification_duration_ms, 2),
+                    "synthesis_duration_ms": 0.0,
+                },
             )
 
         if has_tool_error and evidence_set.is_empty:
@@ -570,7 +628,17 @@ class AgentReasoningService:
                 policy_decision=evidence_set.policy_decisions[0] if evidence_set.policy_decisions else None,
                 tool_result=None,
                 evidence=None,
+                timing={
+                    "total_duration_ms": round((time.perf_counter() - t_start) * 1000.0, 2),
+                    "planning_duration_ms": round(planning_duration_ms, 2),
+                    "knowledge_retrieval_duration_ms": round(knowledge_retrieval_duration_ms, 2),
+                    "tool_execution_duration_ms": round(tool_execution_duration_ms, 2),
+                    "vision_duration_ms": round(vision_duration_ms, 2),
+                    "verification_duration_ms": round(verification_duration_ms, 2),
+                    "synthesis_duration_ms": 0.0,
+                },
             )
+
 
         # 12. Format Evidence & Verification for Phase 2 Synthesis
         evidence_formatted_parts = []
@@ -633,8 +701,10 @@ class AgentReasoningService:
             temperature=0.2,
         )
 
+        t_syn_start = time.perf_counter()
         synthesis_resp = await self.model_provider.generate(synthesis_req)
         final_answer = synthesis_resp.content
+        synthesis_duration_ms = (time.perf_counter() - t_syn_start) * 1000.0
 
         # 13. Post-Synthesis Grounding Support Re-check
         post_synthesis_check = self.verification_engine._check_grounding_support(
@@ -674,6 +744,8 @@ class AgentReasoningService:
         first_knowledge_evidence = evidence_set.knowledge_evidence[0] if evidence_set.knowledge_evidence else None
         primary_evidence = first_tool_evidence or first_knowledge_evidence
 
+        total_duration_ms = (time.perf_counter() - t_start) * 1000.0
+
         return AgentQueryResponse(
             query=request.query,
             final_answer=final_answer,
@@ -690,7 +762,17 @@ class AgentReasoningService:
             policy_decision=evidence_set.policy_decisions[0] if evidence_set.policy_decisions else None,
             tool_result=first_tool_result_data,
             evidence=primary_evidence,
+            timing={
+                "total_duration_ms": round(total_duration_ms, 2),
+                "planning_duration_ms": round(planning_duration_ms, 2),
+                "knowledge_retrieval_duration_ms": round(knowledge_retrieval_duration_ms, 2),
+                "tool_execution_duration_ms": round(tool_execution_duration_ms, 2),
+                "vision_duration_ms": round(vision_duration_ms, 2),
+                "verification_duration_ms": round(verification_duration_ms, 2),
+                "synthesis_duration_ms": round(synthesis_duration_ms, 2),
+            },
         )
+
 
     def _resolve_calculations(
         self,

@@ -19,17 +19,21 @@ All processing flows through the real M1-M8 services:
 import json
 import logging
 from pathlib import Path
+import time
 from typing import Any, Dict, List, Optional
 
 from app.config import settings
 from app.core import AgentQueryRequest, AgentReasoningService, agent_reasoning_service
 from app.core.schemas import AgentQueryStatus
 from app.demo.schemas import (
+    DemoExecutionTiming,
+    DemoResetResponse,
     DemoRunRequest,
     DemoRunResponse,
     DemoScenarioId,
     DemoScenarioMetadata,
 )
+
 from app.knowledge import KnowledgeService, knowledge_service
 from app.knowledge.embeddings import MockEmbeddingProvider
 from app.knowledge.index import NumpyCosineVectorIndex
@@ -276,8 +280,19 @@ class DemoOrchestrationService:
             image_path=image_path,
         )
 
-        # 5. Execute full agent loop through real services
+        # 5. Execute full agent loop through real services with monotonic timing
+        t_scenario_start = time.perf_counter()
         agent_resp = await service.process_query(agent_req)
+        scenario_duration_ms = (time.perf_counter() - t_scenario_start) * 1000.0
+
+        # Extract timing measurements
+        timing_model = None
+        if agent_resp.timing and isinstance(agent_resp.timing, dict):
+            t_data = dict(agent_resp.timing)
+            t_data["total_duration_ms"] = round(max(scenario_duration_ms, t_data.get("total_duration_ms", 0.0)), 2)
+            timing_model = DemoExecutionTiming(**t_data)
+        elif isinstance(agent_resp.timing, DemoExecutionTiming):
+            timing_model = agent_resp.timing
 
         # 6. Extract trace audit events for this run
         all_agent_events = audit_event_sink.get_agent_events(limit=50)
@@ -330,9 +345,67 @@ class DemoOrchestrationService:
             security_events=security_events,
             visual_findings=visual_findings,
             calculations=calculations,
+            timing=timing_model,
             is_synthetic=True,
             synthetic_notice="SYNTHETIC INDUSTRIAL TELEMETRY — AIR-GAPPED DEMONSTRATION DATA ONLY",
         )
+
+    def reset_demo_state(self) -> DemoResetResponse:
+        """Reset transient demo execution state, audit logs, and counters.
+
+        Safe and deterministic:
+        - Clears transient audit and trace event sink
+        - Resets execution counters (calibration counter, external request counter)
+        - Preserves all Knowledge Fabric source documents and embeddings intact
+        - Preserves equipment records, models, and configuration
+        """
+        from app.security.events import audit_event_sink
+        from app.tools.industrial.equipment import CALIBRATION_EXECUTION_COUNTER
+        from app.models import EXTERNAL_REQUEST_COUNTER
+
+        events = audit_event_sink.get_events(limit=1000)
+        agent_events = audit_event_sink.get_agent_events(limit=1000)
+        security_alerts = [
+            e for e in agent_events
+            if e.event_type.value in ("SECURITY_ALERT", "PROMPT_INJECTION_DETECTED")
+        ]
+
+        total_cleared_events = len(events) + len(agent_events)
+        audit_event_sink.clear()
+
+        # Reset transient execution counters
+        CALIBRATION_EXECUTION_COUNTER["count"] = 0
+        EXTERNAL_REQUEST_COUNTER["count"] = 0
+
+        # Verify Knowledge Fabric & Equipment records remain intact
+        knowledge_docs = self.knowledge_service.list_documents()
+        records_path = Path(__file__).resolve().parent.parent.parent / "data" / "demo" / "equipment_records.json"
+        equipment_count = 0
+        if records_path.exists():
+            try:
+                with open(records_path, "r", encoding="utf-8") as f:
+                    eq_data = json.load(f)
+                    equipment_count = len(eq_data)
+            except Exception:
+                pass
+
+        return DemoResetResponse(
+            status="RESET_COMPLETE",
+            cleared_audit_events_count=total_cleared_events,
+            cleared_security_events_count=len(security_alerts),
+            reset_counters={
+                "calibration_executions": 0,
+                "external_requests": 0,
+            },
+            knowledge_documents_preserved=len(knowledge_docs),
+            equipment_records_preserved=equipment_count,
+            models_preserved=True,
+            message=(
+                "Transient demo execution state, audit logs, and security alerts safely reset. "
+                "Sovereign knowledge base and model weights preserved intact."
+            ),
+        )
+
 
     def _build_deterministic_responses(self, scenario_id: DemoScenarioId) -> tuple[str, str]:
         """Provide exact typed structured model plan and grounded synthesis for demo determinism."""

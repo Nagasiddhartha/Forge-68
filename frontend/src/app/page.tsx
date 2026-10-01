@@ -56,8 +56,10 @@ export default function Home() {
         clearance={clearance}
         onChangeClearance={setClearance}
         backendOnline={backendOnline}
+        modelProviderOnline={Boolean(health?.model_provider_online)}
         version={health?.version || "0.8.0"}
       />
+
 
       {/* Main Operational Container */}
       <main style={{

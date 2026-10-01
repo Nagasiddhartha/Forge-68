@@ -171,9 +171,37 @@ async def get_sovereignty_status() -> Dict[str, Any]:
     }
 
 
+from app.preflight import (
+    PreflightReport,
+    run_preflight_checks,
+    validate_local_reasoning_runtime,
+    validate_local_vision_runtime,
+)
+
+
+@app.get("/api/v1/system/preflight", response_model=PreflightReport, tags=["System"])
+async def get_system_preflight() -> PreflightReport:
+    """Run comprehensive local runtime preflight checks and return typed readiness report."""
+    return await run_preflight_checks()
+
+
+@app.get("/api/v1/system/diagnostics", tags=["System"])
+async def get_system_diagnostics() -> Dict[str, Any]:
+    """Diagnostic endpoint verifying actual reasoning and vision runtime status."""
+    report = await run_preflight_checks()
+    reasoning_diag = await validate_local_reasoning_runtime()
+    vision_diag = await validate_local_vision_runtime()
+    return {
+        "preflight": report.model_dump(),
+        "reasoning": reasoning_diag,
+        "vision": vision_diag,
+    }
+
+
 # =========================================================================
 # Milestone 2: Policy & Industrial Tool APIs
 # =========================================================================
+
 
 @app.get("/api/v1/tools", response_model=List[ToolMetadata], tags=["Tools"])
 async def list_registered_tools() -> List[ToolMetadata]:
@@ -353,10 +381,12 @@ async def get_audit_events(limit: int = 100) -> Dict[str, Any]:
 
 
 # =========================================================================
-# Milestone 9: Industrial Mission & Demo Harness APIs
+# Milestone 9 & 11: Industrial Mission & Demo Harness APIs
 # =========================================================================
 
 from app.demo import (
+    DemoExecutionTiming,
+    DemoResetResponse,
     DemoRunRequest,
     DemoRunResponse,
     DemoScenarioMetadata,
@@ -379,6 +409,16 @@ async def run_demo_scenario(request: DemoRunRequest) -> DemoRunResponse:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Demo execution failed: {str(exc)}")
+
+
+@app.post("/api/v1/demo/reset", response_model=DemoResetResponse, tags=["Demo"])
+async def reset_demo() -> DemoResetResponse:
+    """Reset transient demo execution state, audit logs, and counters while preserving Knowledge Fabric."""
+    try:
+        return demo_orchestration_service.reset_demo_state()
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Demo reset failed: {str(exc)}")
+
 
 
 # =========================================================================

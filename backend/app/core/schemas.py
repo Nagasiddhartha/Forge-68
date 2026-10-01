@@ -213,3 +213,5 @@ class AgentQueryResponse(BaseModel):
     policy_decision: Optional[PolicyDecision] = None
     tool_result: Optional[Dict[str, Any]] = None
     evidence: Optional[EvidenceRecord] = None
+    timing: Optional[Any] = None
+
