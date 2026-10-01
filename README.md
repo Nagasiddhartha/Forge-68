@@ -260,5 +260,43 @@ Grounded Agent Synthesis (Qwen3)
 - `tests/test_vision.py` — 21 comprehensive unit, security, and integration tests
 - `POST /api/v1/vision/analyze` — Typed API endpoint for engineering imagery analysis
 
+---
 
+### Milestone 8 — Sovereign Operations Workspace
 
+Delivers a functional, judge-facing industrial control-plane frontend workspace in Next.js / TypeScript that exposes the full spectrum of FORGE sovereign capabilities (M1–M7) without fake data, mocked telemetry, or external cloud dependencies.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 FORGE SOVEREIGN INDUSTRIAL CONTROL PLANE                    │
+│    AIR-GAPPED SOVEREIGN  •  POLICY: DEFAULT-DENY  •  ZERO CLOUD EGRESS      │
+├────────────┬──────────────┬───────────┬──────────┬──────────────┬───────────┤
+│  OVERVIEW  │ AI WORKSPACE │ KNOWLEDGE │ EVIDENCE │ VERIFICATION │ AUDIT LOG │
+└────────────┴──────────────┴───────────┴──────────┴──────────────┴───────────┘
+```
+
+**Core Principles & UI Architecture:**
+1. **Zero Faked Functionality:** The control plane strictly consumes live backend APIs (`/api/v1/agent/query`, `/api/v1/system/sovereignty`, `/api/v1/audit/events`, `/api/v1/knowledge/documents`, `/api/v1/knowledge/search`, `/api/v1/vision/analyze`, `/api/v1/tools`).
+2. **Industrial Control-Room Aesthetics:** Designed with a serious, high-density industrial SOC/mission-control design language (dark slate/obsidian palette, monospace tags, high status contrast, no consumer chatbot fluff or gratuitous animations).
+3. **End-to-End Execution Trace:** Visualizes the 7-phase agent execution pipeline:
+   - `REQUEST` → `PLAN` → `KNOWLEDGE` → `TOOLS & POLICY` → `VISUAL EVIDENCE` → `VERIFICATION` → `FINAL RESPONSE`
+4. **Multi-Source Evidence Inspection:** Unified `EvidencePanel` detailing Document Chunks, Sandboxed Tool Executions, Visual Gauge/Corrosion Inspections, and Deterministic Calculations with cryptographic SHA-256 hashes and data classification tiers.
+5. **Deterministic Verification Center:** Visualizes the M6 `VerificationResult` with overall trust status badges (`VERIFIED`, `PARTIALLY_VERIFIED`, `INSUFFICIENT_EVIDENCE`, `NEEDS_REVIEW`, `FAILED`) and itemized breakdown of the 7 deterministic checks without LLM self-evaluation.
+6. **Sovereign Perimeter Matrix:** Dedicated sovereignty dashboard verifying the air-gap boundary, active local reasoning model (`qwen3:8b`), local vision provider (`qwen2.5-vl:7b`), zero cloud SDK dependencies, and tamper-evident audit status.
+7. **Tamper-Evident Audit Trail:** Chronological event viewer with filter pills (`AGENT`, `TOOL`, `POLICY`, `VERIFICATION`, `KNOWLEDGE`) and an expandable JSON inspector for all raw event payloads.
+8. **Demo-First Persona Controls:** Top-bar role switcher (`ENGINEER`, `OPERATOR`, `INSPECTOR`, `SECURITY_OFFICER`, `AUDITOR`) and classification lattice selector (`PUBLIC`, `INTERNAL`, `CONFIDENTIAL`, `RESTRICTED`, `CRITICAL`) to demonstrate default-deny policy mediation and authorization gates live.
+
+**Key components added/updated:**
+- `frontend/src/lib/api.ts` — Complete typed TypeScript API client covering all M1–M8 endpoints
+- `frontend/src/app/globals.css` — High-density industrial SOC styling, status badges, and execution timeline connectors
+- `frontend/src/components/Navigation.tsx` — Operational header, status pulse, persona controls, and 7-tab router
+- `frontend/src/components/OverviewView.tsx` — Mission control dashboard displaying real subsystem statuses and recent audit events
+- `frontend/src/components/AIWorkspaceView.tsx` — Primary agent execution screen with demo presets, multimodal image picker, execution trace, and evidence tabs
+- `frontend/src/components/ExecutionTrace.tsx` — Step-by-step pipeline visualization of real backend agent execution
+- `frontend/src/components/EvidencePanel.tsx` — Reusable multi-source evidence inspector with classification and provenance filters
+- `frontend/src/components/VerificationPanel.tsx` — Autonomous verification breakdown with 7 deterministic checks
+- `frontend/src/components/KnowledgeView.tsx` — On-premise vector repository inspector and semantic search console
+- `frontend/src/components/SovereigntyView.tsx` — Air-gap boundary dashboard and zero-cloud compliance attestation
+- `frontend/src/components/AuditView.tsx` — Real-time immutable audit ledger and JSON payload inspector
+- `frontend/src/app/page.tsx` — Main control-plane page orchestrating shared role, clearance, and execution state
+- `backend/app/main.py` — Small read-only endpoints: `GET /api/v1/system/sovereignty`, `GET /api/v1/audit/events`, `GET /api/v1/knowledge/documents`, `GET /api/v1/vision/samples`

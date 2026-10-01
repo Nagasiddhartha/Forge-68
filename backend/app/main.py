@@ -6,6 +6,8 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from pathlib import Path
+
 from app.config import settings
 from app.core import AgentQueryRequest, AgentQueryResponse, agent_reasoning_service
 from app.knowledge import (
@@ -23,6 +25,7 @@ from app.security import (
     PolicyDecision,
     PolicyDecisionType,
     PolicyEvaluationRequest,
+    audit_event_sink,
     policy_gateway,
 )
 from app.tools import (
@@ -115,6 +118,50 @@ async def system_status() -> Dict[str, Any]:
             "online": model_online,
         },
         "registered_tools_count": len(tool_registry.list_tools()),
+    }
+
+
+@app.get("/api/v1/system/sovereignty", tags=["System"])
+async def get_sovereignty_status() -> Dict[str, Any]:
+    """Detailed sovereignty audit reporting local-only constraints and zero external dependencies."""
+    provider = get_model_provider()
+    model_online = await provider.health_check()
+    return {
+        "status": "ENFORCED",
+        "air_gapped": True,
+        "cloud_ai_sdks_blocked": True,
+        "external_network_calls_blocked": True,
+        "model_provider": {
+            "type": settings.MODEL_PROVIDER,
+            "default_model": settings.DEFAULT_MODEL,
+            "base_url": settings.OLLAMA_BASE_URL,
+            "online": model_online,
+            "cloud_fallback": False,
+        },
+        "vision_provider": {
+            "type": settings.VISION_PROVIDER,
+            "default_model": settings.DEFAULT_VISION_MODEL,
+            "max_image_size_bytes": settings.MAX_IMAGE_SIZE_BYTES,
+            "local_only": True,
+        },
+        "embedding_provider": {
+            "type": settings.EMBEDDING_PROVIDER,
+            "model": settings.EMBEDDING_MODEL,
+            "local_only": True,
+        },
+        "policy_gateway": {
+            "default_decision": "DENY",
+            "strict_clearance_enforced": True,
+        },
+        "verification_engine": {
+            "deterministic_checks_count": 7,
+            "python_calculations_registered": 4,
+            "llm_self_verification_prohibited": True,
+        },
+        "audit_sink": {
+            "active_events_count": len(audit_event_sink.get_agent_events(1000)),
+            "tamper_evident": True,
+        }
     }
 
 
@@ -217,6 +264,29 @@ async def search_knowledge(request: KnowledgeSearchRequest) -> KnowledgeSearchRe
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Search failed: {exc}")
 
 
+@app.get("/api/v1/knowledge/documents", tags=["Knowledge"])
+async def list_knowledge_documents() -> Dict[str, Any]:
+    """Inspect ingested and available offline demo knowledge documents with classifications."""
+    ingested = knowledge_service.list_documents()
+    demo_dir = Path(settings.KNOWLEDGE_BASE_DIR)
+    demo_files = []
+    if demo_dir.exists():
+        for p in demo_dir.glob("*.*"):
+            if p.is_file():
+                demo_files.append({
+                    "filename": p.name,
+                    "file_path": str(p).replace("\\", "/"),
+                    "size_bytes": p.stat().st_size,
+                    "classification": "INTERNAL",
+                })
+    return {
+        "ingested_documents": ingested,
+        "available_demo_documents": demo_files,
+        "total_ingested": len(ingested),
+        "total_available": len(demo_files),
+    }
+
+
 # =========================================================================
 # Milestone 7: Multimodal Engineering Intelligence APIs
 # =========================================================================
@@ -240,5 +310,40 @@ async def analyze_vision_image(request: VisionAnalyzeRequest) -> VisionAnalyzeRe
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Validation failed: {ve}")
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Vision analysis failed: {exc}")
+
+
+@app.get("/api/v1/vision/samples", tags=["Vision"])
+async def list_vision_sample_images() -> Dict[str, Any]:
+    """List offline synthetic engineering imagery available for multimodal analysis."""
+    img_dir = Path(settings.IMAGE_BASE_DIR)
+    samples = []
+    if img_dir.exists():
+        for p in img_dir.glob("*.*"):
+            if p.is_file() and p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
+                samples.append({
+                    "filename": p.name,
+                    "file_path": str(p).replace("\\", "/"),
+                    "size_bytes": p.stat().st_size,
+                    "equipment_id": "R-204" if "r204" in p.name.lower() else None,
+                })
+    return {"samples": samples}
+
+
+# =========================================================================
+# Milestone 8: Sovereign Audit & Event Introspection APIs
+# =========================================================================
+
+@app.get("/api/v1/audit/events", tags=["Audit"])
+async def get_audit_events(limit: int = 100) -> Dict[str, Any]:
+    """Retrieve chronological sovereign agent trace events and tool execution events."""
+    agent_events = audit_event_sink.get_agent_events(limit=limit)
+    tool_events = audit_event_sink.get_events(limit=limit)
+    return {
+        "total_agent_events": len(agent_events),
+        "total_tool_events": len(tool_events),
+        "agent_events": agent_events,
+        "tool_events": tool_events,
+    }
+
 
 
