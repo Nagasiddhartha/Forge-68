@@ -170,5 +170,50 @@ Grounded Answer
 - `tests/test_unified_agent.py` — 15 comprehensive unit, security, and integration tests covering Scenarios A through F and security safeguards
 - `POST /api/v1/agent/query` — Typed API endpoint returning structured plan, queries, tool calls, policy decisions, evidence set, and grounded response
 
+---
+
+### Milestone 6 — Verification & Trust Engine
+
+Builds an independent verification layer that evaluates whether evidence and deterministic Python calculations support the agent's findings before final response synthesis.
+
+```
+Evidence
+   ↓
+Verification (VerificationEngine)
+   ├── Evidence completeness
+   ├── Source / provenance checks
+   ├── Classification / policy checks
+   ├── Parameter consistency
+   ├── Deterministic calculations (Python)
+   └── Grounding / support checks
+   ↓
+Trust Status (VerificationResult)
+   ↓
+Qwen3 Synthesis (Informed by Trust Status)
+   ↓
+Final Response
+```
+
+> **FORGE verifies available evidence and deterministic calculations before presenting the final response.**
+> Verification is an automated evidence-grounding audit, not a guarantee of correctness in the real physical world. It confirms that the response passed deterministic verification checks against the available evidence and calculation results without claiming "hallucination elimination."
+
+**Core Principles & Architecture:**
+1. **Model is NOT the Verifier:** The language model never verifies its own output. Verification runs via deterministic, rule-based Python checks inside `VerificationEngine`.
+2. **Deterministic Calculation Engine:** Mathematical evaluations (such as `pressure_variance`, `pressure_margin`, `corrosion_projection`, and `thickness_loss`) are performed entirely by Python logic with typed numeric inputs. Arbitrary Python code execution and shell command execution are strictly prohibited.
+3. **Preserved Calculation Provenance:** Every calculated result preserves its calculation ID, type, typed inputs, numerical result, physical units, supporting evidence IDs, and creation timestamp.
+4. **Independent Trust Statuses:** Produces explicit status indicators: `VERIFIED`, `PARTIALLY_VERIFIED`, `INSUFFICIENT_EVIDENCE`, `NEEDS_REVIEW`, and `FAILED`.
+5. **No Speculative Fabrications:** Missing evidence or unsupported numerical claims immediately produce `INSUFFICIENT_EVIDENCE` or `NEEDS_REVIEW`. Denied tool actions are verified never to be represented as successful executions.
+6. **Immutable Verification Audit:** Records `VERIFICATION_STARTED`, `VERIFICATION_CHECK`, and `VERIFICATION_COMPLETED` events in the audit log.
+
+**Key components added:**
+- `backend/app/verification/models.py` — `VerificationStatus`, `VerificationCheck`, `VerificationResult`
+- `backend/app/verification/calculations.py` — Deterministic `CalculationEngine` with typed schemas and registered industrial formulas
+- `backend/app/verification/engine.py` — `VerificationEngine` with 7 discrete audit checks (provenance, completeness, policy compliance, classification, parameter consistency, calculations, and grounding support)
+- `backend/app/core/reasoning.py` — Updated `AgentReasoningService` integrating deterministic verification between evidence collection and final response generation
+- `backend/app/core/schemas.py` — Extended `AgentPlan` with calculation requests and `AgentQueryResponse` with typed `VerificationResult`
+- `backend/app/security/events.py` — Verification lifecycle audit events (`VERIFICATION_STARTED`, `VERIFICATION_CHECK`, `VERIFICATION_COMPLETED`)
+- `tests/test_verification.py` — 20 comprehensive unit, security, and end-to-end tests covering Scenarios A through H and all verification security constraints
+- `POST /api/v1/agent/query` — Exposes complete verification result payload alongside plan, evidence, and response
+
 
 

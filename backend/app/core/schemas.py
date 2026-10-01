@@ -6,7 +6,10 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, model_validator
 
 from app.security.models import DataClassification, PolicyDecision, Role
+from app.verification.calculations import CalculationRequest
 from app.verification.evidence import EvidenceRecord, EvidenceSet
+from app.verification.models import VerificationResult
+
 
 
 def validate_no_code_injection(args: Any) -> None:
@@ -111,6 +114,10 @@ class AgentPlan(BaseModel):
         default_factory=list,
         description="List of industrial tool invocations if tool execution is needed"
     )
+    calculations: List[CalculationRequest] = Field(
+        default_factory=list,
+        description="List of deterministic industrial calculations requested"
+    )
     reasoning: Optional[str] = Field(
         default=None,
         description="Technical justification for proposed actions"
@@ -195,7 +202,9 @@ class AgentQueryResponse(BaseModel):
     tool_calls: List[ToolCallPlan] = Field(default_factory=list)
     policy_decisions: List[PolicyDecision] = Field(default_factory=list)
     evidence_set: Optional[EvidenceSet] = None
+    verification: Optional[VerificationResult] = None
     execution_event_id: Optional[str] = None
+
 
     # Milestone 3 backward compatibility fields
     tool_call: Optional[Dict[str, Any]] = None
