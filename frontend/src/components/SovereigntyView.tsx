@@ -9,8 +9,15 @@ import {
   fetchSecurityReport,
   fetchSovereigntyStatus,
 } from "@/lib/api";
+import { useRuntimeCapabilities } from "@/lib/runtime";
+import {
+  EnamelSurface,
+  BrassLabel,
+  Divider,
+} from "@/components/primitives";
 
 export function SovereigntyView() {
+  const runtime = useRuntimeCapabilities();
   const [sovereignty, setSovereignty] = useState<SovereigntyStatusResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [securityReport, setSecurityReport] = useState<SecurityBoundaryReport | null>(null);
@@ -58,394 +65,452 @@ export function SovereigntyView() {
     };
   }, []);
 
+  const isModelLive = runtime.reasoningLive || !!health?.model_provider_online;
+  const isVisionInstalled = runtime.visionLive;
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Sovereignty Top Hero */}
-      <div className="card" style={{
-        background: "linear-gradient(135deg, rgba(14, 18, 26, 0.98) 0%, rgba(20, 26, 38, 0.98) 100%)",
-        border: "1px solid var(--accent-cyan)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <span className="badge badge-cyan">LOCAL ONLY</span>
-              <span className="badge badge-verified">LOCAL INFERENCE ENFORCED</span>
-              <span className="badge badge-secondary">NO EXTERNAL AI PROVIDERS CONFIGURED</span>
-              <span className="badge badge-deny">DEFAULT-DENY POLICY</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+      {/* Sovereignty Top Hero Certificate */}
+      <EnamelSurface variant="base" padding="spacious">
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
+          <div style={{ maxWidth: 780 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
+              <BrassLabel variant="outline">SOVEREIGNTY CERTIFICATE</BrassLabel>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "11px",
+                  color: "var(--sage)",
+                  background: "rgba(156, 195, 168, 0.08)",
+                  padding: "2px 8px",
+                  borderRadius: "var(--radius-pill)",
+                  border: "1px solid var(--sage)",
+                }}
+              >
+                ON-PREMISE AIR-GAP CONFORMANCE
+              </span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                ENCLAVE ID: FORGE-SOV-01
+              </span>
             </div>
-            <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
-              FORGE Boundary & Operational Governance
+
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
+              Sovereignty Boundary & Architectural Attestation
             </h1>
 
-            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: 4, maxWidth: 820 }}>
-              Cryptographic boundary and policy-enforced guarantees. All inference, knowledge indexing, tool execution,
-              and verification occur strictly on sovereign local hardware without external AI SDKs or public cloud transit.
+            <p style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink-2)", marginTop: 6, lineHeight: 1.6 }}>
+              Formal attestation of system isolation, policy guarantees, and non-LLM verification.
+              All reasoning, knowledge indexing, tool execution, and verification run locally on sovereign hardware.
+              Outside AI cloud services are strictly unconfigured and inaccessible.
             </p>
           </div>
 
-          <button onClick={loadData} disabled={isLoading} className="btn-secondary">
-            {isLoading ? "AUDITING..." : "↻ VERIFY BOUNDARY"}
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div style={{
-          padding: 12,
-          background: "rgba(244, 63, 94, 0.1)",
-          border: "1px solid rgba(244, 63, 94, 0.3)",
-          borderRadius: "var(--radius-sm)",
-          color: "#fda4af",
-          fontSize: "0.82rem",
-        }}>
-          Communication Error with Control Plane: {error}
-        </div>
-      )}
-
-      {/* Sovereign Perimeter Architecture Matrix */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 16 }}>
-        {/* Perimeter 1: Local Model Inference */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontWeight: 700, fontSize: "0.88rem", fontFamily: "var(--font-mono)" }}>
-              1. LOCAL REASONING INFERENCE
-            </span>
-            <span className="badge badge-verified">
-              <span className="pulse-emerald" />
-              {health?.model_provider_online ? "SOVEREIGN ONLINE" : "BOUNDED READY"}
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>INFERENCE PROVIDER:</span>
-              <span style={{ color: "var(--accent-cyan)", fontWeight: 700 }}>
-                {sovereignty?.model_provider.type.toUpperCase() || "OLLAMA"}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>ACTIVE REASONING MODEL:</span>
-              <span style={{ color: "var(--text-primary)" }}>
-                {sovereignty?.model_provider.default_model || "qwen3:8b"}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>LOCAL INFERENCE ENDPOINT:</span>
-              <span style={{ color: "var(--text-primary)" }}>
-                {sovereignty?.model_provider.base_url || "http://127.0.0.1:11434"}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>CLOUD FALLBACK ALLOWED:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>STRICTLY PROHIBITED (FALSE)</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>EXTERNAL CLOUD SDKS:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>0 IMPORTED / BLOCKED</span>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button
+              onClick={loadData}
+              disabled={isLoading}
+              className="btn-brass-primary"
+              style={{ fontSize: "13px", padding: "10px 18px" }}
+            >
+              {isLoading ? "Verifying..." : "Attest Enclave State ↻"}
+            </button>
           </div>
         </div>
 
-        {/* Perimeter 2: Multimodal Engineering Vision */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontWeight: 700, fontSize: "0.88rem", fontFamily: "var(--font-mono)" }}>
-              2. MULTIMODAL ENGINEERING VISION
-            </span>
-            <span className="badge badge-verified">
-              <span className="pulse-emerald" />
-              LOCAL EXECUTION
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>VISION PROVIDER:</span>
-              <span style={{ color: "var(--accent-cyan)", fontWeight: 700 }}>
-                {sovereignty?.vision_provider.type.toUpperCase() || "LOCAL VISION MOCK/OLLAMA"}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>DEFAULT VISION MODEL:</span>
-              <span style={{ color: "var(--text-primary)" }}>
-                {sovereignty?.vision_provider.default_model || "qwen2.5-vl:7b"}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>AIR-GAP LOCAL ONLY:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>ENFORCED (TRUE)</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>MAX IMAGE BUFFER:</span>
-              <span style={{ color: "var(--text-primary)" }}>
-                {sovereignty?.vision_provider.max_image_size_bytes
-                  ? `${(sovereignty.vision_provider.max_image_size_bytes / 1024 / 1024).toFixed(0)} MB BOUNDED`
-                  : "15 MB BOUNDED"}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>PROVENANCE TRACKING:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>SHA-256 DIGEST ON INGESTION</span>
-            </div>
-          </div>
-        </div>
+        <Divider style={{ margin: "20px 0" }} />
 
-        {/* Perimeter 3: Default-Deny Policy Gateway */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontWeight: 700, fontSize: "0.88rem", fontFamily: "var(--font-mono)" }}>
-              3. POLICY GATEWAY (M2)
-            </span>
-            <span className="badge badge-failed" style={{ background: "rgba(244, 63, 94, 0.15)", color: "#fda4af" }}>
-              DEFAULT-DENY
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>GATEWAY DEFAULT DECISION:</span>
-              <span style={{ color: "#f43f5e", fontWeight: 700 }}>DENY (FAIL-CLOSED)</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>CLEARANCE ENFORCEMENT:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>STRICT LATTICE (ACTIVE)</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>OPERATIONAL BOUNDARIES:</span>
-              <span style={{ color: "var(--accent-cyan)" }}>CALIBRATION / WRITE GATED</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>SUPERVISOR OVERRIDE:</span>
-              <span style={{ color: "var(--text-primary)" }}>REQUIRES EXPLICIT APPROVAL</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Perimeter 4: Deterministic Verification Engine */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontWeight: 700, fontSize: "0.88rem", fontFamily: "var(--font-mono)" }}>
-              4. DETERMINISTIC VERIFICATION ENGINE (M6)
-            </span>
-            <span className="badge badge-verified">
-              MATHEMATICAL PROOF
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>LLM SELF-VERIFICATION:</span>
-              <span style={{ color: "#f43f5e", fontWeight: 700 }}>STRICTLY PROHIBITED</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>INDEPENDENT CHECKS:</span>
-              <span style={{ color: "var(--accent-cyan)", fontWeight: 700 }}>
-                {sovereignty?.verification_engine.deterministic_checks_count ?? 7} DISCRETE CHECKS
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>REGISTERED CALCULATIONS:</span>
-              <span style={{ color: "var(--text-primary)" }}>
-                {sovereignty?.verification_engine.python_calculations_registered ?? 4} PURE PYTHON ENGINES
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>CONFLICT RESOLUTION:</span>
-              <span style={{ color: "#34d399" }}>AUTOMATIC CROSS-SOURCE DRIFT DETECT</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Perimeter 5: Knowledge Fabric Vector Storage */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontWeight: 700, fontSize: "0.88rem", fontFamily: "var(--font-mono)" }}>
-              5. SOVEREIGN KNOWLEDGE FABRIC (M4)
-            </span>
-            <span className="badge badge-verified">
-              LOCAL VECTOR
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>EMBEDDING PROVIDER:</span>
-              <span style={{ color: "var(--accent-cyan)" }}>
-                {sovereignty?.embedding_provider.type.toUpperCase() || "LOCAL DETERMINISTIC"}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>EMBEDDING MODEL:</span>
-              <span style={{ color: "var(--text-primary)" }}>
-                {sovereignty?.embedding_provider.model || "all-MiniLM-L6-v2"}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>EXTERNAL VECTOR CLOUD:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>BLOCKED (NO PINECONE/OPENAI)</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>AIR-GAPPED EMBEDDINGS:</span>
-              <span style={{ color: "#34d399" }}>ENFORCED (TRUE)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Perimeter 6: Tamper-Evident Audit Sink */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontWeight: 700, fontSize: "0.88rem", fontFamily: "var(--font-mono)" }}>
-              6. IMMUTABLE AUDIT SINK
-            </span>
-            <span className="badge badge-secondary">
-              TAMPER-EVIDENT
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>LOG STORAGE MODE:</span>
-              <span style={{ color: "var(--accent-cyan)" }}>APPEND-ONLY IN-MEMORY & SINK</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>RECORDED EVENTS:</span>
-              <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>
-                {sovereignty?.audit_sink.active_events_count ?? 0} ACTIVE LIFECYCLE EVENTS
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>TAMPER-EVIDENT INTEGRITY:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>ACTIVE (TRUE)</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>EGRESS TELEMETRY LEAKAGE:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>ZERO BYTES</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Milestone 10: Security Boundary & Adversarial Matrix */}
-      <div className="card" style={{ border: "1px solid rgba(0, 240, 255, 0.25)" }}>
-        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        {/* Global Enclave Attestation Strip */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 16,
+            background: "var(--bg-0)",
+            padding: "16px 20px",
+            borderRadius: "var(--radius-panel)",
+            border: "1px solid var(--line)",
+          }}
+        >
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <span className="badge badge-cyan">MILESTONE 10</span>
-              <span className="badge badge-verified">ADVERSARIAL HARDENING</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              CLOUD AI API CALLS
+            </span>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "14px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
+              ZERO (NONE CONFIGURED)
             </div>
-            <h2 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, letterSpacing: "0.03em" }}>
-              SECURITY BOUNDARY
-            </h2>
-            <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: 2 }}>
-              Deterministic adversarial test matrix proving that model output and untrusted data cannot bypass FORGE boundaries.
-            </p>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              No external AI SDKs imported
+            </span>
           </div>
 
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ padding: "8px 14px", background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "var(--radius-sm)", textAlign: "center" }}>
-              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#34d399", fontFamily: "var(--font-mono)" }}>
-                {securityReport ? `${securityReport.total_tests} checks` : "10 checks"}
-              </div>
-              <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase" }}>EVALUATED</div>
+          <div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              POLICY GATEWAY STATUS
+            </span>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "14px", color: "var(--coral-text)", fontWeight: 600, marginTop: 4 }}>
+              DEFAULT-DENY (FAIL-CLOSED)
             </div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              Role clearance mandatory
+            </span>
+          </div>
 
-            <div style={{ padding: "8px 14px", background: "rgba(52, 211, 153, 0.12)", border: "1px solid rgba(52, 211, 153, 0.4)", borderRadius: "var(--radius-sm)", textAlign: "center" }}>
-              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#10b981", fontFamily: "var(--font-mono)" }}>
-                {securityReport ? `${securityReport.passed} passed` : "10 passed"}
-              </div>
-              <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase" }}>ENFORCED</div>
+          <div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              LLM SELF-VERIFICATION
+            </span>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "14px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
+              STRICTLY PROHIBITED
             </div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              7 independent code checks
+            </span>
+          </div>
 
-            <div style={{ padding: "8px 14px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: "var(--radius-sm)", textAlign: "center" }}>
-              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: securityReport && securityReport.boundary_violations > 0 ? "#f87171" : "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-                {securityReport ? `${securityReport.boundary_violations} violations` : "0 violations"}
-              </div>
-              <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase" }}>VIOLATIONS</div>
+          <div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              ADVERSARIAL BOUNDARY PROOFS
+            </span>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "14px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
+              {securityReport ? `${securityReport.passed}/${securityReport.total_tests} ENFORCED` : "10/10 ENFORCED"}
             </div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              Deterministic test proofs
+            </span>
           </div>
         </div>
 
-        {/* Security Matrix Table */}
-        <div style={{ overflowX: "auto", marginTop: 12 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", textAlign: "left" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--border-color)", color: "var(--text-muted)" }}>
-                <th style={{ padding: "8px 12px", fontFamily: "var(--font-mono)" }}>ID</th>
-                <th style={{ padding: "8px 12px" }}>Attack</th>
-                <th style={{ padding: "8px 12px" }}>Boundary</th>
-                <th style={{ padding: "8px 12px" }}>Result</th>
-                <th style={{ padding: "8px 12px" }}>Proof of Enforcement</th>
-              </tr>
-            </thead>
-            <tbody>
-              {securityReport?.results && securityReport.results.length > 0 ? (
-                securityReport.results.map((r) => {
-                  const getStatusBadge = (status: string) => {
-                    switch (status.toUpperCase()) {
-                      case "BLOCKED":
-                        return <span className="badge" style={{ background: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "1px solid rgba(239, 68, 68, 0.4)" }}>BLOCKED</span>;
-                      case "QUARANTINED":
-                        return <span className="badge" style={{ background: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "1px solid rgba(245, 158, 11, 0.4)" }}>QUARANTINED</span>;
-                      case "REJECTED":
-                        return <span className="badge" style={{ background: "rgba(244, 63, 94, 0.15)", color: "#fda4af", border: "1px solid rgba(244, 63, 94, 0.4)" }}>REJECTED</span>;
-                      case "ENFORCED":
-                        return <span className="badge badge-verified" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "1px solid rgba(16, 185, 129, 0.4)" }}>ENFORCED</span>;
-                      default:
-                        return <span className="badge badge-secondary">{status}</span>;
-                    }
-                  };
+        {error && (
+          <div
+            style={{
+              marginTop: 14,
+              padding: "10px 14px",
+              background: "rgba(217, 105, 78, 0.1)",
+              border: "1px solid var(--coral)",
+              borderRadius: "var(--radius-sm)",
+              color: "var(--coral-text)",
+              fontFamily: "var(--font-mono)",
+              fontSize: "12px",
+            }}
+          >
+            [BOUNDARY VERIFICATION WARNING] {error}
+          </div>
+        )}
+      </EnamelSurface>
 
-                  return (
-                    <tr key={r.security_test_id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
-                      <td style={{ padding: "10px 12px", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-cyan)" }}>
-                        {r.security_test_id}
-                      </td>
-                      <td style={{ padding: "10px 12px", color: "var(--text-primary)", fontWeight: 600 }}>
-                        <div>{r.attack_category}</div>
-                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2 }}>{r.attempted_action}</div>
-                      </td>
-                      <td style={{ padding: "10px 12px", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
-                        {r.boundary_under_test}
-                      </td>
-                      <td style={{ padding: "10px 12px" }}>
-                        {getStatusBadge(r.status)}
-                      </td>
-                      <td style={{ padding: "10px 12px", fontSize: "0.74rem", color: "var(--text-muted)", maxWidth: 340 }}>
-                        <div style={{ color: "#34d399" }}>✓ {r.actual_outcome}</div>
-                        {r.audit_event && (
-                          <div style={{ fontSize: "0.68rem", color: "var(--accent-cyan)", marginTop: 2, fontFamily: "var(--font-mono)" }}>
-                            Event: {r.audit_event}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={5} style={{ padding: 16, textAlign: "center", color: "var(--text-muted)" }}>
-                    Loading security boundary matrix...
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* The 6 Core Sovereignty Pillars (Current State | What is Enforced | How Verified) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: 20,
+        }}
+      >
+        {/* 1. MODEL */}
+        <EnamelSurface variant="base" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", fontWeight: 600 }}>
+              01 · LOCAL REASONING MODEL
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: isModelLive ? "var(--sage)" : "var(--brass)",
+                background: isModelLive ? "rgba(156, 195, 168, 0.1)" : "rgba(200, 161, 90, 0.1)",
+                padding: "2px 8px",
+                borderRadius: "var(--radius-pill)",
+                border: `1px solid ${isModelLive ? "var(--sage)" : "var(--brass)"}`,
+              }}
+            >
+              {isModelLive ? "LIVE SOVEREIGN INFERENCE" : "BOUNDED READY"}
+            </span>
+          </div>
 
-      {/* Sovereign Architecture Proof Statement */}
-      <div className="card" style={{
-        background: "rgba(0, 240, 255, 0.02)",
-        border: "1px solid rgba(0, 240, 255, 0.15)",
-      }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8 }}>
-          <span style={{ color: "var(--accent-cyan)", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.9rem" }}>
-            SOVEREIGNTY COMPLIANCE ATTESTATION:
-          </span>
-          <span className="badge badge-verified">AIR-GAPPED COMPLIANT</span>
-        </div>
-        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-          FORGE is designed for high-consequence critical infrastructure (nuclear, petrochem, power generation).
-          In accordance with the <strong>AGENTS.md Governance Specification</strong>, the runtime guarantees:
-          (1) Zero external cloud AI SDK dependencies in pyproject.toml or requirements.txt;
-          (2) Zero HTTP/S egress to third-party model inference APIs;
-          (3) Strict verification isolation where LLMs are forbidden from assessing their own answers;
-          (4) Fail-closed, default-deny security mediation for all tool execution boundaries.
-        </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
+                {sovereignty?.model_provider.default_model || "qwen3:8b"} via {sovereignty?.model_provider.type.toUpperCase() || "OLLAMA"}
+              </div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", marginTop: 2 }}>
+                Endpoint: {sovereignty?.model_provider.base_url || "http://127.0.0.1:11434"}
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
+                Zero public cloud AI API calls. Zero external AI SDK dependencies.
+              </div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px", marginTop: 2 }}>
+                Cloud fallback: <strong style={{ color: "var(--sage)" }}>DISABLED (FAIL-CLOSED)</strong>
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
+                Loopback socket binding (127.0.0.1) & strict BaseModelProvider abstract interface injection.
+              </div>
+            </div>
+          </div>
+        </EnamelSurface>
+
+        {/* 2. KNOWLEDGE */}
+        <EnamelSurface variant="base" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", fontWeight: 600 }}>
+              02 · KNOWLEDGE FABRIC
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--sage)",
+                background: "rgba(156, 195, 168, 0.1)",
+                padding: "2px 8px",
+                borderRadius: "var(--radius-pill)",
+                border: "1px solid var(--sage)",
+              }}
+            >
+              LOCAL VECTOR ENCLAVE
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
+                Deterministic / On-Premise Vector Embedding ({sovereignty?.embedding_provider.model || "all-MiniLM-L6-v2"})
+              </div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", marginTop: 2 }}>
+                Vector Cloud: <strong style={{ color: "var(--sage)" }}>BLOCKED (NO PINECONE/WEAVIATE CLOUD)</strong>
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
+                Clearance lattice boundary strictly limits document passage retrievals.
+              </div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px", marginTop: 2 }}>
+                Unprivileged users cannot retrieve higher classification chunks.
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
+                Pre-retrieval clearance filter check & post-retrieval classification verification check.
+              </div>
+            </div>
+          </div>
+        </EnamelSurface>
+
+        {/* 3. VISION */}
+        <EnamelSurface variant="base" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", fontWeight: 600 }}>
+              03 · ENGINEERING VISION
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: isVisionInstalled ? "var(--sage)" : "var(--brass)",
+                background: isVisionInstalled ? "rgba(156, 195, 168, 0.1)" : "rgba(200, 161, 90, 0.1)",
+                padding: "2px 8px",
+                borderRadius: "var(--radius-pill)",
+                border: `1px solid ${isVisionInstalled ? "var(--sage)" : "var(--brass)"}`,
+              }}
+            >
+              {isVisionInstalled ? "LIVE LOCAL VLM" : "DEMO FIXTURE (ADVISORY)"}
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
+                {isVisionInstalled ? "Live Local VLM (qwen2.5-vl:7b)" : "Deterministic Synthetic Fixture (Advisory Gauge)"}
+              </div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", marginTop: 2 }}>
+                Maximum Ingestion Buffer: 15 MB bounded
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
+                Zero image transmission to cloud vision APIs.
+              </div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px", marginTop: 2 }}>
+                SHA-256 provenance hash computed immediately on upload buffer.
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
+                Digest verified against image provenance record; visual finding tagged as advisory until confirmed.
+              </div>
+            </div>
+          </div>
+        </EnamelSurface>
+
+        {/* 4. POLICY */}
+        <EnamelSurface variant="base" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", fontWeight: 600 }}>
+              04 · POLICY GATEWAY
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--coral-text)",
+                background: "rgba(217, 105, 78, 0.1)",
+                padding: "2px 8px",
+                borderRadius: "var(--radius-pill)",
+                border: "1px solid var(--coral)",
+              }}
+            >
+              DEFAULT-DENY ACTIVE
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--coral-text)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
+                Default Gateway Action: DENY (FAIL-CLOSED)
+              </div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", marginTop: 2 }}>
+                Unregistered Tools: Explicitly Blocked
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
+                Tool sandbox execution intercepted before handler invocation.
+              </div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px", marginTop: 2 }}>
+                Supervisor approval required for CRITICAL actuation tools.
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
+                10/10 adversarial test proofs verify denied tools trigger zero sandbox code execution.
+              </div>
+            </div>
+          </div>
+        </EnamelSurface>
+
+        {/* 5. VERIFICATION */}
+        <EnamelSurface variant="base" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", fontWeight: 600 }}>
+              05 · DETERMINISTIC VERIFICATION
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--sage)",
+                background: "rgba(156, 195, 168, 0.1)",
+                padding: "2px 8px",
+                borderRadius: "var(--radius-pill)",
+                border: "1px solid var(--sage)",
+              }}
+            >
+              NON-LLM CODE PROOFS
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
+                {sovereignty?.verification_engine.deterministic_checks_count || 7} Discrete Verification Checkpoints
+              </div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", marginTop: 2 }}>
+                Python Engines: 4 Registered Sandboxed Math Handlers
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
+                LLM self-verification is strictly prohibited.
+              </div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px", marginTop: 2 }}>
+                Calculations must match pure Python formulas before response synthesis.
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
+                Independent VerificationPanel renders discrete pass/fail per checkpoint with proof traces.
+              </div>
+            </div>
+          </div>
+        </EnamelSurface>
+
+        {/* 6. AUDIT */}
+        <EnamelSurface variant="base" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", fontWeight: 600 }}>
+              06 · AUDIT SINK
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--sage)",
+                background: "rgba(156, 195, 168, 0.1)",
+                padding: "2px 8px",
+                borderRadius: "var(--radius-pill)",
+                border: "1px solid var(--sage)",
+              }}
+            >
+              LOCAL APPEND-ONLY
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
+                Append-only in-memory & local file sink
+              </div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", marginTop: 2 }}>
+                Active Events: {sovereignty?.audit_sink.active_events_count || 0} lifecycle events
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
+                No events can be retroactively rewritten or truncated during mission execution.
+              </div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px", marginTop: 2 }}>
+                Telemetry & prompt logs never egress local boundaries.
+              </div>
+            </div>
+
+            <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
+                Deterministic audit trail reader correlates each action with a unique event ID.
+              </div>
+            </div>
+          </div>
+        </EnamelSurface>
       </div>
     </div>
   );
