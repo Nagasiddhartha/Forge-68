@@ -1,7 +1,9 @@
-"use client";
-
 import React from "react";
 import { AgentQueryResponse } from "@/lib/api";
+import {
+  EnamelSurface,
+  VerdictBadge,
+} from "@/components/primitives";
 
 interface ExecutionTraceProps {
   response: AgentQueryResponse;
@@ -12,292 +14,540 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
   const policyDecisions = response.policy_decisions || [];
   const knowledgeEvidence = response.evidence_set?.knowledge_evidence || [];
   const visualEvidence = response.evidence_set?.visual_evidence || [];
+  const toolEvidence = response.evidence_set?.tool_evidence || [];
   const verification = response.verification;
 
   return (
-    <div style={{ marginTop: 24 }}>
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 16,
-        paddingBottom: 8,
-        borderBottom: "1px solid var(--bg-surface-border)",
-      }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Header Bar */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
+          paddingBottom: 12,
+          borderBottom: "1px solid var(--line)",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.95rem" }}>
-            Deterministic Execution Trace
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "12px",
+              fontWeight: 600,
+              color: "var(--brass)",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}
+          >
+            Forensic Execution Trace
           </span>
-          <span className="badge badge-cyan">AUDITABLE LIFECYCLE</span>
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              color: "var(--ink-3)",
+              background: "var(--bg-2)",
+              padding: "2px 8px",
+              borderRadius: "var(--radius-pill)",
+              border: "1px solid var(--line)",
+            }}
+          >
+            Deterministic Lifecycle
+          </span>
         </div>
 
         {response.execution_event_id && (
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", color: "var(--text-muted)" }}>
-            EVENT: {response.execution_event_id}
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              color: "var(--ink-3)",
+            }}
+          >
+            Event ID: <strong style={{ color: "var(--ink-2)" }}>{response.execution_event_id}</strong>
           </span>
         )}
       </div>
 
-      {/* Step 1: User Request */}
-      <div className="trace-step">
-        <div className="trace-node">1</div>
-        <div style={{
-          background: "var(--bg-surface)",
-          border: "1px solid var(--bg-surface-border)",
-          borderRadius: "var(--radius-sm)",
-          padding: "10px 14px",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-cyan)" }}>
-              AGENT_REQUEST (INGESTED)
-            </span>
-            <span className="badge badge-secondary">PHASE 1</span>
-          </div>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{response.query}</p>
-        </div>
-      </div>
+      {/* Sequential Forensic Spine */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Phase 1: Request Ingested */}
+        <EnamelSurface variant="elevated" padding="compact">
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "var(--bg-0)",
+                border: "1px solid var(--line-strong)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                color: "var(--brass)",
+                flexShrink: 0,
+              }}
+            >
+              01
+            </div>
 
-      {/* Step 2: Agent Plan */}
-      <div className="trace-step">
-        <div className="trace-node">2</div>
-        <div style={{
-          background: "var(--bg-surface)",
-          border: "1px solid var(--bg-surface-border)",
-          borderRadius: "var(--radius-sm)",
-          padding: "10px 14px",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-cyan)" }}>
-                AGENT_PLAN_CREATED (QWEN3 8B)
-              </span>
-              {plan && <span className="badge badge-cyan">ACTION: {plan.action.toUpperCase()}</span>}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
+                  Operational Query Ingestion
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    color: "var(--sage)",
+                    background: "rgba(156, 195, 168, 0.08)",
+                    padding: "2px 8px",
+                    borderRadius: "var(--radius-pill)",
+                    border: "1px solid var(--sage)",
+                  }}
+                >
+                  INGESTED
+                </span>
+              </div>
+              <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink)", lineHeight: 1.5 }}>
+                {response.query}
+              </p>
             </div>
           </div>
+        </EnamelSurface>
 
-          {plan?.reasoning && (
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: 8, fontStyle: "italic" }}>
-              &quot;{plan.reasoning}&quot;
-            </p>
-          )}
-
-          {plan && (
-            <div style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 12,
-              fontSize: "0.75rem",
-              fontFamily: "var(--font-mono)",
-              color: "var(--text-muted)",
-              background: "#05070a",
-              padding: "6px 10px",
-              borderRadius: "var(--radius-sm)",
-            }}>
-              <span>KNOWLEDGE QUERIES: {plan.knowledge_queries?.length || 0}</span>
-              <span>TOOL CALLS: {plan.tool_calls?.length || 0}</span>
-              <span>CALCULATIONS: {plan.calculations?.length || 0}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Step 3: Knowledge Retrieval */}
-      {knowledgeEvidence.length > 0 && (
-        <div className="trace-step">
-          <div className="trace-node">3</div>
-          <div style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--bg-surface-border)",
-            borderRadius: "var(--radius-sm)",
-            padding: "10px 14px",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", fontWeight: 700, color: "#38bdf8" }}>
-                KNOWLEDGE_RETRIEVAL_COMPLETED
-              </span>
-              <span className="badge badge-secondary">{knowledgeEvidence.length} CHUNKS RETRIEVED</span>
+        {/* Phase 2: Agent Plan */}
+        <EnamelSurface variant="elevated" padding="compact">
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "var(--bg-0)",
+                border: "1px solid var(--line-strong)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                color: "var(--brass)",
+                flexShrink: 0,
+              }}
+            >
+              02
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {knowledgeEvidence.map((k) => (
-                <div key={k.evidence_id} style={{
-                  fontSize: "0.76rem",
-                  fontFamily: "var(--font-mono)",
-                  background: "var(--bg-surface-elevated)",
-                  padding: "6px 10px",
-                  borderRadius: 3,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}>
-                  <span>{k.source_reference} ({k.filename})</span>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <span className="badge badge-secondary">{k.classification}</span>
-                    {k.retrieval_score && (
-                      <span style={{ color: "var(--accent-cyan)" }}>
-                        {(k.retrieval_score * 100).toFixed(0)}% MATCH
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: Tools & Policy Gateway */}
-      {policyDecisions.length > 0 && (
-        <div className="trace-step">
-          <div className="trace-node">4</div>
-          <div style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--bg-surface-border)",
-            borderRadius: "var(--radius-sm)",
-            padding: "10px 14px",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-amber)" }}>
-                POLICY_EVALUATED & TOOL_EXECUTION
-              </span>
-              <span className="badge badge-secondary">{policyDecisions.length} EVALUATIONS</span>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {policyDecisions.map((pd, idx) => {
-                const isAllow = pd.decision === "ALLOW";
-                return (
-                  <div
-                    key={idx}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
+                  Reasoning Plan Formulation
+                </span>
+                {plan && (
+                  <span
                     style={{
-                      background: "var(--bg-surface-elevated)",
-                      border: `1px solid ${isAllow ? "rgba(16, 185, 129, 0.3)" : "rgba(244, 63, 94, 0.3)"}`,
-                      padding: "8px 10px",
-                      borderRadius: "var(--radius-sm)",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--brass)",
+                      background: "rgba(200, 161, 90, 0.08)",
+                      padding: "2px 8px",
+                      borderRadius: "var(--radius-pill)",
+                      border: "1px solid var(--brass)",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    ACTION: {plan.action.toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              {plan?.reasoning && (
+                <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", fontStyle: "italic", marginBottom: 8 }}>
+                  &ldquo;{plan.reasoning}&rdquo;
+                </p>
+              )}
+
+              {plan && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 12,
+                    fontSize: "12px",
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--ink-3)",
+                    background: "var(--bg-0)",
+                    padding: "6px 12px",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--line)",
+                  }}
+                >
+                  <span>Knowledge Queries: <strong style={{ color: "var(--ink)" }}>{plan.knowledge_queries?.length || 0}</strong></span>
+                  <span>Tool Calls: <strong style={{ color: "var(--ink)" }}>{plan.tool_calls?.length || 0}</strong></span>
+                  <span>Calculations: <strong style={{ color: "var(--ink)" }}>{plan.calculations?.length || 0}</strong></span>
+                </div>
+              )}
+            </div>
+          </div>
+        </EnamelSurface>
+
+        {/* Phase 3: Knowledge Retrieval */}
+        {knowledgeEvidence.length > 0 && (
+          <EnamelSurface variant="elevated" padding="compact">
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "var(--bg-0)",
+                  border: "1px solid var(--line-strong)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  color: "var(--brass)",
+                  flexShrink: 0,
+                }}
+              >
+                03
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
+                    Sovereign Knowledge Retrieval
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--ink-2)",
+                    }}
+                  >
+                    {knowledgeEvidence.length} chunks retrieved
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+                  {knowledgeEvidence.map((k) => (
+                    <div
+                      key={k.evidence_id}
+                      style={{
+                        fontSize: "12px",
+                        fontFamily: "var(--font-mono)",
+                        background: "var(--bg-0)",
+                        padding: "6px 10px",
+                        borderRadius: "var(--radius-sm)",
+                        border: "1px solid var(--line)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "var(--ink)" }}>
+                        {k.source_reference} ({k.filename})
+                      </span>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span className={isAllow ? "badge badge-allow" : "badge badge-deny"}>
-                          {pd.decision}
+                        <span style={{ color: "var(--ink-3)" }}>{k.classification}</span>
+                        {k.retrieval_score && (
+                          <span style={{ color: "var(--brass)" }}>
+                            {(k.retrieval_score * 100).toFixed(0)}% match
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </EnamelSurface>
+        )}
+
+        {/* Phase 4: Policy Gateway & Tool Execution */}
+        {policyDecisions.length > 0 && (
+          <EnamelSurface variant="elevated" padding="compact">
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "var(--bg-0)",
+                  border: "1px solid var(--line-strong)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  color: "var(--brass)",
+                  flexShrink: 0,
+                }}
+              >
+                04
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
+                    Policy Gateway Mediation & Sandbox
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--ink-2)",
+                    }}
+                  >
+                    {policyDecisions.length} evaluations
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+                  {policyDecisions.map((pd, idx) => {
+                    const isAllow = pd.decision === "ALLOW";
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          background: "var(--bg-0)",
+                          border: `1px solid ${isAllow ? "var(--line)" : "rgba(217, 105, 78, 0.4)"}`,
+                          padding: "8px 12px",
+                          borderRadius: "var(--radius-sm)",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span
+                              style={{
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "11px",
+                                fontWeight: 600,
+                                color: isAllow ? "var(--sage)" : "var(--coral-text)",
+                                background: isAllow ? "rgba(156, 195, 168, 0.1)" : "rgba(217, 105, 78, 0.1)",
+                                padding: "2px 8px",
+                                borderRadius: "var(--radius-pill)",
+                              }}
+                            >
+                              {pd.decision}
+                            </span>
+                            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12.5px", fontWeight: 600, color: "var(--ink)" }}>
+                              {pd.tool}
+                            </span>
+                          </div>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                            RULE: {pd.policy_id || "GATEWAY_RULE"}
+                          </span>
+                        </div>
+
+                        <p style={{ fontFamily: "var(--font-ui)", fontSize: "12.5px", color: "var(--ink-2)", marginTop: 4 }}>
+                          {pd.reason}
+                        </p>
+                      </div>
+                    );
+                  })}
+                  {toolEvidence.length > 0 && (
+                    <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                        Executed Sandbox Tools ({toolEvidence.length}):
+                      </span>
+                      {toolEvidence.map((te) => (
+                        <div
+                          key={te.evidence_id}
+                          style={{
+                            background: "var(--bg-0)",
+                            border: "1px solid var(--line)",
+                            padding: "6px 10px",
+                            borderRadius: "var(--radius-sm)",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "11.5px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <span style={{ color: "var(--sage)" }}>{te.source_reference}</span>
+                          <span style={{ color: "var(--ink-3)" }}>ID: {te.evidence_id.slice(0, 12)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </EnamelSurface>
+        )}
+
+        {/* Phase 5: Visual Ingestion (if present) */}
+        {visualEvidence.length > 0 && (
+          <EnamelSurface variant="elevated" padding="compact">
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "var(--bg-0)",
+                  border: "1px solid var(--line-strong)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  color: "var(--brass)",
+                  flexShrink: 0,
+                }}
+              >
+                05
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
+                    Engineering Vision Observation
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--ink-2)",
+                    }}
+                  >
+                    {visualEvidence.length} visual records
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+                  {visualEvidence.map((v) => (
+                    <div
+                      key={v.evidence_id}
+                      style={{
+                        fontSize: "12px",
+                        background: "var(--bg-0)",
+                        padding: "8px 12px",
+                        borderRadius: "var(--radius-sm)",
+                        border: "1px solid var(--line)",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)" }}>
+                          {v.finding_type || "OBSERVATION"}
                         </span>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", fontWeight: 700 }}>
-                          {pd.tool}
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                          SHA256: {v.source_image_hash?.slice(0, 16)}...
                         </span>
                       </div>
-                      <span style={{ fontSize: "0.7rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
-                        POLICY: {pd.policy_id || "GATEWAY_RULE"}
-                      </span>
+                      <p style={{ fontFamily: "var(--font-ui)", color: "var(--ink-2)", fontSize: "12.5px" }}>
+                        {v.retrieved_text}
+                      </p>
                     </div>
-
-                    <p style={{ fontSize: "0.76rem", color: "var(--text-secondary)", marginTop: 4 }}>
-                      {pd.reason}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Step 5: Visual Evidence if present */}
-      {visualEvidence.length > 0 && (
-        <div className="trace-step">
-          <div className="trace-node">5</div>
-          <div style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--bg-surface-border)",
-            borderRadius: "var(--radius-sm)",
-            padding: "10px 14px",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-purple)" }}>
-                MULTIMODAL_OBSERVATIONS_INGESTED
-              </span>
-              <span className="badge badge-insufficient">{visualEvidence.length} VISUAL RECORDS</span>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {visualEvidence.map((v) => (
-                <div key={v.evidence_id} style={{
-                  fontSize: "0.78rem",
-                  background: "var(--bg-surface-elevated)",
-                  padding: "8px 10px",
-                  borderRadius: 3,
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span className="badge badge-insufficient">{v.finding_type || "OBSERVATION"}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-muted)" }}>
-                      SHA256: {v.source_image_hash?.slice(0, 16)}...
-                    </span>
-                  </div>
-                  <p style={{ color: "var(--text-secondary)", fontSize: "0.78rem" }}>{v.retrieved_text}</p>
+                  ))}
                 </div>
-              ))}
+              </div>
+            </div>
+          </EnamelSurface>
+        )}
+
+        {/* Phase 6: Deterministic Verification */}
+        {verification && (
+          <EnamelSurface variant="elevated" padding="compact">
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "var(--bg-0)",
+                  border: "1px solid var(--line-strong)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  color: "var(--sage)",
+                  flexShrink: 0,
+                }}
+              >
+                06
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
+                    Independent Deterministic Verification
+                  </span>
+                  <VerdictBadge verdict={verification.status} />
+                </div>
+
+                <p style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.5 }}>
+                  {verification.summary}
+                </p>
+              </div>
+            </div>
+          </EnamelSurface>
+        )}
+
+        {/* Phase 7: Grounded Final Response */}
+        <EnamelSurface variant="elevated" padding="compact" style={{ border: "1px solid var(--line-strong)" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "var(--bg-0)",
+                border: "1px solid var(--brass)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                color: "var(--brass)",
+                flexShrink: 0,
+              }}
+            >
+              07
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--brass)" }}>
+                  Verified Case Briefing Delivered
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    color: "var(--sage)",
+                  }}
+                >
+                  OPERATOR PRESENTATION
+                </span>
+              </div>
+
+              <div
+                style={{
+                  fontFamily: "var(--font-ui)",
+                  fontSize: "14px",
+                  color: "var(--ink)",
+                  lineHeight: 1.6,
+                  whiteSpace: "pre-wrap",
+                  background: "var(--bg-0)",
+                  padding: "12px 14px",
+                  borderRadius: "var(--radius-sm)",
+                  border: "1px solid var(--line)",
+                }}
+              >
+                {response.final_answer}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Step 6: Verification Assessment */}
-      {verification && (
-        <div className="trace-step">
-          <div className="trace-node">6</div>
-          <div style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--bg-surface-border)",
-            borderRadius: "var(--radius-sm)",
-            padding: "10px 14px",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-emerald)" }}>
-                VERIFICATION_COMPLETED (DETERMINISTIC CHECKS)
-              </span>
-              <span className={
-                verification.status === "VERIFIED"
-                  ? "badge badge-verified"
-                  : verification.status === "NEEDS_REVIEW"
-                  ? "badge badge-review"
-                  : "badge badge-failed"
-              }>
-                {verification.status}
-              </span>
-            </div>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-              {verification.summary}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Step 7: Final Grounded Response */}
-      <div className="trace-step">
-        <div className="trace-node" style={{ borderColor: "var(--accent-emerald)", color: "var(--accent-emerald)" }}>
-          7
-        </div>
-        <div style={{
-          background: "linear-gradient(180deg, var(--bg-surface) 0%, rgba(16, 185, 129, 0.04) 100%)",
-          border: "1px solid rgba(16, 185, 129, 0.4)",
-          borderRadius: "var(--radius-sm)",
-          padding: "14px 16px",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-emerald)" }}>
-              AGENT_FINAL_RESPONSE (EVIDENCE GROUNDED)
-            </span>
-            <span className="badge badge-verified">DELIVERED TO OPERATOR</span>
-          </div>
-
-          <div style={{
-            fontSize: "0.88rem",
-            color: "var(--text-primary)",
-            lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
-          }}>
-            {response.final_answer}
-          </div>
-        </div>
+        </EnamelSurface>
       </div>
     </div>
   );

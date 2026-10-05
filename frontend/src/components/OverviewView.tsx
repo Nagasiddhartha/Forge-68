@@ -11,6 +11,14 @@ import {
   fetchKnowledgeDocuments,
   fetchSovereigntyStatus,
 } from "@/lib/api";
+import {
+  EnamelSurface,
+  VerdictBadge,
+  BrassLabel,
+  Metric,
+  StatusIndicator,
+  Divider,
+} from "@/components/primitives";
 
 interface OverviewViewProps {
   onNavigateToWorkspace: () => void;
@@ -21,7 +29,6 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [audit, setAudit] = useState<AuditEventsResponse | null>(null);
   const [knowledge, setKnowledge] = useState<KnowledgeDocsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
@@ -36,8 +43,8 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
         setHealth(healthRes);
         setAudit(auditRes);
         setKnowledge(knowRes);
-      } finally {
-        setIsLoading(false);
+      } catch {
+        // ignore
       }
     }
     loadData();
@@ -45,230 +52,388 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Hero Mission Control Header */}
-      <div className="card" style={{
-        background: "linear-gradient(135deg, rgba(14, 18, 26, 0.95) 0%, rgba(21, 27, 38, 0.95) 100%)",
-        border: "1px solid var(--accent-cyan-dim)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <span className="badge badge-cyan">LOCAL OPERATIONS</span>
-              <span className="badge badge-verified">SOVEREIGNTY ENFORCED</span>
+      {/* Industrial Case File Header */}
+      <EnamelSurface variant="base" padding="spacious" style={{ position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
+          <div style={{ maxWidth: 780 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+              <BrassLabel variant="outline">MISSION CASE · R-204-REV4</BrassLabel>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  color: "var(--ink-3)",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                HYDROCRACKER LOOP · FACILITY UNIT 4
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  color: "var(--brass)",
+                  padding: "2px 8px",
+                  border: "1px solid var(--line-strong)",
+                  borderRadius: "var(--radius-sm)",
+                }}
+              >
+                CONFIDENTIAL
+              </span>
             </div>
-            <h1 style={{ fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text-primary)" }}>
-              Industrial AI Mission Control Dashboard
+
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                fontSize: "clamp(28px, 3.2vw, 42px)",
+                lineHeight: 1.1,
+                color: "var(--ink)",
+                letterSpacing: "-0.01em",
+                marginBottom: 10,
+              }}
+            >
+              Reactor R-204 Pressure Variance Investigation
             </h1>
-            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: 4, maxWidth: 680 }}>
-              Sovereign, on-premise industrial agent control plane executing local model reasoning,
-              DEFAULT-DENY tool policy mediation, deterministic calculations, and multi-stage verification.
+
+            <p
+              style={{
+                fontFamily: "var(--font-ui)",
+                fontSize: "15px",
+                lineHeight: 1.6,
+                color: "var(--ink-2)",
+              }}
+            >
+              Autonomous industrial investigation synthesizing operating pressure telemetry,
+              ultrasonic shell wall inspection, and plant operating procedures.
+              All reasoning is sovereign, tool actuation is policy-gated, and conclusions are mathematically verified.
             </p>
-
           </div>
 
-          <button onClick={onNavigateToWorkspace} className="btn-primary" style={{ padding: "10px 20px" }}>
-            OPEN AI WORKSPACE ▶
-          </button>
-        </div>
-      </div>
-
-      {/* 6 Real Subsystem Cards Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
-        {/* Card 1: Local AI Reasoning */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.88rem" }}>
-              1. Local AI Reasoning
-            </span>
-            <span className="badge badge-verified">
-              <span className="pulse-emerald" />
-              {health?.model_provider_online ? "ONLINE" : "READY"}
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>PROVIDER:</span>
-              <span style={{ color: "var(--accent-cyan)" }}>{sovereignty?.model_provider?.type?.toUpperCase() || "OLLAMA"}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>REASONING MODEL:</span>
-              <span>{sovereignty?.model_provider?.default_model || "qwen3:8b"}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>EXTERNAL CLOUD AI:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>BLOCKED (0 CALLS)</span>
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
+            <VerdictBadge verdict="REVIEW_REQUIRED" />
+            <button
+              onClick={onNavigateToWorkspace}
+              className="btn-brass-primary"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              Open AI Workspace ▶
+            </button>
           </div>
         </div>
 
-        {/* Card 2: Knowledge Fabric */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.88rem" }}>
-              2. Knowledge Fabric
+        <Divider style={{ margin: "20px 0" }} />
+
+        {/* Primary Case Condition Matrix (Section 4 Specification) */}
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 14,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--ink-3)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Primary Operational Parameters · Reactor R-204
             </span>
-            <span className="badge badge-cyan">VECTOR INDEX ACTIVE</span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--ink-3)",
+              }}
+            >
+              Telemetry Point: PI-204
+            </span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>EMBEDDING MODEL:</span>
-              <span>{sovereignty?.embedding_provider?.model || "BAAI/bge-m3"}</span>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 16,
+              background: "var(--bg-0)",
+              border: "1px solid var(--line)",
+              borderRadius: "var(--radius-panel)",
+              padding: "16px 20px",
+            }}
+          >
+            <Metric
+              value="33.0"
+              unit="bar"
+              label="Current Condition"
+              subtext="Analog indicator PI-204"
+              highlight={true}
+            />
+            <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+              <Metric
+                value="31.2"
+                unit="bar"
+                label="Normal Baseline"
+                subtext="SOP-R204 Rev C §3.2"
+              />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>DEMO DOCUMENTS:</span>
-              <span>{knowledge?.total_available || 5} TECHNICAL REVIEWS</span>
+            <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+              <Metric
+                value="+1.8"
+                unit="bar"
+                label="Observed Deviation"
+                subtext="Above nominal limit"
+                highlight={true}
+              />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>STORAGE BOUNDARY:</span>
-              <span style={{ color: "#34d399" }}>AIR-GAPPED LOCAL DISK</span>
+            <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+              <Metric
+                value="33.5"
+                unit="bar"
+                label="High Alarm Limit"
+                subtext="Margin: 0.5 bar remaining"
+              />
+            </div>
+            <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+              <Metric
+                value="35.0"
+                unit="bar"
+                label="Trip Threshold"
+                subtext="Safety interlock shutdown"
+              />
             </div>
           </div>
         </div>
+      </EnamelSurface>
 
-        {/* Card 3: Policy Gateway */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.88rem" }}>
-              3. Policy Gateway
+      {/* Case Dossier Sections (3 Supporting Operational Layers) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: 20,
+        }}
+      >
+        {/* Layer 1: Multi-Source Evidence Dossier */}
+        <EnamelSurface variant="elevated" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--brass)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              01 · EVIDENCE DOSSIER
             </span>
-            <span className="badge badge-deny">DEFAULT DENY</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>DEFAULT DECISION:</span>
-              <span style={{ color: "#f87171", fontWeight: 700 }}>DENY (FAIL-CLOSED)</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>CLEARANCE ENFORCEMENT:</span>
-              <span style={{ color: "#34d399" }}>STRICT RBAC TIERS</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>UNAUTHORIZED OVERRIDES:</span>
-              <span style={{ color: "#34d399" }}>PREVENTED</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Verification Engine */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.88rem" }}>
-              4. Verification Engine
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--ink-3)",
+              }}
+            >
+              {knowledge?.total_available || 5} Records Indexed
             </span>
-            <span className="badge badge-verified">DETERMINISTIC PYTHON</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>AUDIT CHECKS:</span>
-              <span>7 DISCRETE STAGES</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>CALCULATION ENGINE:</span>
-              <span>PYTHON ARITHMETIC</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>LLM SELF-VERIFICATION:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>STRICTLY PROHIBITED</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Card 5: Multimodal Vision */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.88rem" }}>
-              5. Multimodal Vision
-            </span>
-            <span className="badge badge-insufficient">BOUNDED OBSERVER</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>VISION MODEL:</span>
-              <span>{sovereignty?.vision_provider?.default_model || "qwen2.5-vl:7b"}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>ACCEPTED FORMATS:</span>
-              <span>PNG, JPEG, WebP</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>SAFETY CLEARANCE AUTHORITY:</span>
-              <span style={{ color: "#34d399" }}>REVERTED TO VERIFIER</span>
-            </div>
-          </div>
-        </div>
+          <h3
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "20px",
+              color: "var(--ink)",
+              marginBottom: 8,
+              fontWeight: 500,
+            }}
+          >
+            Multi-Source Corroboration
+          </h3>
 
-        {/* Card 6: Sovereignty Enclosure */}
-        <div className="card">
-          <div className="card-header">
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.88rem" }}>
-              6. Sovereignty Enclosure
-            </span>
-            <span className="badge badge-verified">LOCAL ONLY</span>
+          <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
+            Case determinations are grounded in four independent evidence modalities:
+            plant operating procedures, ultrasonic inspection scans, telemetry feeds, and deterministic calculations.
+          </p>
 
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>NETWORK BOUNDARY:</span>
-              <span style={{ color: "#34d399", fontWeight: 700 }}>LOCAL ONLY (NO CLOUD)</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>AUDIT LOG SINK:</span>
-              <span>{sovereignty?.audit_sink?.active_events_count || audit?.total_agent_events || 0} EVENTS LOGGED</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>TAMPER RESISTANCE:</span>
-              <span style={{ color: "#34d399" }}>APPEND-ONLY SINK</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity Audit Feed */}
-      <div className="card">
-        <div className="card-header">
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.95rem" }}>
-              Recent Agent Execution Audit Stream
-            </span>
-            <span className="badge badge-secondary">REAL-TIME EVENTS</span>
-          </div>
-        </div>
-
-        {audit?.agent_events && audit.agent_events.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {audit.agent_events.slice(0, 6).map((ev) => (
+            {[
+              { id: "01", type: "DOCUMENT", title: "SOP-R204 Rev C", note: "31.2 bar normal operating limit" },
+              { id: "02", type: "GAUGE", title: "Analog Dial PI-204", note: "33.0 bar visual & telemetry reading" },
+              { id: "03", type: "CALCULATION", title: "Variance Engine", note: "+1.8 bar delta, 0.5 bar to alarm" },
+              { id: "04", type: "INSPECTION", title: "Ultrasonic Wall Scan", note: "2.2 mm shell thickness (nominal 2.5 mm)" },
+            ].map((ev) => (
               <div
-                key={ev.event_id}
+                key={ev.id}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "8px 12px",
-                  background: "var(--bg-surface-elevated)",
+                  background: "var(--bg-0)",
+                  border: "1px solid var(--line)",
                   borderRadius: "var(--radius-sm)",
-                  fontSize: "0.75rem",
-                  fontFamily: "var(--font-mono)",
+                  padding: "8px 12px",
+                  fontSize: "12.5px",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span className="badge badge-cyan">{ev.event_type}</span>
-                  <span style={{ color: "var(--text-secondary)" }}>
-                    {ev.details?.query ? `"${String(ev.details.query).slice(0, 60)}..."` : `ID: ${ev.event_id.slice(0, 12)}`}
+                  <span style={{ fontFamily: "var(--font-mono)", color: "var(--brass)", fontSize: "11px" }}>
+                    [{ev.id}]
                   </span>
+                  <span style={{ color: "var(--ink)", fontWeight: 500 }}>{ev.title}</span>
                 </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--text-muted)" }}>
-                  <span>{ev.role}</span>
-                  <span>{new Date(ev.timestamp).toLocaleTimeString()}</span>
-                </div>
+                <span style={{ fontFamily: "var(--font-mono)", color: "var(--ink-3)", fontSize: "11.5px" }}>
+                  {ev.note}
+                </span>
               </div>
             ))}
           </div>
-        ) : (
-          <div style={{ padding: "24px 16px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}>
-            {isLoading ? "Querying sovereign control plane..." : "No agent events recorded yet in current execution session."}
+        </EnamelSurface>
+
+        {/* Layer 2: Independent Deterministic Verification */}
+        <EnamelSurface variant="elevated" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--sage)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              02 · INDEPENDENT VERIFICATION
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--sage)",
+              }}
+            >
+              7 / 7 Checks Active
+            </span>
           </div>
-        )}
+
+          <h3
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "20px",
+              color: "var(--ink)",
+              marginBottom: 8,
+              fontWeight: 500,
+            }}
+          >
+            Non-LLM Verification Spine
+          </h3>
+
+          <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
+            The AI model proposes conclusions, but never verifies its own output.
+            A separate deterministic Python verification engine executes discrete checks before operator delivery.
+          </p>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {[
+              { name: "Provenance", state: "PASS" },
+              { name: "Completeness", state: "PASS" },
+              { name: "Policy Gateway", state: "PASS" },
+              { name: "Classification", state: "PASS" },
+              { name: "Consistency", state: "PASS" },
+              { name: "Calculation", state: "PASS" },
+              { name: "Grounding", state: "PASS" },
+              { name: "Self-Verification", state: "PROHIBITED" },
+            ].map((chk, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  background: "var(--bg-0)",
+                  border: "1px solid var(--line)",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "7px 10px",
+                  fontSize: "12px",
+                }}
+              >
+                <span style={{ color: "var(--ink-2)" }}>{chk.name}</span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: chk.state === "PASS" ? "var(--sage)" : "var(--coral-text)",
+                  }}
+                >
+                  {chk.state}
+                </span>
+              </div>
+            ))}
+          </div>
+        </EnamelSurface>
+
+        {/* Layer 3: Sovereign Controls & Policy Authority */}
+        <EnamelSurface variant="elevated" padding="normal">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--brass)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              03 · CONTROLS & BOUNDARIES
+            </span>
+            <StatusIndicator status="verified" label="Enforced" />
+          </div>
+
+          <h3
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "20px",
+              color: "var(--ink)",
+              marginBottom: 8,
+              fontWeight: 500,
+            }}
+          >
+            Default-Deny Policy Gateway
+          </h3>
+
+          <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
+            Every tool invocation, knowledge chunk access, and telemetry query is evaluated against persona clearance and role authority.
+            Untrusted inputs are quarantined as inert data.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 8px", background: "var(--bg-0)", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <span style={{ color: "var(--ink-3)" }}>Gateway Policy:</span>
+              <span style={{ color: "var(--coral-text)", fontWeight: 600 }}>DEFAULT-DENY (FAIL-CLOSED)</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 8px", background: "var(--bg-0)", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <span style={{ color: "var(--ink-3)" }}>Reasoning Runtime:</span>
+              <span style={{ color: "var(--ink)" }}>
+                {sovereignty?.model_provider?.default_model || "qwen3:8b (Ollama Loopback)"} ({health?.model_provider_online ? "Ready" : "Offline"})
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 8px", background: "var(--bg-0)", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <span style={{ color: "var(--ink-3)" }}>Outside AI Services:</span>
+              <span style={{ color: "var(--sage)", fontWeight: 600 }}>NONE CONFIGURED</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 8px", background: "var(--bg-0)", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
+              <span style={{ color: "var(--ink-3)" }}>Audit Logging:</span>
+              <span style={{ color: "var(--ink)" }}>
+                {((audit?.total_agent_events || 0) + (audit?.tool_events?.length || 0))} Local append-only events
+              </span>
+            </div>
+          </div>
+        </EnamelSurface>
       </div>
     </div>
   );
