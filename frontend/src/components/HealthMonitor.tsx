@@ -90,7 +90,7 @@ export const HealthMonitor: React.FC = () => {
             color: "var(--text-muted)",
             marginTop: "4px"
           }}>
-            AIR-GAPPED SYSTEM HEALTH &bull; {lastCheck ? `LAST SAMPLED: ${lastCheck}` : "INITIALIZING..."}
+            SOVEREIGN SYSTEM HEALTH &bull; {lastCheck ? `LAST SAMPLED: ${lastCheck}` : "INITIALIZING..."}
           </div>
         </div>
 
@@ -163,7 +163,7 @@ export const HealthMonitor: React.FC = () => {
               marginTop: "4px",
               color: "var(--accent-cyan)"
             }}>
-              100% AIR-GAPPED
+              SOVEREIGN RUNTIME
             </div>
             <div style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginTop: "4px" }}>
               Zero Cloud AI APIs Allowed

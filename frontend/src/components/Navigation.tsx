@@ -34,8 +34,8 @@ export function Navigation({
     { id: "knowledge", label: "Knowledge", tag: "FABRIC" },
     { id: "evidence", label: "Evidence", tag: "REGISTRY" },
     { id: "verification", label: "Verification", tag: "ENGINE" },
-    { id: "audit", label: "Audit", tag: "IMMUTABLE" },
-    { id: "sovereignty", label: "Sovereignty", tag: "AIR-GAP" },
+    { id: "audit", label: "Audit", tag: "APPEND-ONLY" },
+    { id: "sovereignty", label: "Sovereignty", tag: "LOCAL-ONLY" },
   ];
 
   return (
@@ -75,8 +75,8 @@ export function Navigation({
             </span>
           </div>
 
-          <span className="badge badge-cyan" title="100% sovereign air-gapped runtime with zero cloud dependencies">
-            AIR-GAPPED SOVEREIGN
+          <span className="badge badge-cyan" title="Sovereign local runtime with zero outside AI dependencies">
+            SOVEREIGN LOCAL RUNTIME
           </span>
 
           {!backendOnline ? (

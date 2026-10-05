@@ -84,7 +84,7 @@ export const Header: React.FC = () => {
             textTransform: "uppercase",
             letterSpacing: "0.05em"
           }}>
-            AIR-GAP SOVEREIGN
+            SOVEREIGN LOCAL RUNTIME
           </span>
         </div>
 

@@ -704,6 +704,7 @@ export function AIWorkspaceView({
 
           {/* FINDING & RECOMMENDATION (North Star Core) */}
           <div
+            className="workspace-finding-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "1.2fr 0.8fr",
@@ -800,6 +801,7 @@ export function AIWorkspaceView({
 
           {/* EVIDENCE & INDEPENDENT CHECKS SUMMARY RAIL */}
           <div
+            className="workspace-evidence-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
@@ -1040,6 +1042,15 @@ export function AIWorkspaceView({
           )}
         </EnamelSurface>
       )}
+
+      <style jsx>{`
+        @media (max-width: 860px) {
+          .workspace-finding-grid,
+          .workspace-evidence-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

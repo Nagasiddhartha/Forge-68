@@ -87,7 +87,7 @@ export function SovereigntyView() {
                   border: "1px solid var(--sage)",
                 }}
               >
-                ON-PREMISE AIR-GAP CONFORMANCE
+                ON-PREMISE SOVEREIGN RUNTIME
               </span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
                 ENCLAVE ID: FORGE-SOV-01
