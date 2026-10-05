@@ -95,11 +95,11 @@ export function SovereigntyView() {
             </div>
 
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
-              Sovereignty Boundary & Architectural Attestation
+              Sovereignty Boundary & Runtime Verification
             </h1>
 
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink-2)", marginTop: 6, lineHeight: 1.6 }}>
-              Formal attestation of system isolation, policy guarantees, and non-LLM verification.
+              Runtime verification of system isolation, policy guarantees, and non-LLM verification.
               All reasoning, knowledge indexing, tool execution, and verification run locally on sovereign hardware.
               Outside AI cloud services are strictly unconfigured and inaccessible.
             </p>
@@ -112,14 +112,14 @@ export function SovereigntyView() {
               className="btn-brass-primary"
               style={{ fontSize: "13px", padding: "10px 18px" }}
             >
-              {isLoading ? "Verifying..." : "Attest Enclave State ↻"}
+              {isLoading ? "Verifying..." : "Verify Runtime State ↻"}
             </button>
           </div>
         </div>
 
         <Divider style={{ margin: "20px 0" }} />
 
-        {/* Global Enclave Attestation Strip */}
+        {/* Global Enclave Runtime Verification Strip */}
         <div
           style={{
             display: "grid",
@@ -282,7 +282,7 @@ export function SovereigntyView() {
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
               <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
               <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
-                Deterministic / On-Premise Vector Embedding ({sovereignty?.embedding_provider.model || "all-MiniLM-L6-v2"})
+                Deterministic / On-Premise Vector Embedding ({runtime.embeddingModel || sovereignty?.embedding_provider.model || "Configured Local Model"})
               </div>
               <div style={{ color: "var(--ink-3)", fontSize: "11px", marginTop: 2 }}>
                 Vector Cloud: <strong style={{ color: "var(--sage)" }}>BLOCKED (NO PINECONE/WEAVIATE CLOUD)</strong>
@@ -343,7 +343,7 @@ export function SovereigntyView() {
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
               <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
               <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
-                Zero image transmission to cloud vision APIs.
+                No cloud vision provider configured. Images remain within the local processing boundary.
               </div>
               <div style={{ color: "var(--ink-2)", fontSize: "11.5px", marginTop: 2 }}>
                 SHA-256 provenance hash computed immediately on upload buffer.

@@ -223,7 +223,7 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
               <div style={{ padding: "12px 14px", backgroundColor: "var(--bg-2)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>AUDIT TRAIL INTEGRITY</div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink)", marginTop: 4 }}>
-                  {runtime.auditHashChained ? "Cryptographically Hash-Chained" : "Local Append-Only Event Bus"}
+                  {runtime.auditHashChained ? "Hash-Chained Event Store" : "Local Append-Only Event Bus"}
                 </div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-3)", marginTop: 2 }}>
                   Total events recorded: {runtime.auditTotalEvents}

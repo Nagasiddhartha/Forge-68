@@ -135,7 +135,7 @@ export function EvidencePanel({
             {title}
           </h2>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", marginTop: 2 }}>
-            Every claim is tied to cryptographic or procedural evidence: verified document passages, sandboxed tools, analog gauges, or deterministic math.
+            Every claim is tied to verifiable evidence: documented procedures, sandboxed tools, analog gauges, or deterministic math.
           </p>
         </div>
 

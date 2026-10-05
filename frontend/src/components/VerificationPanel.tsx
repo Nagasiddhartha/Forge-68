@@ -23,7 +23,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
       title: "Evidence Provenance & Integrity",
       status: "VERIFIED" as VerificationStatus,
       description: "All ingested document chunks, tool telemetry, and visual observations possess verifiable source references, SHA-256 digests, and monotonic timestamps.",
-      details: "4/4 evidence records cryptographically bound. No orphaned claims detected.",
+      details: "4/4 evidence records verified to source digests. No orphaned claims detected.",
     },
     {
       check_name: "COMPLETENESS",

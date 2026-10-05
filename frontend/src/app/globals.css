@@ -499,3 +499,14 @@ body {
   border: 1px solid var(--line);
   color: var(--ink-2);
 }
+
+/* Development / Debug Overlays — hidden for clean production & evaluation interface */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dev-overlay],
+[data-nextjs-dialog-overlay] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+

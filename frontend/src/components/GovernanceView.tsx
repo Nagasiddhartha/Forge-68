@@ -126,7 +126,7 @@ export function GovernanceView() {
           }}
         >
           Authority rules, persona clearances, and deterministic boundary proofs.
-          Controls decide what AI may propose. The model operates within strictly audited, non-bypassable policy bounds.
+          Controls decide what AI may propose. The model operates within strictly audited policy bounds enforced before tool or actuator execution.
         </p>
       </div>
 
