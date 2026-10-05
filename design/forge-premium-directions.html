@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FORGE: three premium directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Cormorant+Garamond:wght@500;600&family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--pg:#E4E2DD;--pt:#1A1B1A;--pm:#66655F;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--pg:#1B1C1B;--pt:#ECEAE4;--pm:#9D9B94}}
+:root[data-theme="dark"]{--pg:#1B1C1B;--pt:#ECEAE4;--pm:#9D9B94}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0}
+body{background:var(--pg);color:var(--pt);font:16px/1.55 'Hanken Grotesk',system-ui,sans-serif;padding:36px 20px 64px}
+.w{max-width:1080px;margin:0 auto}
+h1{font:600 clamp(30px,4vw,44px)/1.1 'Cormorant Garamond',Georgia,serif}
+.in{color:var(--pm);max-width:62ch;margin:12px 0 0}
+.lb{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:48px 0 12px}
+.lb span{color:var(--pm);font-size:14px}
+button{font:inherit;font-size:14px;color:var(--pt);background:none;border:1px solid var(--pm);border-radius:999px;padding:5px 16px;cursor:pointer}
+button:focus-visible{outline:2px solid #C8A15A;outline-offset:2px}
+.fr{border-radius:20px;overflow:hidden}
+.nv{display:flex;align-items:center;gap:26px;padding:18px 32px;font-size:14px;flex-wrap:wrap}
+.nv b{font-weight:500;letter-spacing:.2em;margin-right:12px}
+.nv i{margin-left:auto;font-style:normal}
+.note{color:var(--pm);font-size:14px;margin-top:40px;max-width:70ch}
+svg{display:block}
+
+.e{background:radial-gradient(120% 90% at 72% 42%,#1B4339,#0E2B26 58%,#0A211D);color:#EFE9DA}
+.e .nv{color:#A9B8B1}.e .nv u{color:#EFE9DA;text-decoration:none;border-bottom:1px solid #C8A15A;padding-bottom:4px}.e .nv i{color:#9CC3A8}
+.e .hero{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:20px;padding:20px 48px 12px}
+.e h2{font:500 clamp(34px,4.6vw,56px)/1.04 'Cormorant Garamond',serif}
+.e p{color:#B9C6BF;max-width:44ch;margin:18px 0 26px}
+.bt{display:inline-block;padding:11px 20px;border-radius:999px;font-weight:500;font-size:14px;margin:0 10px 8px 0;border:1px solid #C8A15A}
+.bt.p{background:#C8A15A;color:#10241F}
+.fc{display:flex;margin-top:26px}.fc div{padding:0 26px;border-left:1px solid #2D5249}.fc div:first-child{padding-left:0;border:0}
+.fc b{display:block;font:500 36px/1 'Cormorant Garamond',serif}.fc span{font-size:14px;color:#9FB1A9}
+.dl{width:100%;max-width:420px;margin:auto}
+.ck{display:flex;gap:6px;align-items:center;padding:16px 48px 22px;border-top:1px solid #23463D;color:#9FB1A9;font-size:14px;flex-wrap:wrap}
+.ck s{width:26px;height:3px;background:#9CC3A8;border-radius:2px}.ck span{margin-left:14px}
+.e .arc{stroke-dasharray:1}
+.on .e .arc,.e.on .arc{animation:dr 1.9s .3s cubic-bezier(.3,.7,.2,1) both}
+.e.on .nd{animation:sw 2.2s .3s cubic-bezier(.22,1.15,.36,1) both}
+.e.on .ck s{animation:fl .4s calc(2.3s + var(--i)*.14s) both}
+.e.on .tx{animation:fi .9s 2.2s both}
+@keyframes dr{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes sw{from{transform:rotate(-120deg)}}
+@keyframes fl{from{opacity:.1;transform:scaleX(.2)}}
+@keyframes fi{from{opacity:0}}
+
+.c{background:#E8ECEE;color:#0A2342}
+.c .nv{color:#4D6275}.c .nv b{color:#0A2342}.c .nv u{color:#0A2342;text-decoration:none;border-bottom:2px solid #F26B21;padding-bottom:4px}.c .nv i{color:#2E6B4E}
+.c .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:24px;padding:24px 48px 32px;align-items:center}
+.c h2{font:800 clamp(46px,6.6vw,88px)/.92 'Big Shoulders Display',sans-serif}
+.c p{margin:20px 0;max-width:42ch;color:#33475B}
+.rc{border-left:4px solid #F26B21;padding:4px 0 4px 14px;font-weight:500;max-width:40ch}
+.c .bar{background:#0A2342;color:#DDE6EE;padding:16px 48px;display:flex;gap:28px;flex-wrap:wrap;font-size:14px}
+.c .ld{stroke-dasharray:1}.c .pt{transform:translateY(200px)}
+.c.on .pt{animation:rs 2.4s .3s cubic-bezier(.22,1,.36,1) both}
+.c.on .ld{animation:dr 1s calc(2.2s + var(--i)*.18s) both}
+.c.on .lt{animation:fi .6s calc(2.6s + var(--i)*.18s) both}
+@keyframes rs{from{transform:translateY(370px)}}
+
+.b{background:#D6D4CD;color:#1B1E1D}
+.b .nv{color:#55584F}.b .nv b{color:#1B1E1D}.b .nv u{color:#1B1E1D;text-decoration:none;border-bottom:2px solid #A3361C;padding-bottom:4px}.b .nv i{color:#3D6B52}
+.b .hero{display:grid;grid-template-columns:1fr 1fr;gap:30px;padding:8px 48px 44px;align-items:center}
+.b h2{font:500 clamp(30px,3.6vw,46px)/1.1 'Hanken Grotesk',sans-serif;letter-spacing:-.025em}
+.b p{margin:18px 0 24px;max-width:44ch;color:#3A3D39}
+.vd{border-left:4px solid #A3361C;padding:2px 0 2px 16px;margin-bottom:22px}.vd b{display:block;font-weight:500;color:#A3361C;font-size:18px}
+.b .bt{border-color:#1B1E1D}.b .bt.p{background:#1B1E1D;color:#EFEDE6}
+.rg{fill:none;stroke:#3D6B52;stroke-width:2.5;stroke-dasharray:1;stroke-dashoffset:0}
+.bd{stroke:#1B1E1D;stroke-width:4}
+.b.on .rg{animation:dr .9s calc(var(--i)*.15s) both,hit .4s var(--h) both}
+.b.on .bd{animation:dr .9s .45s both,hit .4s var(--h) both}
+.b.on .pc{animation:tv 2.6s 1s cubic-bezier(.45,0,.25,1) both}
+.b.on .rs{animation:fi .5s var(--h) both}
+.b.on .vd,.b.on .acts{animation:fi .8s 3.7s both}
+.pc{transform:translateX(224px)}
+@keyframes tv{from{transform:translateX(0)}}
+@keyframes hit{from{stroke:#8E8D86;stroke-width:1.4}}
+
+@media(max-width:780px){.e .hero,.c .hero,.b .hero{grid-template-columns:1fr;padding-left:24px;padding-right:24px}.nv,.ck,.c .bar{padding-left:24px;padding-right:24px}.fc div{padding:0 14px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>FORGE, three premium directions</h1>
+<p class="in">Each study shows the same moment: a gauge at 33.0 bar against a 31.2 bar baseline. Each has one orchestrated animation that plays when it scrolls into view. Use Replay to watch it again.</p>
+
+<div class="lb"><span>Direction 1: Enamel and brass, the gauge as the hero</span><button data-r="e">Replay</button></div>
+<section class="fr e" id="e">
+<nav class="nv"><b>FORGE</b><u>Missions</u><span>Library</span><span>Governance</span><span>Audit</span><span>Boundary</span><i>Local only</i></nav>
+<div class="hero"><div>
+<h2>Pressure on R-204 is above normal and approaching alarm.</h2>
+<p>The gauge reads 33.0 bar against a baseline of 31.2. An engineer should review before the next shift. FORGE recommends, and takes no control action.</p>
+<span class="bt p">Escalate to engineering</span><span class="bt">Acknowledge</span>
+<div class="fc tx"><div><b>31.2</b><span>bar, normal</span></div><div><b>+1.8</b><span>bar, deviation</span></div><div><b>0.5</b><span>bar below alarm</span></div></div>
+</div>
+<svg class="dl" viewBox="0 0 360 360" role="img" aria-label="Pressure dial reading 33.0 bar, between normal and alarm">
+<circle cx="180" cy="180" r="172" fill="none" stroke="#C8A15A" stroke-width="2"/>
+<circle cx="180" cy="180" r="164" fill="#0A231E" stroke="#1F5247" stroke-width="6"/>
+<path d="M69.15 244A128 128 0 1 1 290.85 244" fill="none" stroke="#2D5249" stroke-width="10"/>
+<path class="arc" pathLength="1" d="M69.15 244A128 128 0 0 1 180 52" fill="none" stroke="#9CC3A8" stroke-width="10"/>
+<path d="M223.8 59.7A128 128 0 0 1 306.05 157.8" fill="none" stroke="#C8A15A" stroke-width="10"/>
+<path d="M306.05 157.8A128 128 0 0 1 290.85 244" fill="none" stroke="#D9694E" stroke-width="10"/>
+<circle cx="58.3" cy="140.4" r="4" fill="#EFE9DA"/>
+<g id="tk" stroke="#8FA79D"></g><g id="nm" fill="#EFE9DA" font-family="Cormorant Garamond,serif" font-size="20" text-anchor="middle"></g>
+<text x="180" y="282" fill="#EFE9DA" font-family="Cormorant Garamond,serif" font-size="40" text-anchor="middle" font-weight="500">33.0</text>
+<text x="180" y="304" fill="#9FB1A9" font-size="13" text-anchor="middle" font-family="Hanken Grotesk,sans-serif">bar, PI-204</text>
+<g class="nd" style="transform-origin:180px 180px"><path d="M180 66L187 188L173 188Z" fill="#C8A15A"/><circle cx="180" cy="180" r="10" fill="#C8A15A"/><circle cx="180" cy="180" r="3.5" fill="#0A231E"/></g>
+</svg></div>
+<div class="ck"><s style="--i:0"></s><s style="--i:1"></s><s style="--i:2"></s><s style="--i:3"></s><s style="--i:4"></s><s style="--i:5"></s><s style="--i:6"></s><span>7 of 7 independent checks passed. Gauge image is a demo fixture, shown as advisory.</span></div>
+</section>
+
+<div class="lb"><span>Direction 2: Flight-deck tape, precision you can read at a glance</span><button data-r="c">Replay</button></div>
+<section class="fr c" id="c">
+<nav class="nv"><b>FORGE</b><u>Missions</u><span>Library</span><span>Governance</span><span>Audit</span><span>Boundary</span><i>Local only</i></nav>
+<div class="hero"><div>
+<h2>R-204 pressure needs a review before next shift.</h2>
+<p>The reading is 1.8 bar above the normal baseline and 0.5 bar below the high alarm. It has not tripped, and it is trending toward the limit.</p>
+<div class="rc">Recommended: escalate to engineering. FORGE took no control action.</div></div>
+<svg viewBox="0 0 520 400" role="img" aria-label="Vertical pressure tape with the pointer at 33.0 bar">
+<rect x="60" y="171.7" width="56" height="198.3" fill="#C9D3DA"/><rect x="60" y="86.7" width="56" height="85" fill="#F26B21"/><rect x="60" y="30" width="56" height="56.7" fill="#B3261E"/>
+<g id="tp" stroke="#0A2342" stroke-width="1.5" font-family="Hanken Grotesk,sans-serif"></g>
+<g font-size="14" fill="#0A2342" font-family="Hanken Grotesk,sans-serif">
+<path class="ld" pathLength="1" style="--i:0" d="M150 90H250" stroke="#0A2342" fill="none"/><text class="lt" style="--i:0" x="258" y="95">35.0 trip</text>
+<path class="ld" pathLength="1" style="--i:1" d="M150 171.7H250" stroke="#0A2342" fill="none"/><text class="lt" style="--i:1" x="258" y="166">33.5 high alarm</text>
+<path class="ld" pathLength="1" style="--i:2" d="M150 200H250" stroke="#0A2342" fill="none"/><text class="lt" style="--i:2" x="258" y="206" font-weight="500">33.0 reading, advisory</text>
+<path class="ld" pathLength="1" style="--i:3" d="M150 302H250" stroke="#0A2342" fill="none"/><text class="lt" style="--i:3" x="258" y="308">31.2 normal, SOP §3.2</text>
+<path class="ld" pathLength="1" style="--i:4" d="M215 204V300" stroke="#F26B21" stroke-width="2" fill="none"/><text class="lt" style="--i:4" x="224" y="258" fill="#C2470C" font-weight="500">+1.8 bar</text></g>
+<g class="pt"><rect x="0" y="-13" width="46" height="26" fill="#0A2342"/><path d="M46 -8L60 0L46 8Z" fill="#0A2342"/><text x="23" y="5" fill="#fff" font-size="14" text-anchor="middle" font-family="Hanken Grotesk,sans-serif" font-weight="500">33.0</text><path d="M60 0H116" stroke="#0A2342" stroke-width="2.5"/></g>
+</svg></div>
+<div class="bar"><span>Checked by code, not by the AI: 7 of 7 passed</span><span>3 sources and 1 calculation</span><span>Reasoning runs locally on Qwen3 8B</span></div>
+</section>
+
+<div class="lb"><span>Direction 3: Stone and oxide, authority as concentric control</span><button data-r="b">Replay</button></div>
+<section class="fr b" id="b">
+<nav class="nv"><b>FORGE</b><u>Missions</u><span>Library</span><span>Governance</span><span>Audit</span><span>Boundary</span><i>Local only</i></nav>
+<div class="hero">
+<svg viewBox="0 0 460 490" role="img" aria-label="The AI at the centre; its answer passes policy, evidence, independent checks, then your boundary">
+<circle class="rg" pathLength="1" style="--i:0;--h:2.04s" cx="230" cy="250" r="90"/><circle class="rg" pathLength="1" style="--i:1;--h:2.6s" cx="230" cy="250" r="138"/><circle class="rg" pathLength="1" style="--i:2;--h:3.16s" cx="230" cy="250" r="186"/><circle class="rg bd" pathLength="1" style="--h:3.6s" cx="230" cy="250" r="224"/>
+<circle cx="230" cy="250" r="34" fill="#1B1E1D"/><text x="230" y="255" fill="#D6D4CD" font-size="15" text-anchor="middle" font-family="Hanken Grotesk,sans-serif" font-weight="500">AI</text>
+<g font-family="Hanken Grotesk,sans-serif" text-anchor="middle" fill="#1B1E1D">
+<g><rect x="130" y="143" width="200" height="34" rx="4" fill="#D6D4CD"/><text x="230" y="158" font-size="13" font-weight="500">Policy</text><text class="rs" style="--h:2.04s" x="230" y="172" font-size="12">Read-only request allowed</text></g>
+<g><rect x="130" y="95" width="200" height="34" rx="4" fill="#D6D4CD"/><text x="230" y="110" font-size="13" font-weight="500">Evidence</text><text class="rs" style="--h:2.6s" x="230" y="124" font-size="12">3 sources, 1 calculation</text></g>
+<g><rect x="130" y="47" width="200" height="34" rx="4" fill="#D6D4CD"/><text x="230" y="62" font-size="13" font-weight="500">Independent checks</text><text class="rs" style="--h:3.16s" x="230" y="76" font-size="12">7 of 7 passed</text></g>
+<g><rect x="120" y="9" width="220" height="34" rx="4" fill="#D6D4CD"/><text x="230" y="24" font-size="13" font-weight="500">Your boundary</text><text class="rs" style="--h:3.6s" x="230" y="38" font-size="12">No outside AI services configured</text></g></g>
+<circle class="pc" cx="230" cy="250" r="7" fill="#A3361C"/>
+</svg>
+<div>
+<h2>FORGE found pressure above baseline and wants an engineer to look.</h2>
+<p>The AI proposed an answer. Nothing acted on it until policy, evidence, and independent checks had each cleared it.</p>
+<div class="vd"><b>Review required</b>33.0 bar is 1.8 bar over the 31.2 bar baseline and 0.5 bar under the 33.5 bar alarm.</div>
+<div class="acts"><span class="bt p">Escalate to engineering</span><span class="bt">Open the proof</span></div>
+</div></div>
+</section>
+
+<p class="note">These are visual studies, not wired to the backend. They follow the honesty rules: the gauge image is labelled as a demo fixture, the check count is the real seven, and the boundary says "no outside AI services configured" instead of claiming an air gap.</p>
+</div>
+<script>
+(function(){
+var ns='http://www.w3.org/2000/svg',s='',n='',i,a,x,y,r;
+for(i=0;i<=30;i++){a=(-120+i*8)*Math.PI/180;r=i%5?[140,134]:[142,128];
+s+='<line x1="'+(180+r[0]*Math.sin(a)).toFixed(1)+'" y1="'+(180-r[0]*Math.cos(a)).toFixed(1)+'" x2="'+(180+r[1]*Math.sin(a)).toFixed(1)+'" y2="'+(180-r[1]*Math.cos(a)).toFixed(1)+'" stroke-width="'+(i%5?1:1.8)+'"/>';
+if(i%5==0){x=180+104*Math.sin(a);y=180-104*Math.cos(a)+7;n+='<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'">'+(30+i/5)+'</text>'}}
+var tk=document.getElementById('tk'),nm=document.getElementById('nm');tk.innerHTML=s;nm.innerHTML=n;
+var t='';for(i=0;i<=12;i++){y=370-i*28.33;t+='<line x1="'+(i%2?116:110)+'" x2="124" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'"/>';if(i%2==0)t+='<text x="128" y="'+(y+5).toFixed(1)+'" font-size="14" fill="#0A2342" stroke="none">'+(30+i/2)+'</text>'}
+document.getElementById('tp').innerHTML=t;
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}})},{threshold:.3});
+document.querySelectorAll('.fr').forEach(function(f){io.observe(f)});
+document.querySelectorAll('[data-r]').forEach(function(b){b.onclick=function(){var f=document.getElementById(b.dataset.r);f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}});
+})();
+</script>
+</body>
+</html>

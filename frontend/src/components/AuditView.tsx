@@ -143,11 +143,12 @@ export function AuditView() {
         </div>
         <div className="card" style={{ padding: "12px 16px" }}>
           <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-            EXTERNAL DATA EGRESS
+            OUTSIDE AI SERVICES
           </div>
-          <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--text-primary)", marginTop: 8 }}>
-            0 BYTES TRANSMITTED
+          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)", marginTop: 8 }}>
+            NONE CONFIGURED
           </div>
+
         </div>
       </div>
 

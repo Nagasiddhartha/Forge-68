@@ -622,4 +622,52 @@ export async function fetchSecurityMatrix(): Promise<SecurityTestResult[]> {
   return apiFetch<SecurityTestResult[]>("/api/v1/security/matrix");
 }
 
+// =========================================================================
+// Enamel & Brass: Section 12.1 Typed Runtime Capabilities Model
+// =========================================================================
+
+export interface RuntimeCapabilities {
+  mode: "demo_harness" | "live";
+  reasoning: {
+    model: string;
+    installed: boolean;
+    reachable: boolean;
+    live_for_runs: boolean;
+  };
+  vision: {
+    model: string;
+    installed: boolean;
+    mode: "fixture" | "live";
+  };
+  embedding: {
+    model: string;
+    kind: "local_model" | "deterministic_fallback";
+  };
+  policy: {
+    default: string;
+  };
+  outside_ai_services_configured: number;
+  inference_endpoint_is_loopback: boolean;
+  dependency_scan: {
+    ran: boolean;
+    cloud_sdks_found: number;
+    at: string;
+  };
+  egress_counter: number | null;
+  audit: {
+    persisted: boolean;
+    hash_chained: boolean;
+    total_events: number;
+  };
+  security_tests: {
+    last_run_at: string | null;
+    total: number;
+    passed: number | null;
+  };
+}
+
+export async function fetchRuntimeCapabilities(): Promise<RuntimeCapabilities> {
+  return apiFetch<RuntimeCapabilities>("/api/runtime/capabilities");
+}
+
 

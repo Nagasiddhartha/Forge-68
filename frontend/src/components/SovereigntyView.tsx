@@ -68,15 +68,15 @@ export function SovereigntyView() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <span className="badge badge-cyan">AIR-GAP LEVEL 4</span>
-              <span className="badge badge-verified">LOCAL-ONLY INFERENCE ENFORCED</span>
-              <span className="badge badge-secondary">NO EXTERNAL AI/API PROVIDERS CONFIGURED</span>
+              <span className="badge badge-cyan">LOCAL ONLY</span>
+              <span className="badge badge-verified">LOCAL INFERENCE ENFORCED</span>
+              <span className="badge badge-secondary">NO EXTERNAL AI PROVIDERS CONFIGURED</span>
               <span className="badge badge-deny">DEFAULT-DENY POLICY</span>
-
             </div>
             <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
-              FORGE Sovereign Air-Gap & Runtime Governance
+              FORGE Boundary & Operational Governance
             </h1>
+
             <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: 4, maxWidth: 820 }}>
               Cryptographic boundary and policy-enforced guarantees. All inference, knowledge indexing, tool execution,
               and verification occur strictly on sovereign local hardware without external AI SDKs or public cloud transit.

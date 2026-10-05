@@ -173,6 +173,7 @@ async def get_sovereignty_status() -> Dict[str, Any]:
 
 from app.preflight import (
     PreflightReport,
+    get_runtime_capabilities,
     run_preflight_checks,
     validate_local_reasoning_runtime,
     validate_local_vision_runtime,
@@ -196,6 +197,13 @@ async def get_system_diagnostics() -> Dict[str, Any]:
         "reasoning": reasoning_diag,
         "vision": vision_diag,
     }
+
+
+@app.get("/api/runtime/capabilities", tags=["System"])
+@app.get("/api/v1/system/capabilities", tags=["System"])
+async def get_capabilities() -> Dict[str, Any]:
+    """Sovereign runtime capability introspection endpoint conforming to Section 12.1."""
+    return await get_runtime_capabilities()
 
 
 # =========================================================================

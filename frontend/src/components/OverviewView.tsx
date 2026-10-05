@@ -53,16 +53,17 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <span className="badge badge-cyan">AIR-GAPPED OPERATIONS</span>
+              <span className="badge badge-cyan">LOCAL OPERATIONS</span>
               <span className="badge badge-verified">SOVEREIGNTY ENFORCED</span>
             </div>
             <h1 style={{ fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text-primary)" }}>
               Industrial AI Mission Control Dashboard
             </h1>
             <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: 4, maxWidth: 680 }}>
-              Sovereign, air-gapped industrial agent control plane executing on-premise model reasoning,
+              Sovereign, on-premise industrial agent control plane executing local model reasoning,
               DEFAULT-DENY tool policy mediation, deterministic calculations, and multi-stage verification.
             </p>
+
           </div>
 
           <button onClick={onNavigateToWorkspace} className="btn-primary" style={{ padding: "10px 20px" }}>
@@ -202,7 +203,8 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.88rem" }}>
               6. Sovereignty Enclosure
             </span>
-            <span className="badge badge-verified">AIR-GAPPED 100%</span>
+            <span className="badge badge-verified">LOCAL ONLY</span>
+
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: "0.78rem", fontFamily: "var(--font-mono)" }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
