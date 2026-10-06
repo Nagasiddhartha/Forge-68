@@ -167,9 +167,9 @@ export default function Home() {
               </span>
               {[
                 { id: "overview", label: "Mission Overview" },
-                { id: "workspace", label: "AI Reasoning Workspace" },
-                { id: "evidence", label: "Evidence Records" },
-                { id: "verification", label: "Independent Checks" },
+                { id: "workspace", label: "AI Proposal & Actions" },
+                { id: "evidence", label: "Supporting Evidence" },
+                { id: "verification", label: "Why Trust This? (7 Checks)" },
               ].map((sub) => {
                 const isSelected = missionSubView === sub.id;
                 return (
@@ -287,7 +287,7 @@ export default function Home() {
           3. GOVERNANCE DESTINATION
           ========================================================================= */}
       {destination === "governance" && (
-        <GovernanceView />
+        <GovernanceView role={role} />
       )}
 
       {/* =========================================================================

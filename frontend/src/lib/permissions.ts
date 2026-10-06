@@ -1,0 +1,140 @@
+import { Role, DataClassification } from "./api";
+
+export interface RolePermissionConfig {
+  role: Role;
+  label: string;
+  defaultClearance: DataClassification;
+  summary: string;
+  read: "ALLOWED" | "NEEDS_APPROVAL" | "BLOCKED";
+  investigate: "ALLOWED" | "NEEDS_APPROVAL" | "BLOCKED";
+  actuate: "ALLOWED" | "NEEDS_APPROVAL" | "BLOCKED";
+  admin: "ALLOWED" | "NEEDS_APPROVAL" | "BLOCKED";
+  bulletPoints: string[];
+  actuationExplanation: string;
+}
+
+export const ROLE_PERMISSIONS: Record<Role, RolePermissionConfig> = {
+  ENGINEER: {
+    role: "ENGINEER",
+    label: "Engineer",
+    defaultClearance: "CONFIDENTIAL",
+    summary: "Standard operational role. Runs investigations and read-only tools. Critical valve actuation requires approval.",
+    read: "ALLOWED",
+    investigate: "ALLOWED",
+    actuate: "NEEDS_APPROVAL",
+    admin: "BLOCKED",
+    bulletPoints: [
+      "Read plant telemetry & equipment data",
+      "Read operating procedures (SOPs)",
+      "Run operational investigations",
+      "Read-only diagnostics & calculation tools",
+      "Critical valve actuation requires supervisor approval",
+      "Administrative system overrides blocked",
+    ],
+    actuationExplanation: "Engineers can investigate and read sensors, but cannot calibrate critical valves without secondary approval.",
+  },
+  INSPECTOR: {
+    role: "INSPECTOR",
+    label: "Inspector",
+    defaultClearance: "INTERNAL",
+    summary: "Auditing & inspection role. Reviews ultrasonic surveys, inspection logs, and gauge readings. Actuation blocked.",
+    read: "ALLOWED",
+    investigate: "ALLOWED",
+    actuate: "BLOCKED",
+    admin: "BLOCKED",
+    bulletPoints: [
+      "Read ultrasonic inspection reports (PAUT)",
+      "Read historical inspection & telemetry logs",
+      "Run non-destructive evaluation workflows",
+      "Physical tool actuation strictly blocked",
+      "Administrative overrides blocked",
+    ],
+    actuationExplanation: "Inspectors have read-only diagnostic clearance. Physical machinery actuation is strictly blocked.",
+  },
+  AI_OPERATOR: {
+    role: "AI_OPERATOR",
+    label: "AI Operator",
+    defaultClearance: "RESTRICTED",
+    summary: "Autonomous workflow operator. Approved investigation access with zero write or physical actuation authority.",
+    read: "ALLOWED",
+    investigate: "ALLOWED",
+    actuate: "BLOCKED",
+    admin: "BLOCKED",
+    bulletPoints: [
+      "Approved investigation and query access",
+      "Zero write authority to control systems",
+      "Physical tool actuation strictly blocked",
+      "Adversarial or untrusted inputs quarantined",
+      "Administrative overrides blocked",
+    ],
+    actuationExplanation: "AI Operators operate within a zero-write sandbox. Actuation commands are intercepted and blocked.",
+  },
+  ADMIN: {
+    role: "ADMIN",
+    label: "Administrator",
+    defaultClearance: "CRITICAL",
+    summary: "Broad operational authority. Can authorize overrides and tool executions with appropriate policy checks.",
+    read: "ALLOWED",
+    investigate: "ALLOWED",
+    actuate: "ALLOWED",
+    admin: "ALLOWED",
+    bulletPoints: [
+      "Broadest access across all plant data",
+      "Authority to approve critical actuation",
+      "System administration & policy configuration",
+      "Subject to local audit logging",
+    ],
+    actuationExplanation: "Administrators possess actuation authorization subject to local audit logging.",
+  },
+  SECURITY_OFFICER: {
+    role: "SECURITY_OFFICER",
+    label: "Security Officer",
+    defaultClearance: "CRITICAL",
+    summary: "Security oversight role. Full audit visibility, boundary verification, and attack testing. Actuation blocked.",
+    read: "ALLOWED",
+    investigate: "ALLOWED",
+    actuate: "BLOCKED",
+    admin: "BLOCKED",
+    bulletPoints: [
+      "Inspect tamper-evident audit logs & trace events",
+      "Run adversarial security boundary tests",
+      "Plant machinery actuation strictly blocked",
+      "Direct administrative override blocked",
+    ],
+    actuationExplanation: "Security Officers maintain security oversight and cannot actuate physical industrial equipment.",
+  },
+  MANAGER: {
+    role: "MANAGER",
+    label: "Plant Manager",
+    defaultClearance: "CONFIDENTIAL",
+    summary: "Plant management role. Broad operational oversight with supervisory approval authority.",
+    read: "ALLOWED",
+    investigate: "ALLOWED",
+    actuate: "NEEDS_APPROVAL",
+    admin: "NEEDS_APPROVAL",
+    bulletPoints: [
+      "Broad oversight across plant units",
+      "Approval authority for critical operational actuation",
+      "Read plant records and inspection reports",
+      "Administrative changes require verification",
+    ],
+    actuationExplanation: "Managers can authorize actuation workflows under logged policy checks.",
+  },
+  AUDITOR: {
+    role: "AUDITOR",
+    label: "Auditor",
+    defaultClearance: "INTERNAL",
+    summary: "Compliance & compliance audit role. Read-only access to audit logs and plant runbooks.",
+    read: "ALLOWED",
+    investigate: "ALLOWED",
+    actuate: "BLOCKED",
+    admin: "BLOCKED",
+    bulletPoints: [
+      "Read-only access to compliance & audit logs",
+      "Read operating standards and procedures",
+      "Zero physical tool actuation authority",
+      "Administrative overrides strictly blocked",
+    ],
+    actuationExplanation: "Auditors possess read-only inspection clearance without execution authority.",
+  },
+};

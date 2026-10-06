@@ -122,6 +122,58 @@ export function AuditView() {
 
   const totalEventsCount = (auditData?.total_agent_events || 0) + (auditData?.total_tool_events || 0);
 
+  // Human-readable title & summary helper
+  const getEventHumanExplanation = (evt: UnifiedEvent) => {
+    const isDenied = evt.decision === "DENY" || evt.type.includes("DENIED");
+
+    if (evt.type.includes("QUERY") || (evt.category === "AGENT" && evt.type.includes("START"))) {
+      return {
+        humanTitle: "Question received from operator",
+        explanation: "Operator submitted an industrial telemetry or procedure inquiry to the sovereign control plane.",
+      };
+    }
+    if (evt.category === "KNOWLEDGE") {
+      return {
+        humanTitle: "Plant records consulted",
+        explanation: "Sovereign local vector search retrieved private operating procedures within clearance bounds.",
+      };
+    }
+    if (evt.category === "POLICY") {
+      if (isDenied) {
+        return {
+          humanTitle: "Permission checked → BLOCKED",
+          explanation: `FORGE verified ${evt.role} permissions and blocked the requested action before execution.`,
+        };
+      }
+      return {
+        humanTitle: "Permission checked → Allowed",
+        explanation: `Action validated against policy rules for ${evt.role} role clearance.`,
+      };
+    }
+    if (evt.category === "TOOL") {
+      if (isDenied) {
+        return {
+          humanTitle: "Tool execution blocked",
+          explanation: "Policy gateway prevented tool dispatch. Sandboxed code executed: 0 times.",
+        };
+      }
+      return {
+        humanTitle: "Tool allowed & executed",
+        explanation: "Industrial tool executed inside local sandboxed environment with verified arguments.",
+      };
+    }
+    if (evt.category === "VERIFICATION") {
+      return {
+        humanTitle: "Answer verified independently",
+        explanation: "Deterministic Python checks evaluated calculations, consistency, and grounding.",
+      };
+    }
+    return {
+      humanTitle: evt.type.replace(/_/g, " "),
+      explanation: evt.summary,
+    };
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
       {/* Header Banner */}
@@ -129,9 +181,9 @@ export function AuditView() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-              <BrassLabel variant="outline">FORENSIC LIFECYCLE TIMELINE</BrassLabel>
+              <BrassLabel variant="outline">ACTIVITY TIMELINE</BrassLabel>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                WHAT DID FORGE DO?
+                FORENSIC LOG
               </span>
               <span
                 style={{
@@ -148,13 +200,13 @@ export function AuditView() {
               </span>
             </div>
 
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "36px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
-              Operational Lifecycle & Security Audit Trail
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
+              What did FORGE do?
             </h1>
 
-            <p style={{ fontFamily: "var(--font-ui)", fontSize: "14.5px", color: "var(--ink-2)", marginTop: 6, maxWidth: 680 }}>
-              Chronological forensic timeline recording every agent request, reasoning plan, knowledge retrieval chunk,
-              policy gateway decision, tool invocation, and independent verification check.
+            <p style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink-2)", marginTop: 6, maxWidth: 680 }}>
+              A readable chronological activity timeline recording every question, plant record lookup, permission check,
+              tool execution, and independent verification check.
             </p>
           </div>
 
@@ -165,12 +217,75 @@ export function AuditView() {
               className="btn-brass-secondary"
               style={{ fontSize: "12px", padding: "6px 14px" }}
             >
-              {isLoading ? "Refreshing..." : "↻ Refresh Audit Log"}
+              {isLoading ? "Refreshing..." : "↻ Refresh Activity"}
             </button>
           </div>
         </div>
 
         <Divider style={{ margin: "20px 0" }} />
+
+        {/* Readable Chronological Lifecycle Flows Guide */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }} className="audit-flow-grid">
+          <div
+            style={{
+              background: "var(--bg-0)",
+              border: "1px solid var(--line)",
+              borderRadius: "var(--radius-panel)",
+              padding: "16px 18px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{ color: "var(--sage)", fontSize: "12px" }}>✓</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 600 }}>
+                NORMAL INVESTIGATION (ALLOWED)
+              </span>
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11.5px",
+                color: "var(--ink)",
+                lineHeight: 1.8,
+              }}
+            >
+              Question received<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> Plant records consulted<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> Permission checked<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> Tool allowed<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> Calculation performed<br />
+              <span style={{ color: "var(--sage)" }}>↓ Answer verified</span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: "var(--bg-0)",
+              border: "1px solid var(--line)",
+              borderRadius: "var(--radius-panel)",
+              padding: "16px 18px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{ color: "var(--coral)", fontSize: "12px" }}>✕</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 600 }}>
+                UNAUTHORIZED ACTUATION (BLOCKED)
+              </span>
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11.5px",
+                color: "var(--ink)",
+                lineHeight: 1.8,
+              }}
+            >
+              Question received<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> Permission checked<br />
+              <span style={{ color: "var(--coral-text)", fontWeight: 600 }}>↓ BLOCKED</span><br />
+              <span style={{ color: "var(--ink-3)" }}>↓ Tool never executed</span>
+            </div>
+          </div>
+        </div>
 
         {/* Fact KPI Strip */}
         <div
@@ -294,6 +409,7 @@ export function AuditView() {
               const isExpanded = expandedEventId === evt.id;
               const isDenied = evt.decision === "DENY" || evt.type.includes("DENIED");
               const isVerified = evt.type.includes("VERIFIED") || evt.decision === "ALLOW";
+              const humanInfo = getEventHumanExplanation(evt);
 
               return (
                 <div
@@ -310,20 +426,24 @@ export function AuditView() {
                   {/* Event Top Bar */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 600 }}>
-                        [{String(idx + 1).padStart(3, "0")}] {evt.type}
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                        #{String(idx + 1).padStart(3, "0")}
+                      </span>
+                      <span style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink)", fontWeight: 600 }}>
+                        {humanInfo.humanTitle}
                       </span>
                       <span
                         style={{
                           fontFamily: "var(--font-mono)",
-                          fontSize: "10.5px",
-                          color: "var(--ink-3)",
-                          border: "1px solid var(--line)",
+                          fontSize: "10px",
+                          color: isDenied ? "var(--coral-text)" : isVerified ? "var(--sage)" : "var(--ink-3)",
+                          border: `1px solid ${isDenied ? "var(--coral)" : isVerified ? "var(--sage)" : "var(--line)"}`,
                           padding: "1px 6px",
                           borderRadius: "var(--radius-pill)",
+                          background: isDenied ? "rgba(217, 105, 78, 0.08)" : isVerified ? "rgba(156, 195, 168, 0.08)" : "transparent",
                         }}
                       >
-                        {evt.category}
+                        {evt.type}
                       </span>
                     </div>
 
@@ -349,10 +469,10 @@ export function AuditView() {
                     </div>
                   </div>
 
-                  {/* Actor & Primary Summary */}
+                  {/* Plain Language Human Explanation */}
                   <div style={{ marginTop: 8 }}>
-                    <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink)", lineHeight: 1.5 }}>
-                      {evt.summary}
+                    <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5 }}>
+                      {humanInfo.explanation}
                     </p>
                   </div>
 

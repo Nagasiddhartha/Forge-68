@@ -20,13 +20,15 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
   const baselineChecks = [
     {
       check_name: "PROVENANCE",
+      plainTitle: "Sources traceable",
       title: "Evidence Provenance & Integrity",
       status: "VERIFIED" as VerificationStatus,
-      description: "All ingested document chunks, tool telemetry, and visual observations possess verifiable source references, SHA-256 digests, and monotonic timestamps.",
+      description: "All ingested document chunks, tool telemetry, and visual observations possess verifiable source references and SHA-256 digests.",
       details: "4/4 evidence records verified to source digests. No orphaned claims detected.",
     },
     {
       check_name: "COMPLETENESS",
+      plainTitle: "Evidence complete",
       title: "Requirement & Evidence Completeness",
       status: "VERIFIED" as VerificationStatus,
       description: "Every reasoning claim in the agent's plan has corresponding backing records across knowledge, tooling, and sensor telemetry.",
@@ -34,6 +36,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "POLICY",
+      plainTitle: "Within policy rules",
       title: "Policy Gateway Compliance",
       status: "VERIFIED" as VerificationStatus,
       description: "All requested operations evaluated against role clearance. Zero execution of unauthorized, critical-risk, or write-actuation tool handlers.",
@@ -41,30 +44,34 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "CLASSIFICATION",
+      plainTitle: "Within your access",
       title: "Data Classification Boundary",
       status: "VERIFIED" as VerificationStatus,
-      description: "Data classification levels respected. Requester clearance (CONFIDENTIAL) strictly subsumes retrieved document tiers (INTERNAL).",
+      description: "Data classification levels respected. Requester clearance strictly subsumes retrieved document tiers.",
       details: "Zero clearance leakage. Bounded within sovereign enclave.",
     },
     {
       check_name: "PARAMETER_CONSISTENCY",
+      plainTitle: "Values agree",
       title: "Cross-Source Parameter Consistency",
       status: "VERIFIED" as VerificationStatus,
-      description: "Identifies semantic discrepancies between operating readings and engineering baselines. Variance flagged for human operator review.",
+      description: "Operating readings and engineering baselines are compared across multiple sources. Variances are flagged for review.",
       details: "+1.8 bar delta between PI-204 (33.0 bar) and SOP §3.2 (31.2 bar). Non-conflicting semantic roles.",
     },
     {
       check_name: "CALCULATION",
+      plainTitle: "Math independently checked",
       title: "Deterministic Math Validation",
       status: "VERIFIED" as VerificationStatus,
-      description: "All numerical variances, pressure trip margins, and wall thinning rates recalculated in pure Python deterministic sandbox. No LLM arithmetic.",
+      description: "All numerical variances and pressure alarm margins are calculated by pure Python code, not by the language model.",
       details: "Variance: 33.0 - 31.2 = +1.8 bar. Alarm margin: 33.5 - 33.0 = 0.5 bar. Math exact.",
     },
     {
       check_name: "GROUNDING",
+      plainTitle: "Answer supported by evidence",
       title: "Synthesis Grounding & Hallucination Gate",
       status: "VERIFIED" as VerificationStatus,
-      description: "Agent final response text parsed for factual grounding against verified evidence set. Speculative or ungrounded assertions purged.",
+      description: "Response text is checked for factual grounding against verified evidence. Speculative assertions are purged.",
       details: "100% of asserted quantities match verified evidence records.",
     },
   ];
@@ -74,6 +81,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
         const matchingBaseline = baselineChecks.find((b) => b.check_name === chk.check_type);
         return {
           check_name: chk.check_type,
+          plainTitle: matchingBaseline?.plainTitle || chk.check_type.replace(/_/g, " "),
           title: matchingBaseline?.title || chk.check_type.replace(/_/g, " "),
           status: chk.status,
           description: chk.description,
@@ -117,17 +125,17 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                 border: "1px solid var(--sage)",
               }}
             >
-              PURE PYTHON DETERMINISTIC CODE
+              7 INDEPENDENT CODE CHECKS
             </span>
           </div>
 
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--ink)", fontWeight: 500 }}>
-            Independent Verification Engine
+            Why should you trust this answer?
           </h2>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", marginTop: 4, maxWidth: 680 }}>
-            In FORGE, reasoning proposals generated by language models undergo strict, post-generation verification
-            against 7 deterministic proof stages before delivery to operators.
+            In FORGE, reasoning proposals generated by language models undergo 7 post-generation verification checks
+            performed by deterministic Python code before delivery to operators.
           </p>
         </div>
 
@@ -240,10 +248,13 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-                      CHECK {String(idx + 1).padStart(2, "0")} · {chk.check_name}
+                      CHECK {String(idx + 1).padStart(2, "0")}
                     </span>
-                    <span style={{ fontFamily: "var(--font-ui)", fontSize: "14px", fontWeight: 500, color: "var(--ink)" }}>
-                      {chk.title}
+                    <span style={{ fontFamily: "var(--font-ui)", fontSize: "15px", fontWeight: 600, color: "var(--ink)" }}>
+                      {chk.plainTitle}
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                      · {chk.title}
                     </span>
                   </div>
 

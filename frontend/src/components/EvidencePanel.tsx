@@ -125,41 +125,47 @@ export function EvidencePanel({
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <BrassLabel variant="outline">WHERE DID THIS CLAIM COME FROM?</BrassLabel>
+            <BrassLabel variant="outline">WHAT SUPPORTS THIS ANSWER?</BrassLabel>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              MULTI-SOURCE PROVENANCE DOSSIER
+              MULTI-SOURCE EVIDENCE DOSSIER
             </span>
           </div>
 
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", color: "var(--ink)", fontWeight: 500 }}>
-            {title}
+            {title || "What supports this answer?"}
           </h2>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", marginTop: 2 }}>
-            Every claim is tied to verifiable evidence: documented procedures, sandboxed tools, analog gauges, or deterministic math.
+            Every claim is tied to verifiable evidence: documented plant procedures, sandboxed tools, analog gauges, or deterministic math.
           </p>
         </div>
 
         {/* Filter Pills */}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {(["ALL", "DOCUMENT", "TOOL", "VISUAL", "CALCULATION"] as const).map((tab) => {
-            const isSelected = filter === tab;
+          {[
+            { id: "ALL", label: "All Evidence" },
+            { id: "DOCUMENT", label: "Plant Procedures" },
+            { id: "TOOL", label: "Sensor Readings" },
+            { id: "VISUAL", label: "Gauges & Vision" },
+            { id: "CALCULATION", label: "Independent Math" },
+          ].map((tab) => {
+            const isSelected = filter === tab.id;
             return (
               <button
-                key={tab}
-                onClick={() => setFilter(tab)}
+                key={tab.id}
+                onClick={() => setFilter(tab.id as typeof filter)}
                 style={{
                   background: isSelected ? "var(--bg-3)" : "var(--bg-0)",
                   border: isSelected ? "1px solid var(--brass)" : "1px solid var(--line)",
                   borderRadius: "var(--radius-pill)",
                   color: isSelected ? "var(--ink)" : "var(--ink-3)",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
+                  fontFamily: "var(--font-ui)",
+                  fontSize: "12px",
                   padding: "5px 12px",
                   cursor: "pointer",
                   transition: "all var(--dur-fast) var(--ease-out)",
                 }}
               >
-                {tab}
+                {tab.label}
               </button>
             );
           })}

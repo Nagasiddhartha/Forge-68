@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { DataClassification, Role } from "@/lib/api";
 import { ComputedRuntimeState } from "@/lib/runtime";
+import { ROLE_PERMISSIONS } from "@/lib/permissions";
 
 export type ShellDestination = "missions" | "library" | "governance" | "audit" | "boundary";
 
@@ -18,8 +19,8 @@ export interface HeaderProps {
 
 const NAV_ITEMS: Array<{ id: ShellDestination; label: string }> = [
   { id: "missions", label: "Missions" },
-  { id: "library", label: "Library" },
-  { id: "governance", label: "Governance" },
+  { id: "library", label: "Plant Knowledge" },
+  { id: "governance", label: "Who Can Do What" },
   { id: "audit", label: "Audit" },
   { id: "boundary", label: "Boundary" },
 ];
@@ -38,6 +39,8 @@ export function Header({
   const popoverRef = useRef<HTMLDivElement>(null);
   const navContainerRef = useRef<HTMLDivElement>(null);
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   // Underline slide position
   const [underlineStyle, setUnderlineStyle] = useState<{ left: number; width: number }>({
     left: 0,
@@ -45,6 +48,19 @@ export function Header({
   });
 
   const buttonRefs = useRef<Map<ShellDestination, HTMLButtonElement>>(new Map());
+
+  const handleRoleSelect = (newRole: Role) => {
+    onChangeRole(newRole);
+    const def = ROLE_PERMISSIONS[newRole];
+    if (def) {
+      onChangeClearance(def.defaultClearance);
+    }
+    setToastMessage(`Access context updated: Operating as ${newRole} (${def?.defaultClearance || clearance})`);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4500);
+    setPersonaOpen(false);
+  };
 
   useEffect(() => {
     const activeBtn = buttonRefs.current.get(activeDestination);
@@ -241,12 +257,12 @@ export function Header({
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 right: 0,
-                width: 290,
+                width: 360,
                 backgroundColor: "var(--bg-2)",
                 border: "1px solid var(--line)",
                 borderRadius: "var(--radius-panel)",
                 boxShadow: "var(--shadow-popover)",
-                padding: "16px",
+                padding: "18px",
                 zIndex: 200,
                 display: "flex",
                 flexDirection: "column",
@@ -254,56 +270,96 @@ export function Header({
               }}
             >
               <div>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "14px", fontWeight: 500, color: "var(--ink)" }}>
-                  Demo Persona
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 500, color: "var(--ink)" }}>
+                    Select User Persona
+                  </span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
+                    RBAC ENFORCED
+                  </span>
                 </div>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)", marginTop: 2 }}>
-                  Simulates industrial single sign-on (SSO) and role-based clearance enforcement.
+                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-2)", marginTop: 4 }}>
+                  Switching personas dynamically updates your plant permissions, tool boundaries, and investigation authority.
                 </div>
               </div>
 
-              <div>
-                <label style={{ display: "block", fontFamily: "var(--font-ui)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase", marginBottom: 6 }}>
-                  Operational Role
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => onChangeRole(e.target.value as Role)}
-                  style={{
-                    width: "100%",
-                    background: "var(--bg-1)",
-                    border: "1px solid var(--line-strong)",
-                    color: "var(--ink)",
-                    padding: "6px 10px",
-                    borderRadius: "var(--radius-sm)",
-                    fontFamily: "var(--font-ui)",
-                    fontSize: "13px",
-                  }}
-                >
-                  <option value="ENGINEER">ENGINEER (Standard Operations)</option>
-                  <option value="INSPECTOR">INSPECTOR (Audits & Vision)</option>
-                  <option value="AI_OPERATOR">AI_OPERATOR (Restricted Access)</option>
-                  <option value="ADMIN">ADMIN (Full Authority)</option>
-                  <option value="SECURITY_OFFICER">SECURITY_OFFICER</option>
-                </select>
+              {/* 1-Click Role Selection Cards */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
+                {(["ENGINEER", "INSPECTOR", "AI_OPERATOR", "ADMIN", "SECURITY_OFFICER"] as Role[]).map((r) => {
+                  const cfg = ROLE_PERMISSIONS[r];
+                  const isCurrent = role === r;
+                  return (
+                    <div
+                      key={r}
+                      onClick={() => handleRoleSelect(r)}
+                      style={{
+                        background: isCurrent ? "var(--bg-3)" : "var(--bg-0)",
+                        border: isCurrent ? "1px solid var(--brass)" : "1px solid var(--line)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "10px 12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                        transition: "all var(--dur-fast) var(--ease-out)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: isCurrent ? "var(--brass)" : "var(--ink)" }}>
+                            {cfg.label}
+                          </span>
+                          {isCurrent && (
+                            <span style={{ fontSize: "10px", color: "var(--sage)", fontFamily: "var(--font-mono)" }}>
+                              ✓ ACTIVE
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)", border: "1px solid var(--line)", padding: "1px 5px", borderRadius: "var(--radius-pill)" }}>
+                          {cfg.defaultClearance}
+                        </span>
+                      </div>
+
+                      <p style={{ fontFamily: "var(--font-ui)", fontSize: "11.5px", color: "var(--ink-2)", lineHeight: 1.35, margin: 0 }}>
+                        {cfg.summary}
+                      </p>
+
+                      <div style={{ display: "flex", gap: 10, fontSize: "10.5px", fontFamily: "var(--font-mono)", color: "var(--ink-3)", marginTop: 2 }}>
+                        <span>Read: <strong style={{ color: "var(--sage)" }}>✓</strong></span>
+                        <span>Investigate: <strong style={{ color: "var(--sage)" }}>✓</strong></span>
+                        <span>Actuate: <strong style={{ color: cfg.actuate === "ALLOWED" ? "var(--sage)" : cfg.actuate === "NEEDS_APPROVAL" ? "var(--brass)" : "var(--coral-text)" }}>
+                          {cfg.actuate === "ALLOWED" ? "✓" : cfg.actuate === "NEEDS_APPROVAL" ? "⚠ Req. Approval" : "✕ Blocked"}
+                        </strong></span>
+                        <span>Admin: <strong style={{ color: cfg.admin === "ALLOWED" ? "var(--sage)" : "var(--mist)" }}>
+                          {cfg.admin === "ALLOWED" ? "✓" : "✕"}
+                        </strong></span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              <div>
-                <label style={{ display: "block", fontFamily: "var(--font-ui)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase", marginBottom: 6 }}>
-                  Security Clearance
-                </label>
+              {/* Custom Clearance override toggle */}
+              <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                  Clearance Override:
+                </span>
                 <select
                   value={clearance}
-                  onChange={(e) => onChangeClearance(e.target.value as DataClassification)}
+                  onChange={(e) => {
+                    const c = e.target.value as DataClassification;
+                    onChangeClearance(c);
+                    setToastMessage(`Clearance updated: ${role} now operating at ${c}`);
+                    setTimeout(() => setToastMessage(null), 4000);
+                  }}
                   style={{
-                    width: "100%",
                     background: "var(--bg-1)",
                     border: "1px solid var(--line-strong)",
-                    color: "var(--ink)",
-                    padding: "6px 10px",
+                    color: "var(--brass)",
+                    padding: "3px 8px",
                     borderRadius: "var(--radius-sm)",
-                    fontFamily: "var(--font-ui)",
-                    fontSize: "13px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
                   }}
                 >
                   <option value="PUBLIC">PUBLIC</option>
@@ -313,19 +369,41 @@ export function Header({
                   <option value="CRITICAL">CRITICAL</option>
                 </select>
               </div>
-
-              <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, display: "flex", justifyContent: "flex-end" }}>
-                <button
-                  onClick={() => setPersonaOpen(false)}
-                  className="btn-brass-primary"
-                  style={{ padding: "5px 14px", fontSize: "12px" }}
-                >
-                  Apply
-                </button>
-              </div>
             </div>
           )}
         </div>
+
+        {/* Access Context Updated Toast Notification */}
+        {toastMessage && (
+          <div
+            style={{
+              position: "fixed",
+              top: 72,
+              right: 24,
+              backgroundColor: "var(--bg-2)",
+              border: "1px solid var(--brass)",
+              borderRadius: "var(--radius-panel)",
+              boxShadow: "var(--shadow-popover)",
+              padding: "10px 16px",
+              zIndex: 300,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              animation: "fadeIn 0.2s ease-out",
+            }}
+          >
+            <span style={{ color: "var(--sage)", fontSize: "14px" }}>✓</span>
+            <span style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink)", fontWeight: 500 }}>
+              {toastMessage}
+            </span>
+            <button
+              onClick={() => setToastMessage(null)}
+              style={{ background: "none", border: "none", color: "var(--ink-3)", cursor: "pointer", fontSize: "12px", marginLeft: 8 }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Mobile menu button */}
         <button
