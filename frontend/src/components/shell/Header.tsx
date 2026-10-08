@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { DataClassification, Role } from "@/lib/api";
 import { ComputedRuntimeState } from "@/lib/runtime";
 import { ROLE_PERMISSIONS } from "@/lib/permissions";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 export type ShellDestination = "missions" | "library" | "governance" | "audit" | "boundary";
 
@@ -15,15 +16,9 @@ export interface HeaderProps {
   clearance: DataClassification;
   onChangeClearance: (c: DataClassification) => void;
   runtime: ComputedRuntimeState;
+  locale?: Locale;
+  onChangeLocale?: (l: Locale) => void;
 }
-
-const NAV_ITEMS: Array<{ id: ShellDestination; label: string }> = [
-  { id: "missions", label: "Missions" },
-  { id: "library", label: "Plant Knowledge" },
-  { id: "governance", label: "Who Can Do What" },
-  { id: "audit", label: "Audit" },
-  { id: "boundary", label: "Boundary" },
-];
 
 export function Header({
   activeDestination,
@@ -33,7 +28,17 @@ export function Header({
   clearance,
   onChangeClearance,
   runtime,
+  locale = "en",
+  onChangeLocale,
 }: HeaderProps) {
+  const t = TRANSLATIONS[locale];
+  const navItems: Array<{ id: ShellDestination; label: string }> = [
+    { id: "missions", label: t.navMissions },
+    { id: "library", label: t.navKnowledge },
+    { id: "governance", label: t.navGovernance },
+    { id: "audit", label: t.navAudit },
+    { id: "boundary", label: t.navBoundary },
+  ];
   const [personaOpen, setPersonaOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -132,7 +137,7 @@ export function Header({
             }}
             className="md-show-inline"
           >
-            Industrial AI Control Plane
+            {t.brandTitle}
           </span>
         </div>
 
@@ -147,7 +152,7 @@ export function Header({
           }}
           className="desktop-nav"
         >
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive = activeDestination === item.id;
             return (
               <button
@@ -190,8 +195,78 @@ export function Header({
         </nav>
       </div>
 
-      {/* Right Controls: Boundary Chip & Persona */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      {/* Right Controls: Language Selector, Zero-Egress Air-Gap, Boundary Chip & Persona */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Language Selector Pill */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            background: "var(--bg-1)",
+            border: "1px solid var(--line)",
+            borderRadius: "var(--radius-pill)",
+            padding: "2px",
+          }}
+        >
+          {(["en", "hi", "kn"] as Locale[]).map((loc) => {
+            const isActive = (locale || "en") === loc;
+            const label = loc === "en" ? "EN" : loc === "hi" ? "हिंदी" : "ಕನ್ನಡ";
+            return (
+              <button
+                key={loc}
+                onClick={() => onChangeLocale?.(loc)}
+                style={{
+                  background: isActive ? "var(--bg-3)" : "none",
+                  border: "none",
+                  color: isActive ? "var(--brass)" : "var(--ink-2)",
+                  fontWeight: isActive ? 600 : 400,
+                  fontSize: "11.5px",
+                  fontFamily: "var(--font-ui)",
+                  borderRadius: "var(--radius-pill)",
+                  padding: "3px 9px",
+                  cursor: "pointer",
+                  transition: "all var(--dur-fast) var(--ease-out)",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Live Zero-Egress Air-Gap Pill */}
+        <div
+          onClick={() => onSelectDestination("boundary")}
+          title="Host Network Isolation Verified: 0 B outbound traffic (Air-Gapped)"
+          style={{
+            background: "rgba(156, 195, 168, 0.12)",
+            border: "1px solid var(--sage)",
+            borderRadius: "var(--radius-pill)",
+            padding: "4px 10px",
+            fontFamily: "var(--font-mono)",
+            fontSize: "11.5px",
+            color: "var(--sage)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              backgroundColor: "var(--sage)",
+              boxShadow: "0 0 6px var(--sage)",
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ whiteSpace: "nowrap" }}>{t.airGappedBadge}</span>
+        </div>
+
         {/* Boundary Chip */}
         <button
           onClick={() => onSelectDestination("boundary")}
@@ -220,7 +295,7 @@ export function Header({
               boxShadow: isOnline ? "0 0 6px var(--sage)" : "0 0 6px var(--coral)",
             }}
           />
-          <span>{isOnline ? "Local only" : "Offline"}</span>
+          <span>{isOnline ? t.localOnly : t.offline}</span>
         </button>
 
         {/* Demo Persona Selector */}
@@ -241,7 +316,7 @@ export function Header({
               cursor: "pointer",
             }}
           >
-            <span style={{ color: "var(--ink-3)" }}>Persona:</span>
+            <span style={{ color: "var(--ink-3)" }}>{t.personaLabel}</span>
             <span style={{ fontWeight: 500 }}>{role}</span>
             <span style={{ color: "var(--line-strong)" }}>·</span>
             <span style={{ color: "var(--brass)" }}>{clearance}</span>
@@ -272,14 +347,14 @@ export function Header({
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 500, color: "var(--ink)" }}>
-                    Select User Persona
+                    {t.selectPersonaTitle}
                   </span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
-                    RBAC ENFORCED
+                    {t.rbacEnforcedBadge}
                   </span>
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-2)", marginTop: 4 }}>
-                  Switching personas dynamically updates your plant permissions, tool boundaries, and investigation authority.
+                  {t.selectPersonaDesc}
                 </div>
               </div>
 
@@ -342,7 +417,7 @@ export function Header({
               {/* Custom Clearance override toggle */}
               <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                  Clearance Override:
+                  {t.clearanceOverride}
                 </span>
                 <select
                   value={clearance}

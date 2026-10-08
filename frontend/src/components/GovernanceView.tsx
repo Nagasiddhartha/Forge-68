@@ -8,12 +8,15 @@ import {
   fetchTools,
 } from "@/lib/api";
 import { EnamelSurface, SectionHeader, BrassLabel } from "./primitives";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 interface GovernanceViewProps {
   role?: string;
+  locale?: Locale;
 }
 
-export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
+export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceViewProps) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const [securityReport, setSecurityReport] = useState<SecurityBoundaryReport | null>(null);
   const [tools, setTools] = useState<ToolMetadata[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -41,70 +44,75 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
 
   const permissionMatrix = [
     {
-      role: "ENGINEER",
+      role: t.roleEngineer,
       clearance: "CONFIDENTIAL",
-      read: "✓ Allowed",
-      investigate: "✓ Allowed",
-      actuate: "⚠ Approval required",
-      admin: "✕ Blocked",
-      summary: "Read plant data & SOPs, run investigations, read-only tools. Critical actuation requires approval. Admin actions blocked.",
+      read: t.badgeAllowed,
+      investigate: t.badgeAllowed,
+      actuate: t.badgeApprovalRequired,
+      admin: t.badgeBlocked,
+      summary: t.roleSummaryEngineer,
+      rawRole: "ENGINEER",
     },
     {
-      role: "INSPECTOR",
+      role: t.roleInspector,
       clearance: "INTERNAL",
-      read: "✓ Allowed",
-      investigate: "✓ Allowed",
-      actuate: "✕ Blocked",
-      admin: "✕ Blocked",
-      summary: "Read inspection & telemetry data, run investigations. Actuation blocked. Admin actions blocked.",
+      read: t.badgeAllowed,
+      investigate: t.badgeAllowed,
+      actuate: t.badgeBlocked,
+      admin: t.badgeBlocked,
+      summary: t.roleSummaryInspector,
+      rawRole: "INSPECTOR",
     },
     {
-      role: "AI OPERATOR",
+      role: t.roleAiOperator,
       clearance: "RESTRICTED",
-      read: "✓ Allowed",
-      investigate: "✓ Allowed",
-      actuate: "✕ Blocked",
-      admin: "✕ Blocked",
-      summary: "Approved read & investigation access. Zero write authority. Actuation blocked. Admin actions blocked.",
+      read: t.badgeAllowed,
+      investigate: t.badgeAllowed,
+      actuate: t.badgeBlocked,
+      admin: t.badgeBlocked,
+      summary: t.roleSummaryAiOperator,
+      rawRole: "AI_OPERATOR",
     },
     {
-      role: "ADMIN",
+      role: t.roleAdmin,
       clearance: "CRITICAL",
-      read: "✓ Allowed",
-      investigate: "✓ Allowed",
-      actuate: "⚠ Approval required",
-      admin: "✓ Allowed",
-      summary: "Broadest access. Critical actions require appropriate approval. Administrative controls available.",
+      read: t.badgeAllowed,
+      investigate: t.badgeAllowed,
+      actuate: t.badgeApprovalRequired,
+      admin: t.badgeAllowed,
+      summary: t.roleSummaryAdmin,
+      rawRole: "ADMIN",
     },
     {
-      role: "SECURITY OFFICER",
+      role: t.roleSecurityOfficer,
       clearance: "CRITICAL",
-      read: "✓ Allowed",
-      investigate: "✓ Allowed",
-      actuate: "✕ Blocked",
-      admin: "✕ Blocked",
-      summary: "Audit & security visibility. Plant actuation blocked. Administrative override blocked.",
+      read: t.badgeAllowed,
+      investigate: t.badgeAllowed,
+      actuate: t.badgeBlocked,
+      admin: t.badgeBlocked,
+      summary: t.roleSummarySecurityOfficer,
+      rawRole: "SECURITY_OFFICER",
     },
   ];
 
   const getStatusBadge = (status: string) => {
-    if (status.includes("✓ Allowed")) {
+    if (status === t.badgeAllowed || status.includes("Allowed") || status.includes("✓")) {
       return (
         <span style={{ color: "var(--sage)", background: "rgba(156, 195, 168, 0.1)", border: "1px solid var(--sage)", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "11px", fontWeight: 600 }}>
-          ✓ Allowed
+          {t.badgeAllowed}
         </span>
       );
     }
-    if (status.includes("⚠ Approval required")) {
+    if (status === t.badgeApprovalRequired || status.includes("Approval") || status.includes("⚠")) {
       return (
         <span style={{ color: "var(--brass)", background: "rgba(200, 161, 90, 0.1)", border: "1px solid var(--brass)", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "11px", fontWeight: 600 }}>
-          ⚠ Approval required
+          {t.badgeApprovalRequired}
         </span>
       );
     }
     return (
       <span style={{ color: "var(--pewter)", background: "rgba(141, 180, 214, 0.08)", border: "1px solid var(--line-strong)", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "11px", fontWeight: 600 }}>
-        ✕ Blocked
+        {t.badgeBlocked}
       </span>
     );
   };
@@ -114,7 +122,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
       {/* Editorial Header */}
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-          <BrassLabel variant="outline">AUTHORITY LEDGER</BrassLabel>
+          <BrassLabel variant="outline">{t.authorityLedgerBadge}</BrassLabel>
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -126,7 +134,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
               border: "1px solid var(--coral)",
             }}
           >
-            DEFAULT-DENY ENFORCED
+            {t.defaultDenyBadge}
           </span>
           <span
             style={{
@@ -140,7 +148,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
               fontWeight: 600,
             }}
           >
-            SECURITY TESTS: 10 / 10 PASSED
+            {t.securityPassBadge}
           </span>
         </div>
 
@@ -154,7 +162,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
             letterSpacing: "-0.01em",
           }}
         >
-          Who can do what
+          {t.governanceTitle}
         </h1>
 
         <p
@@ -166,7 +174,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
             maxWidth: "68ch",
           }}
         >
-          Controls decide what AI and operators are allowed to do. Every action is checked against policy before any tool or actuator can execute.
+          {t.governanceSubtitle}
         </p>
       </div>
 
@@ -191,13 +199,13 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              PERMISSION MATRIX
+              {t.permissionMatrixTitle}
             </span>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: "4px 0" }}>
-              Role Permissions Matrix
+              {t.permissionMatrixTitle}
             </h2>
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)" }}>
-              Current active persona: <strong style={{ color: "var(--brass)" }}>{role}</strong>. Switching personas in the header updates your execution boundaries instantly.
+              {t.activePersonaLabel} <strong style={{ color: "var(--brass)" }}>{role}</strong>. {t.selectPersonaDesc}
             </p>
           </div>
 
@@ -215,8 +223,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
               color: "var(--sage)",
             }}
           >
-            <span>Policy Gateway:</span>
-            <strong>ACTIVE & ENFORCING</strong>
+            <span>{t.policyGatewayActive}</span>
           </div>
         </div>
 
@@ -224,17 +231,17 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
           <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "var(--font-ui)", fontSize: "14px", textAlign: "left" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--line-strong)", color: "var(--ink-3)" }}>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>Role</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>Read</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>Investigate</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>Actuate</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>Admin</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>Permissions Summary</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colRole}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colRead}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colInvestigate}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colActuate}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colAdmin}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colSummary}</th>
               </tr>
             </thead>
             <tbody>
               {permissionMatrix.map((p, idx) => {
-                const isActive = p.role.toUpperCase() === role.toUpperCase().replace("_", " ") || p.role === role;
+                const isActive = p.rawRole === role || p.role.toUpperCase() === role.toUpperCase().replace("_", " ");
                 return (
                   <tr
                     key={idx}
@@ -312,10 +319,10 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
           </div>
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "var(--ink)", fontWeight: 600 }}>
-              Security tests: 10 / 10 passed
+              {t.securityTestsBannerTitle}
             </div>
             <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-2)", marginTop: 2 }}>
-              Deterministic boundary tests verify untrusted inputs are quarantined and unauthorized actions are blocked.
+              {t.securityTestsBannerDesc}
             </div>
           </div>
         </div>
@@ -325,7 +332,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
           className="btn-brass-secondary"
           style={{ fontSize: "12px", padding: "8px 16px" }}
         >
-          {showTechnicalDetails ? "Hide Technical Details ▲" : "View Technical Policy Details ▼"}
+          {showTechnicalDetails ? t.hidePolicyDetailsBtn : t.viewPolicyDetailsBtn}
         </button>
       </div>
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { VerificationResult, VerificationStatus } from "@/lib/api";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 import {
   EnamelSurface,
   VerdictBadge,
@@ -11,16 +12,18 @@ import {
 
 interface VerificationPanelProps {
   verification?: VerificationResult | null;
+  locale?: Locale;
 }
 
-export function VerificationPanel({ verification }: VerificationPanelProps) {
+export function VerificationPanel({ verification, locale = "en" }: VerificationPanelProps) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const [expandedCheckName, setExpandedCheckName] = useState<string | null>(null);
 
   // Baseline 7 checks for Reactor R-204 investigation if none dynamically provided
   const baselineChecks = [
     {
       check_name: "PROVENANCE",
-      plainTitle: "Sources traceable",
+      plainTitle: t.checkTraceable,
       title: "Evidence Provenance & Integrity",
       status: "VERIFIED" as VerificationStatus,
       description: "All ingested document chunks, tool telemetry, and visual observations possess verifiable source references and SHA-256 digests.",
@@ -28,7 +31,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "COMPLETENESS",
-      plainTitle: "Evidence complete",
+      plainTitle: t.checkEvidenceComplete,
       title: "Requirement & Evidence Completeness",
       status: "VERIFIED" as VerificationStatus,
       description: "Every reasoning claim in the agent's plan has corresponding backing records across knowledge, tooling, and sensor telemetry.",
@@ -36,7 +39,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "POLICY",
-      plainTitle: "Within policy rules",
+      plainTitle: t.checkWithinPolicy,
       title: "Policy Gateway Compliance",
       status: "VERIFIED" as VerificationStatus,
       description: "All requested operations evaluated against role clearance. Zero execution of unauthorized, critical-risk, or write-actuation tool handlers.",
@@ -44,7 +47,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "CLASSIFICATION",
-      plainTitle: "Within your access",
+      plainTitle: t.checkWithinAccess,
       title: "Data Classification Boundary",
       status: "VERIFIED" as VerificationStatus,
       description: "Data classification levels respected. Requester clearance strictly subsumes retrieved document tiers.",
@@ -52,7 +55,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "PARAMETER_CONSISTENCY",
-      plainTitle: "Values agree",
+      plainTitle: t.checkValuesAgree,
       title: "Cross-Source Parameter Consistency",
       status: "VERIFIED" as VerificationStatus,
       description: "Operating readings and engineering baselines are compared across multiple sources. Variances are flagged for review.",
@@ -60,7 +63,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "CALCULATION",
-      plainTitle: "Math independently checked",
+      plainTitle: t.checkMath,
       title: "Deterministic Math Validation",
       status: "VERIFIED" as VerificationStatus,
       description: "All numerical variances and pressure alarm margins are calculated by pure Python code, not by the language model.",
@@ -68,7 +71,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "GROUNDING",
-      plainTitle: "Answer supported by evidence",
+      plainTitle: t.checkEvidenceComplete,
       title: "Synthesis Grounding & Hallucination Gate",
       status: "VERIFIED" as VerificationStatus,
       description: "Response text is checked for factual grounding against verified evidence. Speculative assertions are purged.",
@@ -113,7 +116,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <BrassLabel variant="outline">THE MODEL DOES NOT VERIFY ITSELF</BrassLabel>
+            <BrassLabel variant="outline">{t.modelDoesNotVerifyTitle}</BrassLabel>
             <span
               style={{
                 fontFamily: "var(--font-mono)",
@@ -125,25 +128,24 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                 border: "1px solid var(--sage)",
               }}
             >
-              7 INDEPENDENT CODE CHECKS
+              {t.independentCodeChecksBadge}
             </span>
           </div>
 
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--ink)", fontWeight: 500 }}>
-            Why should you trust this answer?
+            {t.whyTrustTitle}
           </h2>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", marginTop: 4, maxWidth: 680 }}>
-            In FORGE, reasoning proposals generated by language models undergo 7 post-generation verification checks
-            performed by deterministic Python code before delivery to operators.
+            {t.checkedByPythonNotice}
           </p>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-            Deterministic Verdict
+            {t.deterministicVerdictLabel}
           </span>
-          <VerdictBadge verdict={currentStatus} />
+          <VerdictBadge verdict={currentStatus} locale={locale} />
         </div>
       </div>
 
@@ -162,7 +164,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-            VERIFICATION ASSESSMENT SUMMARY
+            {t.assessmentSummaryLabel}
           </span>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
             Checks Evaluated: {activeChecks.length} / 7
@@ -330,7 +332,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
           </h3>
         </div>
 
-        <VerdictBadge verdict={currentStatus} />
+        <VerdictBadge verdict={currentStatus} locale={locale} />
       </div>
     </EnamelSurface>
   );

@@ -18,6 +18,7 @@ import { VerificationPanel } from "@/components/VerificationPanel";
 import { AuditView } from "@/components/AuditView";
 import { SovereigntyView } from "@/components/SovereigntyView";
 import { GovernanceView } from "@/components/GovernanceView";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 type MissionSubView = "overview" | "workspace" | "evidence" | "verification";
 
@@ -26,6 +27,8 @@ export default function Home() {
   const [missionSubView, setMissionSubView] = useState<MissionSubView>("overview");
   const [role, setRole] = useState<Role>("ENGINEER");
   const [clearance, setClearance] = useState<DataClassification>("CONFIDENTIAL");
+  const [locale, setLocale] = useState<Locale>("en");
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const [lastResponse, setLastResponse] = useState<AgentQueryResponse | null>(null);
 
   // Live truthful runtime capability model
@@ -45,6 +48,8 @@ export default function Home() {
       onChangeClearance={setClearance}
       runtime={runtime}
       onRefreshRuntime={runtime.refresh}
+      locale={locale}
+      onChangeLocale={setLocale}
     >
       {/* =========================================================================
           1. MISSIONS DESTINATION
@@ -68,7 +73,7 @@ export default function Home() {
             {/* Left: Product Thesis & Case Findings */}
             <div>
               <div style={{ marginBottom: 16 }}>
-                <VerdictBadge verdict="REVIEW_REQUIRED" />
+                <VerdictBadge verdict="REVIEW_REQUIRED" locale={locale} />
               </div>
 
               <h1
@@ -82,7 +87,7 @@ export default function Home() {
                   fontVariantNumeric: "lining-nums tabular-nums",
                 }}
               >
-                Industrial AI that proposes. You decide.
+                {t.heroTitle}
               </h1>
 
               <p
@@ -96,9 +101,7 @@ export default function Home() {
                   maxWidth: "50ch",
                 }}
               >
-                FORGE executes sovereign, local reasoning over private plant documentation.
-                Policy determines authority, multi-source evidence supports every proposal,
-                and deterministic code verifies the math before action is taken.
+                {t.heroSubtitle}
               </p>
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28 }}>
@@ -106,13 +109,13 @@ export default function Home() {
                   onClick={() => setMissionSubView("workspace")}
                   className="btn-brass-primary"
                 >
-                  Start a mission
+                  {t.startMissionBtn}
                 </button>
                 <button
                   onClick={() => setMissionSubView("overview")}
                   className="btn-brass-secondary"
                 >
-                  Inspect telemetry
+                  {t.inspectTelemetryBtn}
                 </button>
               </div>
 
@@ -127,11 +130,11 @@ export default function Home() {
                   flexWrap: "wrap",
                 }}
               >
-                <Metric value="31.2" unit="bar" label="Normal baseline" subtext="SOP §3.2" />
+                <Metric value="31.2" unit="bar" label={t.baselineMetric} subtext={t.baselineSubtext} />
                 <div style={{ width: 1, height: 42, backgroundColor: "var(--line-strong)" }} />
-                <Metric value="+1.8" unit="bar" label="Observed deviation" highlight={true} subtext="PI-204 reading" />
+                <Metric value="+1.8" unit="bar" label={t.deviationMetric} highlight={true} subtext={t.deviationSubtext} />
                 <div style={{ width: 1, height: 42, backgroundColor: "var(--line-strong)" }} />
-                <Metric value="0.5" unit="bar" label="Distance to alarm" subtext="Alarm at 33.5" />
+                <Metric value="0.5" unit="bar" label={t.distanceToAlarmMetric} subtext={t.alarmSubtext} />
               </div>
             </div>
 
@@ -144,7 +147,8 @@ export default function Home() {
                 trip={35.0}
                 unit="bar"
                 tag="PI-204"
-                label="Reactor R-204 · Synthetic telemetry reading"
+                label={t.dialLabel}
+                locale={locale}
               />
             </div>
           </section>
@@ -163,13 +167,13 @@ export default function Home() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 8 }}>
-                Mission Views:
+                {t.missionViewsLabel}
               </span>
               {[
-                { id: "overview", label: "Mission Overview" },
-                { id: "workspace", label: "AI Proposal & Actions" },
-                { id: "evidence", label: "Supporting Evidence" },
-                { id: "verification", label: "Why Trust This? (7 Checks)" },
+                { id: "overview", label: t.tabOverview },
+                { id: "workspace", label: t.tabWorkspace },
+                { id: "evidence", label: t.tabEvidence },
+                { id: "verification", label: t.tabVerification },
               ].map((sub) => {
                 const isSelected = missionSubView === sub.id;
                 return (
@@ -195,13 +199,13 @@ export default function Home() {
             </div>
 
             <span style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>
-              Clearance: <strong style={{ color: "var(--brass)" }}>{clearance}</strong> · Role: <strong style={{ color: "var(--ink)" }}>{role}</strong>
+              {t.clearanceLabel} <strong style={{ color: "var(--brass)" }}>{clearance}</strong> · {t.roleLabel} <strong style={{ color: "var(--ink)" }}>{role}</strong>
             </span>
           </div>
 
           {/* Sub-view Content */}
           {missionSubView === "overview" && (
-            <OverviewView onNavigateToWorkspace={() => setMissionSubView("workspace")} />
+            <OverviewView onNavigateToWorkspace={() => setMissionSubView("workspace")} locale={locale} />
           )}
 
           {missionSubView === "workspace" && (
@@ -210,6 +214,7 @@ export default function Home() {
               clearance={clearance}
               onExecutionComplete={handleExecutionComplete}
               lastResponse={lastResponse}
+              locale={locale}
             />
           )}
 
@@ -219,10 +224,10 @@ export default function Home() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                   <div>
                     <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)" }}>
-                      Multi-Source Evidence Inspection
+                      {t.evidenceHeaderTitle}
                     </h2>
                     <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", marginTop: 2 }}>
-                      Inspect typed evidence records across Document Chunks, Sandboxed Tool Executions, Visual Inspections, and Deterministic Calculations.
+                      {t.evidenceHeaderDesc}
                     </p>
                   </div>
                   {!lastResponse && (
@@ -231,7 +236,7 @@ export default function Home() {
                       className="btn-brass-primary"
                       style={{ fontSize: "13px" }}
                     >
-                      Run Workspace Query ▶
+                      {t.runWorkspaceQueryBtn}
                     </button>
                   )}
                 </div>
@@ -241,6 +246,7 @@ export default function Home() {
                 evidenceSet={lastResponse?.evidence_set}
                 calculations={lastResponse?.verification?.calculation_results || lastResponse?.verification?.calculations || []}
                 title="Execution Evidence Records"
+                locale={locale}
               />
             </div>
           )}
@@ -251,11 +257,10 @@ export default function Home() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                   <div>
                     <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)" }}>
-                      Independent Verification
+                      {t.verificationHeaderTitle}
                     </h2>
                     <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", marginTop: 2 }}>
-                      Deterministic verification checking provenance, completeness, policy compliance, parameter consistency,
-                      and mathematical calculations without LLM self-evaluation.
+                      {t.verificationHeaderDesc}
                     </p>
                   </div>
                   {!lastResponse && (
@@ -264,13 +269,13 @@ export default function Home() {
                       className="btn-brass-primary"
                       style={{ fontSize: "13px" }}
                     >
-                      Execute in Workspace ▶
+                      {t.executeInWorkspaceBtn}
                     </button>
                   )}
                 </div>
               </EnamelSurface>
 
-              <VerificationPanel verification={lastResponse?.verification} />
+              <VerificationPanel verification={lastResponse?.verification} locale={locale} />
             </div>
           )}
         </div>
@@ -280,28 +285,28 @@ export default function Home() {
           2. LIBRARY DESTINATION
           ========================================================================= */}
       {destination === "library" && (
-        <KnowledgeView clearance={clearance} />
+        <KnowledgeView clearance={clearance} locale={locale} />
       )}
 
       {/* =========================================================================
           3. GOVERNANCE DESTINATION
           ========================================================================= */}
       {destination === "governance" && (
-        <GovernanceView role={role} />
+        <GovernanceView role={role} locale={locale} />
       )}
 
       {/* =========================================================================
           4. AUDIT DESTINATION
           ========================================================================= */}
       {destination === "audit" && (
-        <AuditView />
+        <AuditView locale={locale} />
       )}
 
       {/* =========================================================================
           5. BOUNDARY DESTINATION
           ========================================================================= */}
       {destination === "boundary" && (
-        <SovereigntyView />
+        <SovereigntyView locale={locale} />
       )}
 
       <style jsx>{`

@@ -15,8 +15,10 @@ import {
   BrassLabel,
   Divider,
 } from "@/components/primitives";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
-export function SovereigntyView() {
+export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const runtime = useRuntimeCapabilities();
   const [sovereignty, setSovereignty] = useState<SovereigntyStatusResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -72,34 +74,40 @@ export function SovereigntyView() {
 
   const fiveCards = [
     {
-      title: "Local AI",
-      badge: isModelLive ? "Live Sovereign Model" : "On-Premise Ready",
-      description: `Runs on-premise (${sovereignty?.model_provider.default_model || "qwen3:8b"} via ${sovereignty?.model_provider.type.toUpperCase() || "OLLAMA"}). No cloud AI, zero external API calls, zero cloud SDK dependencies.`,
-      icon: "⚡",
+      title: t.sovPillarAiTitle,
+      badge: isModelLive ? "Live Sovereign Model" : t.sovPillarAiBadge,
+      description: t.sovPillarAiDesc,
+      icon: "[AI]",
     },
     {
-      title: "Local Knowledge",
-      badge: "On-Premise Vector Enclave",
-      description: `Private plant documents indexed locally (${runtime.embeddingModel || sovereignty?.embedding_provider.model || "Local Embeddings"}). Zero cloud vector databases. Access strictly bounded by role clearance.`,
-      icon: "📚",
+      title: t.sovPillarKnowledgeTitle,
+      badge: t.sovPillarKnowledgeBadge,
+      description: t.sovPillarKnowledgeDesc,
+      icon: "[DOC]",
     },
     {
-      title: "Local Tools",
-      badge: "Bounded Execution",
-      description: "Industrial actuation, SCADA telemetry queries, and file operations execute inside local sandboxes. Policy gateway intercepts every call before execution.",
-      icon: "🔧",
+      title: t.sovPillarToolsTitle,
+      badge: t.sovPillarToolsBadge,
+      description: t.sovPillarToolsDesc,
+      icon: "[TOOL]",
     },
     {
-      title: "Independent Verification",
-      badge: "Deterministic Code Checks",
-      description: "7 discrete verification checks evaluate facts, unit bounds, and calculations using pure Python code. The AI model is never allowed to grade its own work.",
-      icon: "✓",
+      title: t.sovPillarVerifTitle,
+      badge: t.sovPillarVerifBadge,
+      description: t.sovPillarVerifDesc,
+      icon: "[VERIF]",
     },
     {
-      title: "Local Audit",
-      badge: "Append-Only Local Sink",
-      description: "Every question, reasoning trace, tool execution, and verification check is logged to an immutable local file sink. Data never leaves your facility.",
-      icon: "📜",
+      title: t.sovPillarAuditTitle,
+      badge: t.sovPillarAuditBadge,
+      description: t.sovPillarAuditDesc,
+      icon: "[AUDIT]",
+    },
+    {
+      title: t.sovPillarEgressTitle,
+      badge: t.sovPillarEgressBadge,
+      description: t.sovPillarEgressDesc,
+      icon: "[EGRESS]",
     },
   ];
 
@@ -122,7 +130,7 @@ export function SovereigntyView() {
                   border: "1px solid var(--sage)",
                 }}
               >
-                ON-PREMISE SOVEREIGN RUNTIME
+                {t.sovHeroBadge}
               </span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
                 ENCLAVE ID: FORGE-SOV-01
@@ -130,12 +138,11 @@ export function SovereigntyView() {
             </div>
 
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
-              Your data stays inside FORGE
+              {t.sovHeroTitle}
             </h1>
 
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink-2)", marginTop: 6, lineHeight: 1.6 }}>
-              All reasoning, plant knowledge, industrial tools, and verification execute strictly on local sovereign hardware.
-              Outside AI cloud services are strictly unconfigured and inaccessible.
+              {t.sovHeroDesc}
             </p>
           </div>
 
@@ -146,7 +153,7 @@ export function SovereigntyView() {
               className="btn-brass-primary"
               style={{ fontSize: "13px", padding: "10px 18px" }}
             >
-              {isLoading ? "Verifying..." : "Verify Runtime State ↻"}
+              {isLoading ? t.sovVerifyingBtn : t.sovVerifyBtn}
             </button>
           </div>
         </div>
@@ -167,37 +174,37 @@ export function SovereigntyView() {
         >
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              EXTERNAL AI PROVIDERS
+              {t.sovExtAiTitle}
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
-              None configured
+              {t.sovExtAiVal}
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Zero cloud LLM API calls or SDKs
+              {t.sovExtAiSub}
             </span>
           </div>
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              CLOUD FALLBACK
+              {t.sovCloudFallbackTitle}
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
-              Disabled (Fail-Closed)
+              {t.sovCloudFallbackVal}
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Never fails over to public services
+              {t.sovCloudFallbackSub}
             </span>
           </div>
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              ADVERSARIAL BOUNDARY PROOFS
+              {t.sovAdversarialTitle}
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
               {securityReport ? `${securityReport.passed} / ${securityReport.total_tests} passed` : "10 / 10 passed"}
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Security tests verified
+              {t.sovAdversarialSub}
             </span>
           </div>
         </div>
@@ -225,10 +232,10 @@ export function SovereigntyView() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              FIVE SOVEREIGN PILLARS
+              {t.sovPillarsTitle}
             </span>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: "4px 0" }}>
-              How FORGE Guarantees Complete Isolation
+              {t.sovPillarsSubtitle}
             </h2>
           </div>
           <button
@@ -236,7 +243,7 @@ export function SovereigntyView() {
             className="btn-brass-secondary"
             style={{ fontSize: "12px", padding: "8px 16px" }}
           >
-            {showTechnicalDetails ? "Hide Technical Details ▲" : "View Technical Runtime Details ▼"}
+            {showTechnicalDetails ? t.sovHideDetailsBtn : t.sovViewDetailsBtn}
           </button>
         </div>
 
@@ -262,7 +269,7 @@ export function SovereigntyView() {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "20px" }}>{card.icon}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", fontWeight: 600 }}>{card.icon}</span>
                 <span
                   style={{
                     fontFamily: "var(--font-mono)",

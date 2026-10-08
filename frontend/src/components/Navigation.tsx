@@ -2,6 +2,7 @@
 
 import React from "react";
 import { DataClassification, Role } from "@/lib/api";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 export type NavTab = "overview" | "workspace" | "knowledge" | "evidence" | "verification" | "audit" | "sovereignty";
 
@@ -15,6 +16,7 @@ interface NavigationProps {
   backendOnline: boolean;
   modelProviderOnline?: boolean;
   version: string;
+  locale?: Locale;
 }
 
 export function Navigation({
@@ -27,15 +29,17 @@ export function Navigation({
   backendOnline,
   modelProviderOnline = false,
   version,
+  locale = "en",
 }: NavigationProps) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const tabs: Array<{ id: NavTab; label: string; tag: string }> = [
-    { id: "overview", label: "Overview", tag: "DASHBOARD" },
-    { id: "workspace", label: "AI Workspace", tag: "PRIMARY" },
-    { id: "knowledge", label: "Knowledge", tag: "FABRIC" },
-    { id: "evidence", label: "Evidence", tag: "REGISTRY" },
-    { id: "verification", label: "Verification", tag: "ENGINE" },
-    { id: "audit", label: "Audit", tag: "APPEND-ONLY" },
-    { id: "sovereignty", label: "Sovereignty", tag: "LOCAL-ONLY" },
+    { id: "overview", label: t.tabOverview, tag: "DASHBOARD" },
+    { id: "workspace", label: t.tabWorkspace, tag: "PRIMARY" },
+    { id: "knowledge", label: t.navKnowledge, tag: "FABRIC" },
+    { id: "evidence", label: t.tabEvidence, tag: "REGISTRY" },
+    { id: "verification", label: t.tabVerification, tag: "ENGINE" },
+    { id: "audit", label: t.navAudit, tag: "APPEND-ONLY" },
+    { id: "sovereignty", label: t.navBoundary, tag: "LOCAL-ONLY" },
   ];
 
   return (
@@ -82,17 +86,17 @@ export function Navigation({
           {!backendOnline ? (
             <span className="badge badge-failed">
               <span className="pulse-rose" />
-              BACKEND OFFLINE
+              {t.navBackendOffline}
             </span>
           ) : modelProviderOnline ? (
             <span className="badge badge-verified" title="Local Ollama instance connected for live Qwen inference">
               <span className="pulse-emerald" />
-              LIVE LOCAL INFERENCE
+              {t.navLiveLocalInference}
             </span>
           ) : (
             <span className="badge badge-cyan" title="Deterministic offline test & mission harness active">
               <span className="pulse-cyan" />
-              DETERMINISTIC DEMO MODE
+              {t.navDeterministicDemoMode}
             </span>
           )}
         </div>

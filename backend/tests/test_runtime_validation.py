@@ -71,7 +71,7 @@ client = TestClient(app)
 # =========================================================================
 
 def test_preflight_python_version():
-    """Verify that Python version check passes for Python >= 3.12."""
+    """Verify that Python version check passes for Python >= 3.11."""
     res = check_python_version()
     assert res.component == "Python Runtime"
     assert res.status == PreflightStatus.READY
@@ -155,7 +155,7 @@ async def test_validate_local_vision_runtime_dial_gauge():
 @pytest.mark.asyncio
 async def test_ollama_reasoning_unavailable_raises_typed_error():
     """Assert OllamaModelProvider raises OllamaUnavailableError on connection failure without cloud fallback."""
-    provider = OllamaModelProvider(base_url="http://127.0.0.1:99999", timeout=0.1)
+    provider = OllamaModelProvider(base_url="http://127.0.0.1:59999", timeout=0.1)
     req = ModelRequest(messages=[ModelMessage(role="user", content="Test")])
 
     with pytest.raises(OllamaUnavailableError) as exc_info:
@@ -190,7 +190,7 @@ async def test_ollama_reasoning_model_not_found_raises_typed_error():
 @pytest.mark.asyncio
 async def test_ollama_vision_unavailable_raises_typed_error():
     """Assert OllamaVisionProvider raises OllamaVisionUnavailableError on connection failure."""
-    provider = OllamaVisionProvider(base_url="http://127.0.0.1:99999", timeout=0.1)
+    provider = OllamaVisionProvider(base_url="http://127.0.0.1:59999", timeout=0.1)
     prov = ImageProvenance(
         image_id="img-1",
         filename="r204_pressure_gauge.png",

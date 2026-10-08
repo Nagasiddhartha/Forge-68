@@ -177,6 +177,7 @@ class AgentQueryStatus(str, Enum):
     TOOL_ERROR = "TOOL_ERROR"
     DIRECT_ANSWER = "DIRECT_ANSWER"
     INVALID_MODEL_OUTPUT = "INVALID_MODEL_OUTPUT"
+    OFFLINE_FALLBACK = "OFFLINE_FALLBACK"
 
 
 class AgentQueryRequest(BaseModel):
@@ -191,6 +192,7 @@ class AgentQueryRequest(BaseModel):
     has_approval: bool = Field(default=False, description="Whether human/supervisor approval is present")
     image_path: Optional[str] = Field(default=None, description="Optional path to local engineering image for multimodal reasoning")
     image_base64: Optional[str] = Field(default=None, description="Optional base64 encoded image for multimodal reasoning")
+    locale: Optional[str] = Field(default="en", description="Target language locale: en, hi, kn")
 
 
 class AgentQueryResponse(BaseModel):

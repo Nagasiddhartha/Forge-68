@@ -14,12 +14,15 @@ import {
   BrassLabel,
   Divider,
 } from "@/components/primitives";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 interface KnowledgeViewProps {
   clearance: DataClassification;
+  locale?: Locale;
 }
 
-export function KnowledgeView({ clearance }: KnowledgeViewProps) {
+export function KnowledgeView({ clearance, locale = "en" }: KnowledgeViewProps) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const [docsData, setDocsData] = useState<KnowledgeDocsResponse | null>(null);
   const [isLoadingDocs, setIsLoadingDocs] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("Reactor R-204 operating pressure trip limits");
@@ -110,43 +113,43 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
   const getDocumentMeta = (filename: string) => {
     if (filename.includes("operating_sop")) {
       return {
-        title: "Operating SOP",
-        subtext: "Operating limits, normal baselines, and safety thresholds.",
-        category: "STANDARD PROCEDURE",
+        title: t.docSopTitle,
+        subtext: t.docSopDesc,
+        category: t.docSopCat,
       };
     }
     if (filename.includes("inspection_report")) {
       return {
-        title: "Inspection Report",
-        subtext: "Ultrasonic shell thickness survey and weld joint data.",
-        category: "NDT SURVEY",
+        title: t.docInspectionTitle,
+        subtext: t.docInspectionDesc,
+        category: t.docInspectionCat,
       };
     }
     if (filename.includes("equipment_specification")) {
       return {
-        title: "Equipment Specification",
-        subtext: "Pressure vessel R-204 design envelope and metallurgy.",
-        category: "VESSEL SPEC",
+        title: t.docEquipTitle,
+        subtext: t.docEquipDesc,
+        category: t.docEquipCat,
       };
     }
     if (filename.includes("maintenance_history")) {
       return {
-        title: "Maintenance History",
-        subtext: "Overhaul logs and relief valve calibration records.",
-        category: "PLANT HISTORY",
+        title: t.docMaintenanceTitle,
+        subtext: t.docMaintenanceDesc,
+        category: t.docMaintenanceCat,
       };
     }
     if (filename.includes("adversarial")) {
       return {
-        title: "Restricted Advisory Bulletin",
-        subtext: "Quarantine sample containing untrusted prompt injection.",
-        category: "SECURITY TEST FIXTURE",
+        title: t.docAdvisoryTitle,
+        subtext: t.docAdvisoryDesc,
+        category: t.docAdvisoryCat,
       };
     }
     return {
       title: filename.replace(/_/g, " ").replace(".md", ""),
-      subtext: "Technical documentation record stored in sovereign archive.",
-      category: "DOCUMENT",
+      subtext: t.readyToSearchDesc,
+      category: t.plantDocumentsHeader,
     };
   };
 
@@ -216,12 +219,11 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
             </div>
 
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
-              Plant Knowledge
+              {t.knowledgeTitle}
             </h1>
 
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink-2)", marginTop: 6, maxWidth: 680 }}>
-              Private documents FORGE can use to answer questions. All retrieval happens locally on sovereign hardware with zero cloud exposure.
-              Your active clearance is <strong style={{ color: "var(--brass)" }}>{clearance}</strong>.
+              {t.knowledgeSubtitle}
             </p>
           </div>
 
@@ -232,7 +234,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               className="btn-brass-secondary"
               style={{ fontSize: "12px", padding: "6px 14px" }}
             >
-              {isLoadingDocs ? "Refreshing..." : "↻ Refresh Records"}
+              {isLoadingDocs ? t.refreshingRecordsBtn : t.refreshRecordsBtn}
             </button>
           </div>
         </div>
@@ -243,10 +245,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
         <form onSubmit={handleSearch} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              ASK A QUESTION ABOUT PLANT RECORDS
+              {t.askRecordsLabel}
             </span>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Clearance Enforced: {clearance}
+              {t.clearanceEnforcedLabel} {clearance}
             </span>
           </div>
 
@@ -255,7 +257,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Ask a question, e.g. 'What is the trip limit for Reactor R-204?'..."
+              placeholder={t.knowledgeSearchPlaceholder}
               style={{
                 flex: 1,
                 minWidth: 280,
@@ -278,14 +280,14 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               className="btn-brass-primary"
               style={{ padding: "12px 24px", fontSize: "13px" }}
             >
-              {isSearching ? "Searching..." : "Search Records ▶"}
+              {isSearching ? "Searching..." : `${t.searchKnowledgeBtn} ▶`}
             </button>
           </div>
 
           {/* Quick Query Suggestions */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Suggested Queries:
+              {t.suggestedQueriesLabel}
             </span>
             {[
               "Reactor R-204 normal operating pressure",
@@ -357,10 +359,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
         <EnamelSurface variant="base" padding="normal">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              PLANT DOCUMENTS ({docsData?.available_demo_documents.length ?? 5})
+              {t.plantDocumentsHeader} ({docsData?.available_demo_documents.length ?? 5})
             </span>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              ASSET: REACTOR R-204
+              {t.assetLabel}
             </span>
           </div>
 
@@ -407,7 +409,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                           background: accessible ? "rgba(156, 195, 168, 0.08)" : "rgba(217, 105, 78, 0.08)",
                         }}
                       >
-                        {accessible ? `✓ Accessible (${doc.classification})` : `🔒 Restricted (${doc.classification})`}
+                        {accessible ? `${t.accessibleBadge} (${doc.classification})` : `${t.restrictedBadge} (${doc.classification})`}
                       </span>
                     </div>
 
@@ -432,7 +434,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                       }}
                     >
                       <span>
-                        Size: {(doc.size_bytes / 1024).toFixed(1)} KB
+                        {t.sizeLabel} {(doc.size_bytes / 1024).toFixed(1)} KB
                       </span>
                       <button
                         onClick={() => handleQuickIngest(doc.file_path, doc.classification as DataClassification)}
@@ -448,13 +450,13 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                           cursor: accessible ? "pointer" : "not-allowed",
                         }}
                       >
-                        {isIngesting ? "Indexing..." : "Re-Index ↺"}
+                        {isIngesting ? t.indexingBtn : t.reIndexBtn}
                       </button>
                     </div>
 
                     {/* Secondary Technical Metadata */}
                     <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "var(--ink-3)", opacity: 0.7 }}>
-                      Ref: {doc.file_path}
+                      {t.refLabel} {doc.file_path}
                     </div>
                   </div>
                 );
@@ -471,7 +473,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
         <EnamelSurface variant="base" padding="normal">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              ANSWER & SUPPORTING PASSAGES ({searchResults?.results.length ?? 0})
+              {t.sourcePassagesHeader} ({searchResults?.results.length ?? 0})
             </span>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
               Sovereign Vector Retrieval
@@ -494,10 +496,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 600 }}>
-                        HUMAN-READABLE ANSWER
+                        {t.humanAnswerTitle}
                       </span>
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                        Synthesized from private plant records
+                        {t.humanAnswerSubtitle}
                       </span>
                     </div>
 
@@ -525,10 +527,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                       }}
                     >
                       <span>
-                        Primary Source: <strong style={{ color: "var(--brass)" }}>{String(summary?.source || "plant_archive")}</strong>
+                        {t.primarySourceLabel} <strong style={{ color: "var(--brass)" }}>{String(summary?.source || "plant_archive")}</strong>
                       </span>
                       <span style={{ color: "var(--sage)" }}>
-                        ✓ 100% on-premise local data
+                        {t.onPremiseLocalDataProof}
                       </span>
                     </div>
                   </div>
@@ -537,7 +539,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
 
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-                  SOURCE INFORMATION BENEATH
+                  {t.sourcePassagesHeader}
                 </span>
                 <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
               </div>
@@ -565,7 +567,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                     </div>
 
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 600 }}>
-                      {(r.score * 100).toFixed(0)}% MATCH
+                      {(r.score * 100).toFixed(0)}{t.matchScoreSuffix}
                     </span>
                   </div>
 
@@ -597,10 +599,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                     }}
                   >
                     <span>
-                      Document: <strong style={{ color: "var(--ink-2)" }}>{((r.chunk.metadata?.filename as string) || "Technical Specification")}</strong>
+                      {t.documentLabel} <strong style={{ color: "var(--ink-2)" }}>{((r.chunk.metadata?.filename as string) || "Technical Specification")}</strong>
                     </span>
                     <span>
-                      Chunk ID: {r.chunk.chunk_id}
+                      {t.chunkIdLabel} {r.chunk.chunk_id}
                     </span>
                   </div>
                 </div>
@@ -609,10 +611,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
           ) : (
             <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--ink-3)" }}>
               <p style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--ink-2)", marginBottom: 6 }}>
-                Ready to search plant records
+                {t.readyToSearchTitle}
               </p>
               <p style={{ fontFamily: "var(--font-ui)", fontSize: "13px" }}>
-                Ask any operational question or select a suggestion above to inspect sovereign vector retrievals.
+                {t.readyToSearchDesc}
               </p>
             </div>
           )}

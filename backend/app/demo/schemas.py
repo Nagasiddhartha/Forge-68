@@ -38,6 +38,7 @@ class DemoRunRequest(BaseModel):
     role: Optional[Role] = Field(default=None, description="Optional override role")
     classification: Optional[DataClassification] = Field(default=None, description="Optional override clearance")
     deterministic: bool = Field(default=True, description="Enforce deterministic sovereign execution mode")
+    locale: Optional[str] = Field(default="en", description="Target language locale: en, hi, kn")
 
 
 

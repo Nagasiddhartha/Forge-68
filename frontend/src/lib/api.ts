@@ -8,7 +8,7 @@ export type DataClassification = "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "RESTR
 export type PolicyDecisionType = "ALLOW" | "DENY";
 export type VerificationStatus = "VERIFIED" | "PARTIALLY_VERIFIED" | "INSUFFICIENT_EVIDENCE" | "NEEDS_REVIEW" | "FAILED";
 export type AgentActionType = "direct" | "knowledge" | "tool" | "combined";
-export type AgentQueryStatus = "SUCCESS" | "POLICY_DENIED" | "TOOL_ERROR" | "DIRECT_ANSWER" | "INVALID_MODEL_OUTPUT";
+export type AgentQueryStatus = "SUCCESS" | "POLICY_DENIED" | "TOOL_ERROR" | "DIRECT_ANSWER" | "INVALID_MODEL_OUTPUT" | "OFFLINE_FALLBACK";
 
 export interface PolicyDecision {
   decision: PolicyDecisionType;
@@ -126,6 +126,7 @@ export interface AgentQueryRequest {
   has_approval?: boolean;
   image_path?: string;
   image_base64?: string;
+  locale?: string;
 }
 
 export interface AgentQueryResponse {
@@ -490,6 +491,7 @@ export interface DemoRunRequest {
   role?: Role;
   classification?: DataClassification;
   deterministic?: boolean;
+  locale?: string;
 }
 
 export interface DemoRunResponse extends AgentQueryResponse {
@@ -669,5 +671,60 @@ export interface RuntimeCapabilities {
 export async function fetchRuntimeCapabilities(): Promise<RuntimeCapabilities> {
   return apiFetch<RuntimeCapabilities>("/api/runtime/capabilities");
 }
+
+// =========================================================================
+// Deliverables & Network Egress APIs
+// =========================================================================
+
+export interface ApprovalNoteRequest {
+  query?: string;
+  asset_id?: string;
+  role?: Role;
+  requester?: string;
+  classification?: DataClassification;
+  locale?: string;
+  agent_response?: AgentQueryResponse;
+  demo_response?: DemoRunResponse;
+}
+
+export interface ApprovalNoteResponse {
+  status: string;
+  file_id: string;
+  filename: string;
+  download_url: string;
+  deliverable_type: string;
+  asset_id: string;
+  sha256_hash: string;
+  file_size_bytes: number;
+  created_at: string;
+  verification_verdict: string;
+}
+
+export interface EgressStatusResponse {
+  status: string;
+  air_gapped: boolean;
+  egress_bytes: number;
+  external_requests_count: number;
+  cloud_ai_sdks_blocked: boolean;
+  network_interfaces: string;
+  message: string;
+}
+
+export async function generateApprovalNote(request: ApprovalNoteRequest): Promise<ApprovalNoteResponse> {
+  return apiFetch<ApprovalNoteResponse>("/api/v1/deliverables/approval-note", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+export function getDeliverableDownloadUrl(fileId: string): string {
+  return `${BACKEND_URL}/api/v1/deliverables/download/${fileId}`;
+}
+
+export async function fetchEgressStatus(): Promise<EgressStatusResponse> {
+  return apiFetch<EgressStatusResponse>("/api/v1/system/egress");
+}
+
 
 

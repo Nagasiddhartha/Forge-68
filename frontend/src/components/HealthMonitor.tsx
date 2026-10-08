@@ -2,8 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { fetchHealth, fetchModels, HealthResponse, ModelsResponse } from "@/lib/api";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
-export const HealthMonitor: React.FC = () => {
+export interface HealthMonitorProps {
+  locale?: Locale;
+}
+
+export const HealthMonitor: React.FC<HealthMonitorProps> = ({ locale = "en" }) => {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [modelsData, setModelsData] = useState<ModelsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -90,7 +96,7 @@ export const HealthMonitor: React.FC = () => {
             color: "var(--text-muted)",
             marginTop: "4px"
           }}>
-            SOVEREIGN SYSTEM HEALTH &bull; {lastCheck ? `LAST SAMPLED: ${lastCheck}` : "INITIALIZING..."}
+            {t.healthSubtitle} &bull; {lastCheck ? `${t.healthLastSampled}: ${lastCheck}` : t.healthInitializing}
           </div>
         </div>
 
@@ -99,7 +105,7 @@ export const HealthMonitor: React.FC = () => {
           disabled={loading}
           className="btn-sovereign"
         >
-          {loading ? "PROBING RUNTIME..." : "RUN HEALTH CHECK"}
+          {loading ? t.healthProbing : t.healthRunCheck}
         </button>
       </div>
 
@@ -189,7 +195,7 @@ export const HealthMonitor: React.FC = () => {
               {health?.model_provider ? health.model_provider.toUpperCase() : "OLLAMA"}
             </div>
             <div style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginTop: "4px" }}>
-              Status: {health?.model_provider_online ? "Online (Port 11434)" : "Offline / Standby"}
+              Status: {health?.model_provider_online ? t.healthStatusOnline : t.healthStatusOffline}
             </div>
           </div>
 
@@ -213,7 +219,7 @@ export const HealthMonitor: React.FC = () => {
               {health?.default_model || "qwen3:8b"}
             </div>
             <div style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--accent-cyan)", marginTop: "4px" }}>
-              {modelsData?.models?.includes("qwen3:8b") ? "Verified Local (RTX 4060 GPU)" : "Configured Default"}
+              {modelsData?.models?.includes("qwen3:8b") ? t.healthVerifiedLocalGpu : t.healthConfiguredDefault}
             </div>
           </div>
         </div>

@@ -19,12 +19,15 @@ import {
   StatusIndicator,
   Divider,
 } from "@/components/primitives";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 interface OverviewViewProps {
   onNavigateToWorkspace: () => void;
+  locale?: Locale;
 }
 
-export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
+export function OverviewView({ onNavigateToWorkspace, locale = "en" }: OverviewViewProps) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const [sovereignty, setSovereignty] = useState<SovereigntyStatusResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [audit, setAudit] = useState<AuditEventsResponse | null>(null);
@@ -57,7 +60,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
           <div style={{ maxWidth: 780 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-              <BrassLabel variant="outline">MISSION CASE · R-204-REV4</BrassLabel>
+              <BrassLabel variant="outline">{t.caseBadge}</BrassLabel>
               <span
                 style={{
                   fontFamily: "var(--font-mono)",
@@ -66,7 +69,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                   letterSpacing: "0.06em",
                 }}
               >
-                HYDROCRACKER LOOP · FACILITY UNIT 4
+                {t.facilityUnit}
               </span>
               <span
                 style={{
@@ -93,7 +96,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                 marginBottom: 10,
               }}
             >
-              Reactor R-204 Pressure Variance Investigation
+              {t.caseTitle}
             </h1>
 
             <p
@@ -104,20 +107,18 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                 color: "var(--ink-2)",
               }}
             >
-              Autonomous industrial investigation synthesizing operating pressure telemetry,
-              ultrasonic shell wall inspection, and plant operating procedures.
-              All reasoning is sovereign, tool actuation is policy-gated, and conclusions are mathematically verified.
+              {t.caseDescription}
             </p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
-            <VerdictBadge verdict="REVIEW_REQUIRED" />
+            <VerdictBadge verdict="REVIEW_REQUIRED" locale={locale} />
             <button
               onClick={onNavigateToWorkspace}
               className="btn-brass-primary"
               style={{ whiteSpace: "nowrap" }}
             >
-              Open AI Workspace ▶
+              {t.openWorkspaceBtn}
             </button>
           </div>
         </div>
@@ -143,7 +144,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                 textTransform: "uppercase",
               }}
             >
-              Primary Operational Parameters · Reactor R-204
+              {t.primaryParamsHeader}
             </span>
             <span
               style={{
@@ -152,7 +153,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                 color: "var(--ink-3)",
               }}
             >
-              Telemetry Point: PI-204
+              {t.telemetryPoint}
             </span>
           </div>
 
@@ -170,24 +171,24 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             <Metric
               value="33.0"
               unit="bar"
-              label="Current Condition"
-              subtext="Analog indicator PI-204"
+              label={t.currentCondition}
+              subtext={t.currentConditionSubtext}
               highlight={true}
             />
             <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
               <Metric
                 value="31.2"
                 unit="bar"
-                label="Normal Baseline"
-                subtext="SOP-R204 Rev C §3.2"
+                label={t.baselineMetric}
+                subtext={t.baselineSubtext}
               />
             </div>
             <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
               <Metric
                 value="+1.8"
                 unit="bar"
-                label="Observed Deviation"
-                subtext="Above nominal limit"
+                label={t.observedDeviation}
+                subtext={t.aboveNominalLimit}
                 highlight={true}
               />
             </div>
@@ -195,16 +196,16 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
               <Metric
                 value="33.5"
                 unit="bar"
-                label="High Alarm Limit"
-                subtext="Margin: 0.5 bar remaining"
+                label={t.highAlarmLimit}
+                subtext={t.marginRemaining}
               />
             </div>
             <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
               <Metric
                 value="35.0"
                 unit="bar"
-                label="Trip Threshold"
-                subtext="Safety interlock shutdown"
+                label={t.tripThreshold}
+                subtext={t.safetyInterlockShutdown}
               />
             </div>
           </div>
@@ -231,7 +232,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                 letterSpacing: "0.04em",
               }}
             >
-              01 · EVIDENCE DOSSIER
+              {t.multiSourceDossierTitle}
             </span>
             <span
               style={{
@@ -253,12 +254,11 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
               fontWeight: 500,
             }}
           >
-            Multi-Source Corroboration
+            {t.multiSourceCorroboration}
           </h3>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
-            Case determinations are grounded in four independent evidence modalities:
-            plant operating procedures, ultrasonic inspection scans, telemetry feeds, and deterministic calculations.
+            {t.multiSourceDesc}
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -307,7 +307,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                 letterSpacing: "0.04em",
               }}
             >
-              02 · INDEPENDENT VERIFICATION
+              {t.verificationSpineTitle}
             </span>
             <span
               style={{
@@ -329,12 +329,11 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
               fontWeight: 500,
             }}
           >
-            Non-LLM Verification Spine
+            {t.nonLlmVerificationSpine}
           </h3>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
-            The AI model proposes conclusions, but never verifies its own output.
-            A separate deterministic Python verification engine executes discrete checks before operator delivery.
+            {t.verificationSpineDesc}
           </p>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -389,7 +388,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                 letterSpacing: "0.04em",
               }}
             >
-              03 · CONTROLS & BOUNDARIES
+              {t.controlsBoundariesTitle}
             </span>
             <StatusIndicator status="verified" label="Enforced" />
           </div>
@@ -403,12 +402,11 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
               fontWeight: 500,
             }}
           >
-            Default-Deny Policy Gateway
+            {t.defaultDenyPolicyGateway}
           </h3>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
-            Every tool invocation, knowledge chunk access, and telemetry query is evaluated against persona clearance and role authority.
-            Untrusted inputs are quarantined as inert data.
+            {t.controlsBoundariesDesc}
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontFamily: "var(--font-mono)", fontSize: "12px" }}>

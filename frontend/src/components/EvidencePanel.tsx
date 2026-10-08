@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { CalculationResult, EvidenceRecord, EvidenceSet } from "@/lib/api";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 import {
   EnamelSurface,
   BrassLabel,
@@ -13,6 +14,7 @@ interface EvidencePanelProps {
   evidenceList?: EvidenceRecord[];
   calculations?: CalculationResult[];
   title?: string;
+  locale?: Locale;
 }
 
 export function EvidencePanel({
@@ -20,7 +22,9 @@ export function EvidencePanel({
   evidenceList,
   calculations = [],
   title = "Evidence Dossier",
+  locale = "en",
 }: EvidencePanelProps) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const [filter, setFilter] = useState<"ALL" | "DOCUMENT" | "TOOL" | "VISUAL" | "CALCULATION">("ALL");
 
   // Gather items
@@ -125,28 +129,28 @@ export function EvidencePanel({
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <BrassLabel variant="outline">WHAT SUPPORTS THIS ANSWER?</BrassLabel>
+            <BrassLabel variant="outline">{t.whatSupportsTitle.toUpperCase()}</BrassLabel>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              MULTI-SOURCE EVIDENCE DOSSIER
+              {t.multiSourceDossierTitle}
             </span>
           </div>
 
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", color: "var(--ink)", fontWeight: 500 }}>
-            {title || "What supports this answer?"}
+            {title === "Execution Evidence Records" ? t.evidenceHeaderTitle : (title || t.whatSupportsTitle)}
           </h2>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", marginTop: 2 }}>
-            Every claim is tied to verifiable evidence: documented plant procedures, sandboxed tools, analog gauges, or deterministic math.
+            {t.evidenceDossierSubtitle}
           </p>
         </div>
 
         {/* Filter Pills */}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {[
-            { id: "ALL", label: "All Evidence" },
-            { id: "DOCUMENT", label: "Plant Procedures" },
-            { id: "TOOL", label: "Sensor Readings" },
-            { id: "VISUAL", label: "Gauges & Vision" },
-            { id: "CALCULATION", label: "Independent Math" },
+            { id: "ALL", label: t.filterAllEvidence },
+            { id: "DOCUMENT", label: t.filterProcedures },
+            { id: "TOOL", label: t.filterSensors },
+            { id: "VISUAL", label: t.filterGauges },
+            { id: "CALCULATION", label: t.filterMath },
           ].map((tab) => {
             const isSelected = filter === tab.id;
             return (

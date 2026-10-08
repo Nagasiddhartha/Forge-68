@@ -1,6 +1,12 @@
 import React from "react";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
-export const Header: React.FC = () => {
+export interface HeaderProps {
+  locale?: Locale;
+}
+
+export const Header: React.FC<HeaderProps> = ({ locale = "en" }) => {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   return (
     <header style={{
       borderBottom: "1px solid var(--bg-surface-border)",
@@ -60,7 +66,7 @@ export const Header: React.FC = () => {
             letterSpacing: "0.04em",
             textTransform: "uppercase"
           }}>
-            Sovereign Industrial AI Control Plane
+            {t.brandTitle}
           </div>
         </div>
       </div>
@@ -84,7 +90,7 @@ export const Header: React.FC = () => {
             textTransform: "uppercase",
             letterSpacing: "0.05em"
           }}>
-            SOVEREIGN LOCAL RUNTIME
+            {t.navSovereignLocalRuntime}
           </span>
         </div>
 
@@ -96,8 +102,8 @@ export const Header: React.FC = () => {
           fontFamily: "var(--font-mono)",
           color: "var(--text-muted)"
         }}>
-          <span style={{ color: "var(--text-secondary)" }}>GATEWAY:</span>
-          <span>LOCAL ONLY</span>
+          <span style={{ color: "var(--text-secondary)" }}>{t.policyGatewayActive}:</span>
+          <span>{t.localOnly}</span>
         </div>
       </div>
     </header>

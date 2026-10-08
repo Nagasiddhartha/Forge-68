@@ -1,4 +1,5 @@
 import React from "react";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 export type VerdictType =
   | "VERIFIED"
@@ -10,17 +11,39 @@ export type VerdictType =
 
 export interface VerdictBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   verdict: VerdictType | string;
+  locale?: Locale;
 }
 
-export function VerdictBadge({ verdict, className = "", style, ...props }: VerdictBadgeProps) {
+export function VerdictBadge({ verdict, locale = "en", className = "", style, ...props }: VerdictBadgeProps) {
   const normVerdict = verdict.toUpperCase().replace(/\s+/g, "_");
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
+
+  const getLocalizedLabel = (norm: string): string => {
+    switch (norm) {
+      case "VERIFIED":
+        return t.verified;
+      case "REVIEW_REQUIRED":
+      case "NEEDS_REVIEW":
+        return t.needsReview;
+      case "INSUFFICIENT_EVIDENCE":
+        return t.insufficientEvidence;
+      case "ACTION_BLOCKED":
+      case "POLICY_DENIED":
+        return t.actionBlocked;
+      case "QUARANTINED":
+        return t.quarantined;
+      case "FAILED":
+        return t.failed;
+      default:
+        return verdict;
+    }
+  };
 
   const config: Record<
     string,
-    { label: string; outlineColor: string; textColor: string; bg: string; icon: React.ReactNode; isDashed?: boolean }
+    { outlineColor: string; textColor: string; bg: string; icon: React.ReactNode; isDashed?: boolean }
   > = {
     VERIFIED: {
-      label: "Verified",
       outlineColor: "var(--sage)",
       textColor: "var(--sage)",
       bg: "rgba(156, 195, 168, 0.08)",
@@ -31,7 +54,6 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       ),
     },
     REVIEW_REQUIRED: {
-      label: "Review required",
       outlineColor: "var(--brass)",
       textColor: "var(--brass)",
       bg: "rgba(200, 161, 90, 0.08)",
@@ -44,7 +66,6 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       ),
     },
     NEEDS_REVIEW: {
-      label: "Review required",
       outlineColor: "var(--brass)",
       textColor: "var(--brass)",
       bg: "rgba(200, 161, 90, 0.08)",
@@ -57,7 +78,6 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       ),
     },
     INSUFFICIENT_EVIDENCE: {
-      label: "Insufficient evidence",
       outlineColor: "var(--mist)",
       textColor: "var(--mist)",
       bg: "rgba(159, 177, 169, 0.08)",
@@ -69,7 +89,6 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       ),
     },
     ACTION_BLOCKED: {
-      label: "Action blocked",
       outlineColor: "var(--pewter)",
       textColor: "var(--pewter)",
       bg: "rgba(141, 180, 214, 0.08)",
@@ -81,7 +100,6 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       ),
     },
     POLICY_DENIED: {
-      label: "Action blocked",
       outlineColor: "var(--pewter)",
       textColor: "var(--pewter)",
       bg: "rgba(141, 180, 214, 0.08)",
@@ -93,7 +111,6 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       ),
     },
     QUARANTINED: {
-      label: "Quarantined",
       outlineColor: "var(--pewter)",
       textColor: "var(--pewter)",
       bg: "rgba(141, 180, 214, 0.08)",
@@ -104,7 +121,6 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       ),
     },
     FAILED: {
-      label: "Failed",
       outlineColor: "var(--coral)",
       textColor: "var(--coral-text)",
       bg: "rgba(217, 105, 78, 0.08)",
@@ -119,12 +135,13 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
   };
 
   const item = config[normVerdict] || {
-    label: verdict,
     outlineColor: "var(--mist)",
     textColor: "var(--mist)",
     bg: "rgba(159, 177, 169, 0.08)",
     icon: null,
   };
+
+  const label = getLocalizedLabel(normVerdict);
 
   return (
     <span
@@ -148,7 +165,7 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       {...props}
     >
       {item.icon}
-      <span>{item.label}</span>
+      <span>{label}</span>
     </span>
   );
 }

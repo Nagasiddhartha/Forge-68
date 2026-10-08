@@ -1,5 +1,6 @@
 import React from "react";
 import { VerdictBadge } from "./VerdictBadge";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 export interface CaseHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
@@ -10,6 +11,7 @@ export interface CaseHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   verdict?: string;
   breadcrumb?: string;
   actions?: React.ReactNode;
+  locale?: Locale;
 }
 
 export function CaseHeader({
@@ -23,8 +25,10 @@ export function CaseHeader({
   actions,
   className = "",
   style,
+  locale = "en",
   ...props
 }: CaseHeaderProps) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   return (
     <div
       style={{
@@ -43,7 +47,7 @@ export function CaseHeader({
           <span style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-3)" }}>
             {breadcrumb}
           </span>
-          {verdict && <VerdictBadge verdict={verdict} />}
+          {verdict && <VerdictBadge verdict={verdict} locale={locale} />}
         </div>
         {actions && <div>{actions}</div>}
       </div>
@@ -74,25 +78,25 @@ export function CaseHeader({
       >
         {asset && (
           <div>
-            <span style={{ color: "var(--ink-3)" }}>Asset: </span>
+            <span style={{ color: "var(--ink-3)" }}>{t.caseAssetLabel}: </span>
             <span style={{ fontFamily: "var(--font-mono)", color: "var(--ink)" }}>{asset}</span>
           </div>
         )}
         {persona && (
           <div>
-            <span style={{ color: "var(--ink-3)" }}>Persona: </span>
+            <span style={{ color: "var(--ink-3)" }}>{t.casePersonaLabel}: </span>
             <span>{persona}</span>
           </div>
         )}
         {clearance && (
           <div>
-            <span style={{ color: "var(--ink-3)" }}>Clearance: </span>
+            <span style={{ color: "var(--ink-3)" }}>{t.caseClearanceLabel}: </span>
             <span style={{ color: "var(--brass)" }}>{clearance}</span>
           </div>
         )}
         {timestamp && (
           <div>
-            <span style={{ color: "var(--ink-3)" }}>Logged: </span>
+            <span style={{ color: "var(--ink-3)" }}>{t.caseLoggedLabel}: </span>
             <span>{timestamp}</span>
           </div>
         )}

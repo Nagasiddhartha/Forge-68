@@ -151,6 +151,7 @@ MANDATORY SECURITY & GOVERNANCE RULES:
 
 === DETECTED PARAMETER VARIANCES (IF ANY) ===
 {conflicts_formatted}
+{target_language_instruction}
 """
 
 

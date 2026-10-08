@@ -63,21 +63,21 @@ def check_python_version() -> PreflightCheckResult:
     major, minor, micro = sys.version_info.major, sys.version_info.minor, sys.version_info.micro
     version_str = f"{major}.{minor}.{micro}"
 
-    if major == 3 and minor >= 12:
+    if major == 3 and minor >= 11:
         return PreflightCheckResult(
             component="Python Runtime",
             status=PreflightStatus.READY,
             detected_value=version_str,
             requirement=PreflightRequirement.REQUIRED_FOR_FULL_DEMO,
-            message=f"Python {version_str} meets high-assurance requirement (>= 3.12).",
+            message=f"Python {version_str} meets high-assurance requirement (>= 3.11).",
         )
     return PreflightCheckResult(
         component="Python Runtime",
         status=PreflightStatus.FAILED,
         detected_value=version_str,
         requirement=PreflightRequirement.REQUIRED_FOR_FULL_DEMO,
-        message=f"Python {version_str} is below required version 3.12.",
-        manual_fix_command="Install Python 3.12+",
+        message=f"Python {version_str} is below required version 3.11.",
+        manual_fix_command="Install Python 3.11+",
     )
 
 

@@ -69,3 +69,8 @@ backend/.knowledge_cache/
 embeddings.npz
 sentence_transformers/
 .cache/
+
+# Generated deliverables
+backend/data/deliverables/*.docx
+!backend/data/deliverables/.gitkeep
+

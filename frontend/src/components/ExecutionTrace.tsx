@@ -1,5 +1,6 @@
 import React from "react";
 import { AgentQueryResponse } from "@/lib/api";
+import { Locale, TRANSLATIONS } from "@/lib/i18n";
 import {
   EnamelSurface,
   VerdictBadge,
@@ -7,9 +8,11 @@ import {
 
 interface ExecutionTraceProps {
   response: AgentQueryResponse;
+  locale?: Locale;
 }
 
-export function ExecutionTrace({ response }: ExecutionTraceProps) {
+export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps) {
+  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const plan = response.agent_plan || response.plan;
   const policyDecisions = response.policy_decisions || [];
   const knowledgeEvidence = response.evidence_set?.knowledge_evidence || [];
@@ -67,7 +70,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
               color: "var(--ink-3)",
             }}
           >
-            Event ID: <strong style={{ color: "var(--ink-2)" }}>{response.execution_event_id}</strong>
+            {t.traceEventId}: <strong style={{ color: "var(--ink-2)" }}>{response.execution_event_id}</strong>
           </span>
         )}
       </div>
@@ -161,7 +164,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                       border: "1px solid var(--brass)",
                     }}
                   >
-                    ACTION: {plan.action.toUpperCase()}
+                    {t.traceActionLabel}: {plan.action.toUpperCase()}
                   </span>
                 )}
               </div>
@@ -187,9 +190,9 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                     border: "1px solid var(--line)",
                   }}
                 >
-                  <span>Knowledge Queries: <strong style={{ color: "var(--ink)" }}>{plan.knowledge_queries?.length || 0}</strong></span>
-                  <span>Tool Calls: <strong style={{ color: "var(--ink)" }}>{plan.tool_calls?.length || 0}</strong></span>
-                  <span>Calculations: <strong style={{ color: "var(--ink)" }}>{plan.calculations?.length || 0}</strong></span>
+                  <span>{t.traceKnowledgeQueries}: <strong style={{ color: "var(--ink)" }}>{plan.knowledge_queries?.length || 0}</strong></span>
+                  <span>{t.traceToolCalls}: <strong style={{ color: "var(--ink)" }}>{plan.tool_calls?.length || 0}</strong></span>
+                  <span>{t.traceCalculations}: <strong style={{ color: "var(--ink)" }}>{plan.calculations?.length || 0}</strong></span>
                 </div>
               )}
             </div>
@@ -231,7 +234,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                       color: "var(--ink-2)",
                     }}
                   >
-                    {knowledgeEvidence.length} chunks retrieved
+                    {knowledgeEvidence.length} {t.traceChunksRetrieved}
                   </span>
                 </div>
 
@@ -258,7 +261,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                         <span style={{ color: "var(--ink-3)" }}>{k.classification}</span>
                         {k.retrieval_score && (
                           <span style={{ color: "var(--brass)" }}>
-                            {(k.retrieval_score * 100).toFixed(0)}% match
+                            {(k.retrieval_score * 100).toFixed(0)}% {t.traceMatch}
                           </span>
                         )}
                       </div>
@@ -305,7 +308,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                       color: "var(--ink-2)",
                     }}
                   >
-                    {policyDecisions.length} evaluations
+                    {policyDecisions.length} {t.traceEvaluations}
                   </span>
                 </div>
 
@@ -342,7 +345,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                             </span>
                           </div>
                           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                            RULE: {pd.policy_id || "GATEWAY_RULE"}
+                            {t.traceRule}: {pd.policy_id || "GATEWAY_RULE"}
                           </span>
                         </div>
 
@@ -355,7 +358,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                   {toolEvidence.length > 0 && (
                     <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                        Executed Sandbox Tools ({toolEvidence.length}):
+                        {t.traceExecutedTools} ({toolEvidence.length}):
                       </span>
                       {toolEvidence.map((te) => (
                         <div
@@ -418,7 +421,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                       color: "var(--ink-2)",
                     }}
                   >
-                    {visualEvidence.length} visual records
+                    {visualEvidence.length} {t.traceVisualRecords}
                   </span>
                 </div>
 
@@ -481,7 +484,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
                     Independent Deterministic Verification
                   </span>
-                  <VerdictBadge verdict={verification.status} />
+                  <VerdictBadge verdict={verification.status} locale={locale} />
                 </div>
 
                 <p style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.5 }}>
