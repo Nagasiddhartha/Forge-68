@@ -112,13 +112,14 @@ if ($reasoningFound) {
 }
 
 # 6. Check Vision Model
-$targetVisionModel = "qwen2.5-vl:7b"
-$visionFound = $installedModels | Where-Object { $_ -like "*$targetVisionModel*" -or $_ -like "*vl*" }
-if ($visionFound) {
-    Write-StatusRow "Vision Model" "READY" "$targetVisionModel (Live Local Multimodal)" Green
+$targetVisionModel = "moondream"
+$visionFound = @($installedModels | Where-Object { $_ -like "*$targetVisionModel*" -or $_ -like "*vl*" -or $_ -like "*llava*" })
+if ($visionFound.Count -gt 0) {
+    $matchedVision = $visionFound[0]
+    Write-StatusRow "Vision Model" "READY" "$matchedVision (Live Local Multimodal)" Green
 } elseif ($ollamaOnline) {
-    Write-StatusRow "Vision Model" "MISSING" "$targetVisionModel not in local library" Yellow
-    Write-Host "  -> Manual install command: ollama pull $targetVisionModel" -ForegroundColor DarkCyan
+    Write-StatusRow "Vision Model" "MISSING" "Vision model not in local library" Yellow
+    Write-Host "  -> Manual install command: ollama pull moondream" -ForegroundColor DarkCyan
     Write-Host "  -> Note: Deterministic demo vision will run automatically without live model" -ForegroundColor DarkGray
 } else {
     Write-StatusRow "Vision Model" "STANDBY" "Deterministic Demo Vision Active" Yellow

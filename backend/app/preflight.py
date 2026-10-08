@@ -238,18 +238,28 @@ def check_reasoning_model(installed_tags: List[str]) -> PreflightCheckResult:
 
 
 def check_vision_model(installed_tags: List[str]) -> PreflightCheckResult:
-    """Verify availability of configured local vision model (e.g., qwen2.5-vl:7b)."""
+    """Verify availability of configured local vision model (e.g., qwen2.5-vl:7b, moondream)."""
     target = settings.DEFAULT_VISION_MODEL
     target_clean = target.split(":")[0].lower()
     matched = any(target.lower() in t.lower() or target_clean in t.lower() for t in installed_tags)
+    detected_model = target
+
+    if not matched:
+        vision_candidates = ["moondream", "llava", "minicpm-v", "bakllava", "vl"]
+        for vc in vision_candidates:
+            found = next((t for t in installed_tags if vc in t.lower()), None)
+            if found:
+                matched = True
+                detected_model = found
+                break
 
     if matched:
         return PreflightCheckResult(
             component="Vision Model (Multimodal)",
             status=PreflightStatus.READY,
-            detected_value=target,
+            detected_value=detected_model,
             requirement=PreflightRequirement.OPTIONAL,
-            message=f"Local multimodal vision model '{target}' is installed and ready.",
+            message=f"Local multimodal vision model '{detected_model}' is installed and ready.",
         )
     elif installed_tags:
         return PreflightCheckResult(
