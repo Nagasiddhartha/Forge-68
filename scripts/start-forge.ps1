@@ -88,7 +88,7 @@ $ollamaOnline = $false
 $installedModels = @()
 
 try {
-    $resp = Invoke-RestMethod -Uri "$OllamaUrl/api/tags" -Method Get -TimeoutSec 2 -ErrorAction Stop
+    $resp = Invoke-RestMethod -Uri "$OllamaUrl/api/tags" -Method Get -TimeoutSec 6 -ErrorAction Stop
     $ollamaOnline = $true
     if ($resp.models) {
         $installedModels = @($resp.models | ForEach-Object { $_.name })
