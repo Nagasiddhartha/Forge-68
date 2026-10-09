@@ -77,4 +77,5 @@ sentence_transformers/
 .cache/
 backend/data/deliverables/*.docx
 backend/data/reports/*.docx
+backend/data/ocr_ingested/
 

@@ -244,11 +244,11 @@ class DemoOrchestrationService:
             image_path = str(cand1) if cand1.exists() else str(cand2)
 
         # 4. Configure Service & Execution Engine
+        loc = (request.locale or request.language or "en").lower()
         if request.deterministic:
             # Deterministic execution mode: Use MockModelProvider preloaded with
             # structured responses while running real tools, knowledge retrieval,
             # calculations, policy gateway, and verification engine.
-            loc = (request.locale or 'en').lower()
             plan_json, synthesis_text = self._build_deterministic_responses(scenario_id, locale=loc)
             mock_model = MockModelProvider(responses=[plan_json, synthesis_text])
             mock_vision = MockVisionProvider()

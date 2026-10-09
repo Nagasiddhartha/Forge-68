@@ -17,7 +17,7 @@ interface GovernanceViewProps {
 }
 
 export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [securityReport, setSecurityReport] = useState<SecurityBoundaryReport | null>(null);
   const [tools, setTools] = useState<ToolMetadata[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -163,13 +163,13 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              PERMISSION MATRIX
+              {language === "hi" ? "अनुमति मैट्रिक्स" : language === "kn" ? "ಅನುಮತಿ ಮ್ಯಾಟ್ರಿಕ್ಸ್" : "PERMISSION MATRIX"}
             </span>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: "4px 0" }}>
               {t("govPermissionMatrixTitle")}
             </h2>
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)" }}>
-              {t("govActivePersona")} <strong style={{ color: "var(--brass)" }}>{role}</strong>. Switching personas in the header updates your execution boundaries instantly.
+              {t("govActivePersona")} <strong style={{ color: "var(--brass)" }}>{role}</strong>. {language === "hi" ? "शीर्षलेख में व्यक्तित्व बदलने से आपकी निष्पादन सीमाएं तुरंत अद्यतित होती हैं।" : language === "kn" ? "ಹೆಡರ್‌ನಲ್ಲಿ ವ್ಯಕ್ತಿತ್ವವನ್ನು ಬದಲಾಯಿಸುವುದು ನಿಮ್ಮ ಕಾರ್ಯಾಚರಣೆಯ ಗಡಿಗಳನ್ನು ತಕ್ಷಣವೇ ನವೀಕರಿಸುತ್ತದೆ." : "Switching personas in the header updates your execution boundaries instantly."}
             </p>
           </div>
 
@@ -284,10 +284,10 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
           </div>
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "var(--ink)", fontWeight: 600 }}>
-              Security tests: 10 / 10 passed
+              {language === "hi" ? "सुरक्षा परीक्षण: 10 / 10 उत्तीर्ण" : language === "kn" ? "ಭದ್ರತಾ ಪರೀಕ್ಷೆಗಳು: 10 / 10 ಉತ್ತೀರ್ಣ" : "Security tests: 10 / 10 passed"}
             </div>
             <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-2)", marginTop: 2 }}>
-              Deterministic boundary tests verify untrusted inputs are quarantined and unauthorized actions are blocked.
+              {language === "hi" ? "नियतात्मक सीमा परीक्षण पुष्टि करते हैं कि अविश्वसनीय इनपुट संगरोधित हैं और अनधिकृत क्रियाएं अवरुद्ध हैं।" : language === "kn" ? "ಅವಿಶ್ವಾಸನೀಯ ಇನ್‌ಪುಟ್‌ಗಳನ್ನು ಪ್ರತ್ಯೇಕಿಸಲಾಗಿದೆ ಮತ್ತು ಅನಧಿಕೃತ ಕ್ರಿಯೆಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ ಎಂದು ನಿರ್ಣಾಯಕ ಗಡಿ ಪರೀಕ್ಷೆಗಳು ಪರಿಶೀಲಿಸುತ್ತವೆ." : "Deterministic boundary tests verify untrusted inputs are quarantined and unauthorized actions are blocked."}
             </div>
           </div>
         </div>
@@ -297,7 +297,9 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
           className="btn-brass-secondary"
           style={{ fontSize: "12px", padding: "8px 16px" }}
         >
-          {showTechnicalDetails ? "Hide Technical Details ▲" : "View Technical Policy Details ▼"}
+          {showTechnicalDetails
+            ? (language === "hi" ? "तकनीकी विवरण छिपाएं ▲" : language === "kn" ? "ತಾಂತ್ರಿಕ ವಿವರಗಳನ್ನು ಮರೆಮಾಡಿ ▲" : "Hide Technical Details ▲")
+            : (language === "hi" ? "तकनीकी नीति विवरण देखें ▼" : language === "kn" ? "ತಾಂತ್ರಿಕ ನೀತಿ ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ ▼" : "View Technical Policy Details ▼")}
         </button>
       </div>
 
@@ -308,21 +310,21 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
       {/* 2. Tool Authority & Default-Deny Registry */}
       <EnamelSurface variant="base" padding="spacious">
         <SectionHeader
-          title="Tool authority"
-          eyebrow="Industrial Execution Sandboxes"
-          description="Registered industrial tools, risk tiers, and required clearances. Unregistered tools default to strict DENY."
+          title={language === "hi" ? "उपकरण अधिकार" : language === "kn" ? "ಉಪಕರಣ ಅಧಿಕಾರ" : "Tool authority"}
+          eyebrow={language === "hi" ? "औद्योगिक निष्पादन सैंडबॉक्स" : language === "kn" ? "ಕೈಗಾರಿಕಾ ಕಾರ್ಯಾಚರಣೆ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್" : "Industrial Execution Sandboxes"}
+          description={language === "hi" ? "पंजीकृत औद्योगिक उपकरण, जोखिम स्तर और आवश्यक अनुमतियां। अपंजीकृत उपकरण सख्त अस्वीकार (DENY) पर जाते हैं।" : language === "kn" ? "ನೋಂದಾಯಿತ ಕೈಗಾರಿಕಾ ಉಪಕರಣಗಳು, ಅಪಾಯದ ಶ್ರೇಣಿಗಳು ಮತ್ತು ಅಗತ್ಯ ಅನುಮತಿಗಳು. ನೋಂದಾಯಿಸದ ಪರಿಕರಗಳು ಕಟ್ಟುನಿಟ್ಟಾದ ನಿರಾಕರಣೆಗೆ ಒಳಪಡುತ್ತವೆ." : "Registered industrial tools, risk tiers, and required clearances. Unregistered tools default to strict DENY."}
         />
 
         <div style={{ overflowX: "auto", marginTop: 20 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "var(--font-ui)", fontSize: "14px", textAlign: "left" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--line-strong)", color: "var(--ink-3)" }}>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Tool Name</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Identifier</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Risk Tier</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Required Persona</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Supervisor Approval</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Policy Action</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "उपकरण का नाम" : language === "kn" ? "ಉಪಕರಣದ ಹೆಸರು" : "Tool Name"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "पहचानकर्ता" : language === "kn" ? "ಗುರುತಿಸುವಿಕೆ" : "Identifier"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "जोखिम स्तर" : language === "kn" ? "ಅಪಾಯದ ಶ್ರೇಣಿ" : "Risk Tier"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "आवश्यक भूमिका" : language === "kn" ? "ಅಗತ್ಯವಿರುವ ಪಾತ್ರ" : "Required Persona"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "पर्यवेक्षक स्वीकृति" : language === "kn" ? "ಮೇಲ್ವಿಚಾರಕರ ಅನುಮೋದನೆ" : "Supervisor Approval"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "नीति कार्रवाई" : language === "kn" ? "ನೀತಿ ಕ್ರಮ" : "Policy Action"}</th>
               </tr>
             </thead>
             <tbody>
@@ -349,22 +351,24 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
                     </td>
                     <td style={{ padding: "14px 14px", color: "var(--ink)" }}>{t.required_role}</td>
                     <td style={{ padding: "14px 14px", color: t.requires_approval ? "var(--brass)" : "var(--ink-3)" }}>
-                      {t.requires_approval ? "Supervisor approval required" : "Autonomous allowed"}
+                      {t.requires_approval
+                        ? (language === "hi" ? "पर्यवेक्षक स्वीकृति आवश्यक" : language === "kn" ? "ಮೇಲ್ವಿಚಾರಕರ ಅನುಮೋದನೆ ಅಗತ್ಯವಿದೆ" : "Supervisor approval required")
+                        : (language === "hi" ? "स्वायत्त स्वीकृत" : language === "kn" ? "ಸ್ವಾಯತ್ತ ಅನುಮತಿ ಇದೆ" : "Autonomous allowed")}
                     </td>
                     <td style={{ padding: "14px 14px", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--sage)" }}>
-                      Gated by Gateway
+                      {language === "hi" ? "गेटवे द्वारा नियंत्रित" : language === "kn" ? "ಗೇಟ್‌ವೇ ಮೂಲಕ ನಿಯಂತ್ರಿತ" : "Gated by Gateway"}
                     </td>
                   </tr>
                 );
               })}
               <tr style={{ borderBottom: "1px solid var(--line)", background: "rgba(141, 180, 214, 0.04)" }}>
-                <td style={{ padding: "14px 14px", fontWeight: 600, color: "var(--pewter)" }}>Unregistered tools</td>
+                <td style={{ padding: "14px 14px", fontWeight: 600, color: "var(--pewter)" }}>{language === "hi" ? "अपंजीकृत उपकरण" : language === "kn" ? "ನೋಂದಾಯಿಸದ ಉಪಕರಣಗಳು" : "Unregistered tools"}</td>
                 <td style={{ padding: "14px 14px", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--pewter)" }}>*</td>
-                <td style={{ padding: "14px 14px", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--pewter)", fontWeight: 600 }}>RESTRICTED</td>
-                <td style={{ padding: "14px 14px", color: "var(--pewter)" }}>None</td>
-                <td style={{ padding: "14px 14px", color: "var(--pewter)", fontWeight: 500 }}>Blocked</td>
+                <td style={{ padding: "14px 14px", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--pewter)", fontWeight: 600 }}>{language === "hi" ? "प्रतिबंधित" : language === "kn" ? "ನಿರ್ಬಂಧಿತ" : "RESTRICTED"}</td>
+                <td style={{ padding: "14px 14px", color: "var(--pewter)" }}>{language === "hi" ? "कोई नहीं" : language === "kn" ? "ಯಾವುದೂ ಇಲ್ಲ" : "None"}</td>
+                <td style={{ padding: "14px 14px", color: "var(--pewter)", fontWeight: 500 }}>{language === "hi" ? "अवरुद्ध" : language === "kn" ? "ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ" : "Blocked"}</td>
                 <td style={{ padding: "14px 14px", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--coral-text)", fontWeight: 600 }}>
-                  DEFAULT DENY (FAIL-CLOSED)
+                  {language === "hi" ? "डिफ़ॉल्ट अस्वीकार (फ़ेल-क्लोज़्ड)" : language === "kn" ? "ಡೀಫಾಲ್ಟ್ ನಿರಾಕರಣೆ (ಫೇಲ್-ಕ್ಲೋಸ್ಡ್)" : "DEFAULT DENY (FAIL-CLOSED)"}
                 </td>
               </tr>
             </tbody>
@@ -375,9 +379,9 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
       {/* 3. Adversarial Proofs (10 / 10 Passed) */}
       <EnamelSurface variant="base" padding="spacious">
         <SectionHeader
-          title="Adversarial proofs"
-          eyebrow="Proof of Enforcement"
-          description="Deterministic boundary tests verifying that malicious inputs, unprivileged calls, and prompt injections are quarantined or blocked without exception."
+          title={language === "hi" ? "प्रतिकूल प्रमाण" : language === "kn" ? "ಪ್ರತಿಕೂಲ ಪುರಾವೆಗಳು" : "Adversarial proofs"}
+          eyebrow={language === "hi" ? "प्रवर्तन का प्रमाण" : language === "kn" ? "ಜಾರಿ ಪುರಾವೆ" : "Proof of Enforcement"}
+          description={language === "hi" ? "दुर्भावनापूर्ण इनपुट, अप्राधिकृत कॉल और प्रॉम्प्ट इंजेक्शन को बिना किसी अपवाद के अलग या अवरुद्ध करने का सत्यापन।" : language === "kn" ? "ದುರುದ್ದೇಶಪೂರಿತ ಇನ್‌ಪುಟ್‌ಗಳು, ಅನಧಿಕೃತ ಕರೆಗಳು ಮತ್ತು ಪ್ರಾಂಪ್ಟ್ ಇಂಜೆಕ್ಷನ್‌ಗಳನ್ನು ವಿನಾಯಿತಿ ಇಲ್ಲದೆ ಪ್ರತ್ಯೇಕಿಸಲಾಗಿದೆ ಅಥವಾ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ ಎಂದು ಪರಿಶೀಲಿಸುವ ನಿರ್ಣಾಯಕ ಪರೀಕ್ಷೆಗಳು." : "Deterministic boundary tests verifying that malicious inputs, unprivileged calls, and prompt injections are quarantined or blocked without exception."}
           action={
             <div
               style={{
@@ -391,7 +395,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
                 fontWeight: 600,
               }}
             >
-              {securityReport ? `${securityReport.passed} of ${securityReport.total_tests} PASSED` : "10 of 10 PASSED"}
+              {securityReport ? `${securityReport.passed} / ${securityReport.total_tests} ${language === "hi" ? "उत्तीर्ण" : language === "kn" ? "ಉತ್ತೀರ್ಣ" : "PASSED"}` : (language === "hi" ? "10 में से 10 उत्तीर्ण" : language === "kn" ? "10 ರಲ್ಲಿ 10 ಉತ್ತೀರ್ಣ" : "10 of 10 PASSED")}
             </div>
           }
         />
@@ -400,11 +404,11 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
           <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "var(--font-ui)", fontSize: "13px", textAlign: "left" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--line-strong)", color: "var(--ink-3)" }}>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Proof ID</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Attack Category & Vector</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Boundary Under Test</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Enforcement State</th>
-                <th style={{ padding: "12px 14px", fontWeight: 500 }}>Verification Outcome</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "प्रमाण आईडी" : language === "kn" ? "ಪುರಾವೆ ಐಡಿ" : "Proof ID"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "हमला श्रेणी और वेक्टर" : language === "kn" ? "ದಾಳಿ ವರ್ಗ ಮತ್ತು ವೆಕ್ಟರ್" : "Attack Category & Vector"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "परीक्षण के तहत सीमा" : language === "kn" ? "ಪರೀಕ್ಷಿಸಲಾದ ಗಡಿ" : "Boundary Under Test"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "प्रवर्तन स्थिति" : language === "kn" ? "ಜಾರಿ ಸ್ಥಿತಿ" : "Enforcement State"}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 500 }}>{language === "hi" ? "सत्यापन परिणाम" : language === "kn" ? "ಪರಿಶೀಲನೆ ಫಲಿತಾಂಶ" : "Verification Outcome"}</th>
               </tr>
             </thead>
             <tbody>
@@ -436,7 +440,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
                     <div style={{ color: "var(--sage)", fontWeight: 500 }}>✓ {r.actual_outcome}</div>
                     {r.audit_event && (
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginTop: 2 }}>
-                        Audit Event: {r.audit_event}
+                        {language === "hi" ? "ऑडिट घटना:" : language === "kn" ? "ಆಡಿಟ್ ಘಟನೆ:" : "Audit Event:"} {r.audit_event}
                       </div>
                     )}
                   </td>

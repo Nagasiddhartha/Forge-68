@@ -127,6 +127,7 @@ class CalculationEngine:
         calculation: str,
         inputs: Dict[str, Any],
         evidence_ids: Optional[List[str]] = None,
+        locale: str = "en",
     ) -> CalculationResult:
         """Validate inputs and compute deterministic engineering result."""
         evidence_ids = evidence_ids or []
@@ -145,11 +146,12 @@ class CalculationEngine:
 
         calc_type = valid_types[calc_name]
 
+        res: CalculationResult
         if calc_type == CalculationType.PRESSURE_VARIANCE:
             typed_inputs = PressureVarianceInputs(**inputs)
             # observed_pressure - normal_operating_pressure
             val = round(typed_inputs.observed_pressure_bar - typed_inputs.normal_operating_pressure_bar, 4)
-            return CalculationResult(
+            res = CalculationResult(
                 calculation_type=calc_type.value,
                 inputs=typed_inputs.model_dump(),
                 result=val,
@@ -165,7 +167,7 @@ class CalculationEngine:
             typed_margin_inputs = PressureMarginInputs(**inputs)
             # trip_pressure - observed_pressure
             val = round(typed_margin_inputs.trip_pressure_bar - typed_margin_inputs.observed_pressure_bar, 4)
-            return CalculationResult(
+            res = CalculationResult(
                 calculation_type=calc_type.value,
                 inputs=typed_margin_inputs.model_dump(),
                 result=val,
@@ -182,7 +184,7 @@ class CalculationEngine:
             # current_thickness - (corrosion_rate * years)
             loss = typed_corrosion_inputs.corrosion_rate_mm_year * typed_corrosion_inputs.projection_years
             val = round(typed_corrosion_inputs.current_thickness_mm - loss, 4)
-            return CalculationResult(
+            res = CalculationResult(
                 calculation_type=calc_type.value,
                 inputs=typed_corrosion_inputs.model_dump(),
                 result=val,
@@ -199,7 +201,7 @@ class CalculationEngine:
             typed_loss_inputs = ThicknessLossInputs(**inputs)
             # initial_thickness - current_thickness
             val = round(typed_loss_inputs.initial_thickness_mm - typed_loss_inputs.current_thickness_mm, 4)
-            return CalculationResult(
+            res = CalculationResult(
                 calculation_type=calc_type.value,
                 inputs=typed_loss_inputs.model_dump(),
                 result=val,
@@ -210,5 +212,17 @@ class CalculationEngine:
                     f"current ({typed_loss_inputs.current_thickness_mm} mm) = {val} mm"
                 ),
             )
+        else:
+            raise ValueError(f"Unhandled calculation type: '{calc_type}'")
 
-        raise ValueError(f"Unhandled calculation type: '{calc_type}'")
+        if locale and locale.lower() in ("kn", "hi"):
+            from app.core.localization import localize_calculation_description
+            res.description = localize_calculation_description(
+                calc_type=res.calculation_type,
+                inputs=res.inputs,
+                result=res.result,
+                units=res.units,
+                locale=locale,
+            )
+
+        return res

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type Language = "en" | "hi" | "kn";
 
@@ -608,6 +608,77 @@ export interface TranslationDictionary {
   overviewStatusReady: string;
   overviewStatusOffline: string;
   overviewEnforcedBadge: string;
+
+  // Verdict Badges & Statuses
+  verdictVerified: string;
+  verdictReviewRequired: string;
+  verdictInsufficientEvidence: string;
+  verdictActionBlocked: string;
+  verdictQuarantined: string;
+  verdictFailed: string;
+  verdictAllowed: string;
+  verdictDenied: string;
+
+  // Baseline Verification Plain Titles & Traces
+  checkSourcesTraceable: string;
+  checkEvidenceComplete: string;
+  checkWithinPolicyRules: string;
+  checkWithinYourAccess: string;
+  checkValuesAgree: string;
+  checkMathChecked: string;
+  checkAnswerSupported: string;
+  verificationTraceLabel: string;
+
+  // Workspace Titles & Status Badges
+  independentVerdictLabel: string;
+  securityResultLabel: string;
+  synthesizedFindingsTitle: string;
+  runIdPrefix: string;
+  noNarrativeAnswer: string;
+  evidenceItemLabel: string;
+  retrievedArtifactsLabel: string;
+  actuationGatewayCheckLabel: string;
+  independentSafetyChecksLabel: string;
+  localSovereignRuntimeLabel: string;
+  actionLabel: string;
+  roleEvaluatedLabel: string;
+  modelAndRuntimeTitle: string;
+  sovereignOnPremBadge: string;
+  modelLabel: string;
+  providerLabel: string;
+  tokensLabel: string;
+  mathVerificationLabel: string;
+  evidenceMatchLabel: string;
+  evidenceInputsLabel: string;
+  unitMs: string;
+  unitBar: string;
+  unitMm: string;
+
+  // OCR Document & Photo Extraction
+  ocrButton: string;
+  ocrModalTitle: string;
+  ocrModalSubtitle: string;
+  ocrUploadPrompt: string;
+  ocrSelectFile: string;
+  ocrLanguageLabel: string;
+  ocrExtractButton: string;
+  ocrProcessing: string;
+  ocrExtractedHeader: string;
+  ocrConfidenceLabel: string;
+  ocrIngestButton: string;
+  ocrIngesting: string;
+  ocrIngestSuccess: string;
+  ocrPagesProcessed: string;
+  ocrCloseButton: string;
+
+  // Direct Vision Inspection Labels
+  visionFilenameLabel: string;
+  visionMimeLabel: string;
+  visionSizeLabel: string;
+  visionShaLabel: string;
+  visionConfidenceLabel: string;
+  visionObservedLabel: string;
+  visionSeverityLabel: string;
 }
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -1214,19 +1285,90 @@ export const translations: Record<Language, TranslationDictionary> = {
     overviewEnforcedBadge: "Enforced",
     latencyLabel: "LATENCY",
     policyDecisionLabel: "POLICY DECISION",
+
+    // Verdict Badges
+    verdictVerified: "Verified",
+    verdictReviewRequired: "Review required",
+    verdictInsufficientEvidence: "Insufficient evidence",
+    verdictActionBlocked: "Action blocked",
+    verdictQuarantined: "Quarantined",
+    verdictFailed: "Failed",
+    verdictAllowed: "ALLOWED",
+    verdictDenied: "DENIED",
+
+    // Baseline Verification Checks
+    checkSourcesTraceable: "Sources traceable",
+    checkEvidenceComplete: "Evidence complete",
+    checkWithinPolicyRules: "Within policy rules",
+    checkWithinYourAccess: "Within your access",
+    checkValuesAgree: "Values agree",
+    checkMathChecked: "Math independently checked",
+    checkAnswerSupported: "Answer supported by evidence",
+    verificationTraceLabel: "Verification Trace",
+
+    // Workspace & Operational Labels
+    independentVerdictLabel: "Independent Verdict",
+    securityResultLabel: "Security Result",
+    synthesizedFindingsTitle: "SYNTHESIZED TECHNICAL FINDINGS",
+    runIdPrefix: "RUN ID:",
+    noNarrativeAnswer: "No narrative answer recorded.",
+    evidenceItemLabel: "items",
+    retrievedArtifactsLabel: "Retrieved artifacts",
+    actuationGatewayCheckLabel: "Actuation gateway check",
+    independentSafetyChecksLabel: "Independent safety checks",
+    localSovereignRuntimeLabel: "Local sovereign runtime",
+    actionLabel: "Action",
+    roleEvaluatedLabel: "Role Evaluated",
+    modelAndRuntimeTitle: "MODEL & RUNTIME",
+    sovereignOnPremBadge: "SOVEREIGN ON-PREM",
+    modelLabel: "Model",
+    providerLabel: "Provider",
+    tokensLabel: "Tokens",
+    mathVerificationLabel: "Math verification",
+    evidenceMatchLabel: "Match",
+    evidenceInputsLabel: "Inputs",
+    unitMs: "ms",
+    unitBar: "bar",
+    unitMm: "mm",
+
+    // OCR Document & Photo Extraction
+    ocrButton: "📷 Document / Photo OCR",
+    ocrModalTitle: "Sovereign Document & Photo OCR Text Extraction",
+    ocrModalSubtitle: "Air-gapped local OCR processing for scanned manuals, P&IDs, nameplates, and reports with direct ingestion into Plant Knowledge Fabric.",
+    ocrUploadPrompt: "Drop image or PDF document here (PNG, JPG, WEBP, PDF)",
+    ocrSelectFile: "Browse Local File",
+    ocrLanguageLabel: "OCR Language",
+    ocrExtractButton: "Extract Text (Local Tesseract)",
+    ocrProcessing: "Processing local air-gapped OCR...",
+    ocrExtractedHeader: "Extracted Document Text",
+    ocrConfidenceLabel: "OCR Confidence",
+    ocrIngestButton: "Index into Plant Knowledge Fabric",
+    ocrIngesting: "Indexing into Knowledge Base...",
+    ocrIngestSuccess: "Successfully indexed! You can now query this document in AI Workspace.",
+    ocrPagesProcessed: "Pages processed",
+    ocrCloseButton: "Close",
+
+    // Direct Vision Inspection Labels
+    visionFilenameLabel: "Filename",
+    visionMimeLabel: "MIME",
+    visionSizeLabel: "Size",
+    visionShaLabel: "SHA256",
+    visionConfidenceLabel: "Confidence",
+    visionObservedLabel: "Observed",
+    visionSeverityLabel: "Severity",
   },
 
   hi: {
     // Navigation & Shell
-    navMissions: "अभियान (Missions)",
-    navKnowledge: "संयंत्र ज्ञान (Knowledge)",
-    navGovernance: "अधिकार क्षेत्र (Governance)",
-    navAudit: "ऑडिट (Audit)",
-    navBoundary: "सुरक्षा सीमा (Boundary)",
-    navLocalOnly: "केवल स्थानीय (Local only)",
-    navOffline: "ऑफ़लाइन (Offline)",
-    navVoiceButton: "ध्वनि सहायक (Voice)",
-    navPersona: "भूमिका (Persona)",
+    navMissions: "अभियान",
+    navKnowledge: "संयंत्र ज्ञान",
+    navGovernance: "अधिकार क्षेत्र",
+    navAudit: "ऑडिट",
+    navBoundary: "सुरक्षा सीमा",
+    navLocalOnly: "केवल स्थानीय",
+    navOffline: "ऑफ़लाइन",
+    navVoiceButton: "ध्वनि सहायक",
+    navPersona: "भूमिका",
     navPersonaSelectTitle: "उपयोगकर्ता भूमिका चुनें",
     navRbacBadge: "RBAC लागू",
     navRbacExplanation: "भूमिका बदलने से आपके संयंत्र अनुमतियां, टूल सीमाएं और जांच अधिकार स्वतः अपडेट हो जाते हैं।",
@@ -1274,7 +1416,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     case03Desc: "AI महत्वपूर्ण वाल्व कैलिब्रेशन का प्रयास करता है; FORGE किसी भी टूल चलने से पहले इसे रोकता है।",
     case04Number: "04",
     case04Title: "सुरक्षा एवं इंजेक्शन परीक्षण",
-    case04Badge: "संगरोधित (Quarantined)",
+    case04Badge: "संगरोधित",
     case04Desc: "एक अविश्वसनीय दस्तावेज़ AI को नियंत्रित करने की कोशिश करता है; FORGE इसे केवल डेटा मानता है।",
     runButton: "चलाएं ▶",
     runningButton: "चल रहा है...",
@@ -1298,7 +1440,7 @@ export const translations: Record<Language, TranslationDictionary> = {
 
     // Active Run Strip & States
     runIdentityScenario: "परिदृश्य:",
-    runIdentityRunId: "रन ID:",
+    runIdentityRunId: "निष्पादन रन आईडी:",
     runIdentityState: "स्थिति:",
     runIdentityRole: "भूमिका:",
     runIdentityLang: "भाषा:",
@@ -1473,7 +1615,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Execution Trace
     traceTitle: "फोरेंसिक निष्पादन ट्रेस",
     traceSubtitle: "नियतात्मक जीवनचक्र",
-    traceEventId: "ईवेंट ID:",
+    traceEventId: "ईवेंट पहचान संख्या:",
     tracePhase1: "01 · अनुरोध अंतर्ग्रहण एवं पार्सिंग",
     tracePhase1Desc: "क्वेरी प्राप्त हुई और परिचालन उद्देश्य, लक्षित संपत्ति और क्लीयरेंस सीमाओं में वर्गीकृत की गई।",
     tracePhase2: "02 · नीति गेटवे मूल्यांकन",
@@ -1785,8 +1927,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     verificationCheckPrefix: "जाँच",
     verificationFinalStatusTitle: "अंतिम नियतात्मक पाइपलाइन स्थिति",
     verificationTrustBoundaryAssured: "विश्वास सीमा सुनिश्चित: मानव ऑपरेटर समीक्षा सुरक्षित",
-    verificationPassBadge: "उत्तीर्ण (PASS)",
-    verificationProhibitedBadge: "निषिद्ध (PROHIBITED)",
+    verificationPassBadge: "उत्तीर्ण",
+    verificationProhibitedBadge: "निषिद्ध",
     evidenceCalcExact: "गणना · सटीक",
     evidenceEnginePurePython: "इंजन: शुद्ध पायथन नियतात्मक सैंडबॉक्स",
     evidenceDocExcerpt: "दस्तावेज़ उद्धरण",
@@ -1798,7 +1940,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     evidenceChunkLabel: "खंड:",
     evidenceSandboxToolLabel: "सैंडबॉक्स टूल:",
     evidenceModalityLabel: "प्रणाली:",
-    traceIngestedBadge: "प्राप्त (INGESTED)",
+    traceIngestedBadge: "प्राप्त",
     traceActionLabel: "कार्रवाई:",
     traceKnowledgeQueriesCount: "ज्ञान प्रश्न:",
     traceToolCallsCount: "उपकरण कॉल:",
@@ -1819,19 +1961,90 @@ export const translations: Record<Language, TranslationDictionary> = {
     overviewEnforcedBadge: "लागू",
     latencyLabel: "विलंबता",
     policyDecisionLabel: "नीतिगत निर्णय",
+
+    // Verdict Badges
+    verdictVerified: "सत्यापित",
+    verdictReviewRequired: "समीक्षा आवश्यक",
+    verdictInsufficientEvidence: "अपर्याप्त साक्ष्य",
+    verdictActionBlocked: "कार्रवाई अवरुद्ध",
+    verdictQuarantined: "संगरोधित",
+    verdictFailed: "विफल",
+    verdictAllowed: "अनुमत",
+    verdictDenied: "अस्वीकृत",
+
+    // Baseline Verification Checks
+    checkSourcesTraceable: "स्रोत खोजने योग्य",
+    checkEvidenceComplete: "साक्ष्य पूर्ण",
+    checkWithinPolicyRules: "नीति नियमों के तहत",
+    checkWithinYourAccess: "आपकी पहुंच के भीतर",
+    checkValuesAgree: "मान सहमत हैं",
+    checkMathChecked: "गणित स्वतंत्र रूप से जाँचा गया",
+    checkAnswerSupported: "उत्तर साक्ष्य द्वारा समर्थित",
+    verificationTraceLabel: "सत्यापन ट्रेस",
+
+    // Workspace & Operational Labels
+    independentVerdictLabel: "स्वतंत्र निर्णय",
+    securityResultLabel: "सुरक्षा परिणाम",
+    synthesizedFindingsTitle: "संश्लेषित तकनीकी निष्कर्ष",
+    runIdPrefix: "रन आईडी:",
+    noNarrativeAnswer: "कोई विवरणात्मक उत्तर दर्ज नहीं है।",
+    evidenceItemLabel: "आइटम",
+    retrievedArtifactsLabel: "पुनर्प्राप्त कलाकृतियाँ",
+    actuationGatewayCheckLabel: "सक्रियण गेटवे जाँच",
+    independentSafetyChecksLabel: "स्वतंत्र सुरक्षा जाँचें",
+    localSovereignRuntimeLabel: "स्थानीय संप्रभु रनटाइम",
+    actionLabel: "कार्रवाई",
+    roleEvaluatedLabel: "मूल्यांकित भूमिका",
+    modelAndRuntimeTitle: "मॉडल एवं रनटाइम",
+    sovereignOnPremBadge: "संप्रभु स्थानीय (ऑन-प्रिम)",
+    modelLabel: "मॉडल",
+    providerLabel: "प्रदाता",
+    tokensLabel: "टोकन",
+    mathVerificationLabel: "गणित सत्यापन",
+    evidenceMatchLabel: "मिलान",
+    evidenceInputsLabel: "इनपुट",
+    unitMs: "मिलीसेकंड",
+    unitBar: "बार",
+    unitMm: "मिमी",
+
+    // OCR Document & Photo Extraction
+    ocrButton: "📷 दस्तावेज़ / फ़ोटो ओसीआर",
+    ocrModalTitle: "संप्रभु दस्तावेज़ एवं फ़ोटो ओसीआर पाठ निष्कर्षण",
+    ocrModalSubtitle: "प्लांट नॉलेज फ़ैब्रिक में सीधे अंतर्ग्रहण के साथ स्कैन किए गए मैनुअल, पीएंडआईडी, नेमप्लेट और रिपोर्ट के लिए एयर-गैप्ड स्थानीय ओसीआर प्रसंस्करण।",
+    ocrUploadPrompt: "छवि या पीडीएफ दस्तावेज़ यहाँ छोड़ें (PNG, JPG, WEBP, PDF)",
+    ocrSelectFile: "स्थानीय फ़ाइल चुनें",
+    ocrLanguageLabel: "ओसीआर भाषा",
+    ocrExtractButton: "पाठ निकालें (स्थानीय टेसेरैक्ट)",
+    ocrProcessing: "स्थानीय एयर-गैप्ड ओसीआर संसाधित हो रहा है...",
+    ocrExtractedHeader: "निष्कर्षित दस्तावेज़ पाठ",
+    ocrConfidenceLabel: "ओसीआर विश्वसनीयता",
+    ocrIngestButton: "प्लांट नॉलेज फ़ैब्रिक में इंडेक्स करें",
+    ocrIngesting: "ज्ञान आधार में इंडेक्स हो रहा है...",
+    ocrIngestSuccess: "सफलतापूर्वक इंडेक्स किया गया! अब आप AI वर्कस्पेस में इस दस्तावेज़ से प्रश्न पूछ सकते हैं।",
+    ocrPagesProcessed: "संसाधित पृष्ठ",
+    ocrCloseButton: "बंद करें",
+
+    // Direct Vision Inspection Labels
+    visionFilenameLabel: "फ़ाइल का नाम",
+    visionMimeLabel: "MIME प्रकार",
+    visionSizeLabel: "आकार",
+    visionShaLabel: "SHA256 डाइजेस्ट",
+    visionConfidenceLabel: "सटीकता विश्वास",
+    visionObservedLabel: "अवलोकित मान",
+    visionSeverityLabel: "गंभीरता स्तर",
   },
 
   kn: {
     // Navigation & Shell
-    navMissions: "ಕಾರ್ಯಾಚರಣೆಗಳು (Missions)",
-    navKnowledge: "ಸ್ಥಾವರ ಜ್ಞಾನ (Knowledge)",
-    navGovernance: "ಅಧಿಕಾರ ನಿರ್ವಹಣೆ (Governance)",
-    navAudit: "ಆಡಿಟ್ (Audit)",
-    navBoundary: "ರಕ್ಷಣಾ ಗಡಿ (Boundary)",
-    navLocalOnly: "ಸ್ಥಳೀಯ ಮಾತ್ರ (Local only)",
-    navOffline: "ಆಫ್‌ಲೈನ್ (Offline)",
-    navVoiceButton: "ಧ್ವನಿ ಸಹಾಯಕ (Voice)",
-    navPersona: "ಪಾತ್ರ (Persona)",
+    navMissions: "ಕಾರ್ಯಾಚರಣೆಗಳು",
+    navKnowledge: "ಸ್ಥಾವರ ಜ್ಞಾನ",
+    navGovernance: "ಅಧಿಕಾರ ನಿರ್ವಹಣೆ",
+    navAudit: "ಆಡಿಟ್",
+    navBoundary: "ರಕ್ಷಣಾ ಗಡಿ",
+    navLocalOnly: "ಸ್ಥಳೀಯ ಮಾತ್ರ",
+    navOffline: "ಆಫ್‌ಲೈನ್",
+    navVoiceButton: "ಧ್ವನಿ ಸಹಾಯಕ",
+    navPersona: "ಪಾತ್ರ",
     navPersonaSelectTitle: "ಬಳಕೆದಾರರ ಪಾತ್ರ ಆಯ್ಕೆಮಾಡಿ",
     navRbacBadge: "RBAC ಜಾರಿಯಲ್ಲಿದೆ",
     navRbacExplanation: "ಪಾತ್ರವನ್ನು ಬದಲಾಯಿಸುವುದರಿಂದ ನಿಮ್ಮ ಸ್ಥಾವರ ಅನುಮತಿಗಳು, ಟೂಲ್ ಗಡಿಗಳು ಮತ್ತು ತನಿಖಾ ಅಧಿಕಾರವು ನವೀಕರಿಸಲ್ಪಡುತ್ತದೆ.",
@@ -1879,7 +2092,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     case03Desc: "AI ನಿರ್ಣಾಯಕ ಕವಾಟ ಮಾಪನಾಂಕ ನಿರ್ಣಯಕ್ಕೆ ಪ್ರಯತ್ನಿಸುತ್ತದೆ; FORGE ಯಾವುದೇ ಟೂಲ್ ಚಾಲನೆಯಾಗುವ ಮುನ್ನ ಅದನ್ನು ನಿರ್ಬಂಧಿಸುತ್ತದೆ.",
     case04Number: "04",
     case04Title: "ಭದ್ರತೆ ಮತ್ತು ಇಂಜೆಕ್ಷನ್ ಪರೀಕ್ಷೆ",
-    case04Badge: "ಪ್ರತ್ಯೇಕಿಸಲಾಗಿದೆ (Quarantined)",
+    case04Badge: "ಪ್ರತ್ಯೇಕಿಸಲಾಗಿದೆ",
     case04Desc: "ಅನಪೇಕ್ಷಿತ ದಾಖಲೆಯೊಂದು AI ಅನ್ನು ನಿಯಂತ್ರಿಸಲು ಪ್ರಯತ್ನಿಸುತ್ತದೆ; FORGE ಇದನ್ನು ಕೇವಲ ಡೇಟಾ ಎಂದು ಪರಿಗಣಿಸುತ್ತದೆ.",
     runButton: "ಚಲಾಯಿಸಿ ▶",
     runningButton: "ಚಾಲನೆಯಲ್ಲಿದೆ...",
@@ -1903,7 +2116,7 @@ export const translations: Record<Language, TranslationDictionary> = {
 
     // Active Run Strip & States
     runIdentityScenario: "ಪ್ರಕರಣ:",
-    runIdentityRunId: "ರನ್ ID:",
+    runIdentityRunId: "ಚಾಲನೆ ರನ್ ಐಡಿ:",
     runIdentityState: "ಸ್ಥಿತಿ:",
     runIdentityRole: "ಪಾತ್ರ:",
     runIdentityLang: "ಭಾಷೆ:",
@@ -2078,7 +2291,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Execution Trace
     traceTitle: "ಫೋರೆನ್ಸಿಕ್ ಎಕ್ಸಿಕ್ಯೂಶನ್ ಟ್ರೇಸ್",
     traceSubtitle: "ನಿಖರ ಜೀವನಚಕ್ರ",
-    traceEventId: "ಈವೆಂಟ್ ID:",
+    traceEventId: "ಈವೆಂಟ್ ಗುರುತಿಸುವಿಕೆ ಸಂಖ್ಯೆ:",
     tracePhase1: "01 · ವಿನಂತಿ ಸ್ವೀಕಾರ ಮತ್ತು ವಿಶ್ಲೇಷಣೆ",
     tracePhase1Desc: "ಪ್ರಶ್ನೆಯನ್ನು ಸ್ವೀಕರಿಸಿ ಕಾರ್ಯಾಚರಣೆಯ ಉದ್ದೇಶ ಮತ್ತು ಭದ್ರತಾ ಗಡಿಗಳಾಗಿ ವರ್ಗೀಕರಿಸಲಾಗಿದೆ.",
     tracePhase2: "02 · ನೀತಿ ಗೇಟ್‌ವೇ ಮೌಲ್ಯಮಾಪನ",
@@ -2390,8 +2603,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     verificationCheckPrefix: "ತಪಾಸಣೆ",
     verificationFinalStatusTitle: "ಅಂತಿಮ ನಿರ್ಣಾಯಕ ಪೈಪ್‌ಲೈನ್ ಸ್ಥಿತಿ",
     verificationTrustBoundaryAssured: "ವಿಶ್ವಾಸಾರ್ಹ ಗಡಿ ದೃಢಪಟ್ಟಿದೆ: ಮಾನವ ಆಪರೇಟರ್ ಪರಿಶೀಲನೆ ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ",
-    verificationPassBadge: "ಉತ್ತೀರ್ಣ (PASS)",
-    verificationProhibitedBadge: "ನಿಷೇಧಿಸಲಾಗಿದೆ (PROHIBITED)",
+    verificationPassBadge: "ಉತ್ತೀರ್ಣ",
+    verificationProhibitedBadge: "ನಿಷೇಧಿಸಲಾಗಿದೆ",
     evidenceCalcExact: "ಲೆಕ್ಕಾಚಾರ · ನಿಖರ",
     evidenceEnginePurePython: "ಎಂಜಿನ್: ಶುದ್ಧ ಪೈಥಾನ್ ನಿರ್ಣಾಯಕ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್",
     evidenceDocExcerpt: "ದಾಖಲೆಯ ಉಲ್ಲೇಖ",
@@ -2403,7 +2616,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     evidenceChunkLabel: "ಭಾಗ:",
     evidenceSandboxToolLabel: "ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಟೂಲ್:",
     evidenceModalityLabel: "ವಿಧಾನ:",
-    traceIngestedBadge: "ಸ್ವೀಕರಿಸಲಾಗಿದೆ (INGESTED)",
+    traceIngestedBadge: "ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
     traceActionLabel: "ಕ್ರಿಯೆ:",
     traceKnowledgeQueriesCount: "ಜ್ಞಾನದ ಪ್ರಶ್ನೆಗಳು:",
     traceToolCallsCount: "ಉಪಕರಣ ಕರೆಗಳು:",
@@ -2424,6 +2637,77 @@ export const translations: Record<Language, TranslationDictionary> = {
     overviewEnforcedBadge: "ಜಾರಿಯಲ್ಲಿದೆ",
     latencyLabel: "ವಿಳಂಬ",
     policyDecisionLabel: "ನೀತಿ ನಿರ್ಧಾರ",
+
+    // Verdict Badges
+    verdictVerified: "ಪರಿಶೀಲಿಸಲಾಗಿದೆ",
+    verdictReviewRequired: "ಪರಿಶೀಲನೆ ಅಗತ್ಯವಿದೆ",
+    verdictInsufficientEvidence: "ಅಪೂರ್ಣ ಪುರಾವೆ",
+    verdictActionBlocked: "ಕ್ರಿಯೆ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ",
+    verdictQuarantined: "ಪ್ರತ್ಯೇಕಿಸಲಾಗಿದೆ",
+    verdictFailed: "ವಿಫಲವಾಗಿದೆ",
+    verdictAllowed: "ಅನುಮತಿಸಲಾಗಿದೆ",
+    verdictDenied: "ನಿರಾಕರಿಸಲಾಗಿದೆ",
+
+    // Baseline Verification Checks
+    checkSourcesTraceable: "ಮೂಲಗಳು ಪತ್ತೆಹಚ್ಚಬಹುದಾದವು",
+    checkEvidenceComplete: "ಪುರಾವೆಗಳು ಪೂರ್ಣಗೊಂಡಿವೆ",
+    checkWithinPolicyRules: "ನೀತಿ ನಿಯಮಗಳ ಒಳಗೆ",
+    checkWithinYourAccess: "ನಿಮ್ಮ ಪ್ರವೇಶ ವ್ಯಾಪ್ತಿಯೊಳಗೆ",
+    checkValuesAgree: "ಮೌಲ್ಯಗಳು ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತವೆ",
+    checkMathChecked: "ಗಣಿತ ಸ್ವತಂತ್ರವಾಗಿ ಪರಿಶೀಲಿಸಲಾಗಿದೆ",
+    checkAnswerSupported: "ಉತ್ತರವು ಪುರಾವೆಗಳಿಂದ ಬೆಂಬಲಿತವಾಗಿದೆ",
+    verificationTraceLabel: "ಪರಿಶೀಲನಾ ಟ್ರೇಸ್",
+
+    // Workspace & Operational Labels
+    independentVerdictLabel: "ಸ್ವತಂತ್ರ ತೀರ್ಪು",
+    securityResultLabel: "ಸುರಕ್ಷತಾ ಫಲಿತಾಂಶ",
+    synthesizedFindingsTitle: "ಸಂಶ್ಲೇಷಿತ ತಾಂತ್ರಿಕ ಸಂಶೋಧನೆಗಳು",
+    runIdPrefix: "ರನ್ ಐಡಿ:",
+    noNarrativeAnswer: "ಯಾವುದೇ ವಿವರಣಾತ್ಮಕ ಉತ್ತರ ದಾಖಲಾಗಿಲ್ಲ.",
+    evidenceItemLabel: "ಐಟಂಗಳು",
+    retrievedArtifactsLabel: "ಹಿಂಪಡೆಯಲಾದ ಕಲಾಕೃತಿಗಳು",
+    actuationGatewayCheckLabel: "ಕಾರ್ಯಾಚರಣೆ ಗೇಟ್‌ವೇ ಪರಿಶೀಲನೆ",
+    independentSafetyChecksLabel: "ಸ್ವತಂತ್ರ ಸುರಕ್ಷತಾ ತಪಾಸಣೆಗಳು",
+    localSovereignRuntimeLabel: "ಸ್ಥಳೀಯ ಸಾರ್ವಭೌಮ ರನ್‌ಟೈಮ್",
+    actionLabel: "ಕ್ರಿಯೆ",
+    roleEvaluatedLabel: "ಮೌಲ್ಯಮಾಪನ ಮಾಡಲಾದ ಪಾತ್ರ",
+    modelAndRuntimeTitle: "ಮಾದರಿ ಮತ್ತು ರನ್‌ಟೈಮ್",
+    sovereignOnPremBadge: "ಸಾರ್ವಭೌಮ ಆನ್-ಪ್ರೆಮ್",
+    modelLabel: "ಮಾದರಿ",
+    providerLabel: "ಪೂರೈಕೆದಾರ",
+    tokensLabel: "ಟೋಕನ್‌ಗಳು",
+    mathVerificationLabel: "ಗಣಿತ ಪರಿಶೀಲನೆ",
+    evidenceMatchLabel: "ಹೊಂದಾಣಿಕೆ",
+    evidenceInputsLabel: "ಇನ್‌ಪುಟ್‌ಗಳು",
+    unitMs: "ಮಿಲಿಸೆಕೆಂಡ್‌",
+    unitBar: "ಬಾರ್",
+    unitMm: "ಮಿಮೀ",
+
+    // OCR Document & Photo Extraction
+    ocrButton: "📷 ದಾಖಲೆ / ಫೋಟೋ OCR",
+    ocrModalTitle: "ಸಾರ್ವಭೌಮ ದಾಖಲೆ ಮತ್ತು ಫೋಟೋ OCR ಪಠ್ಯ ಹೊರತೆಗೆಯುವಿಕೆ",
+    ocrModalSubtitle: "ಪ್ಲಾಂಟ್ ನಾಲೆಡ್ಜ್ ಫ್ಯಾಬ್ರಿಕ್‌ಗೆ ನೇರ ಒಳಸೇರಿಸುವಿಕೆಯೊಂದಿಗೆ ಸ್ಕ್ಯಾನ್ ಮಾಡಿದ ಮ್ಯಾನುಯಲ್‌ಗಳು, P&ID ಗಳು, ನೇಮ್‌ಪ್ಲೇಟ್‌ಗಳು ಮತ್ತು ವರದಿಗಳಿಗಾಗಿ ಏರ್-ಗ್ಯಾಪ್ಡ್ ಸ್ಥಳೀಯ OCR ಪ್ರಕ್ರಿಯೆ.",
+    ocrUploadPrompt: "ಚಿತ್ರ ಅಥವಾ PDF ಡಾಕ್ಯುಮೆಂಟ್ ಅನ್ನು ಇಲ್ಲಿ ಬಿಡಿ (PNG, JPG, WEBP, PDF)",
+    ocrSelectFile: "ಸ್ಥಳೀಯ ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ",
+    ocrLanguageLabel: "OCR ಭಾಷೆ",
+    ocrExtractButton: "ಪಠ್ಯ ಹೊರತೆಗೆಯಿರಿ (ಸ್ಥಳೀಯ ಟೆಸ್ಸೆರಾಕ್ಟ್)",
+    ocrProcessing: "ಸ್ಥಳೀಯ ಏರ್-ಗ್ಯಾಪ್ಡ್ OCR ಪ್ರಕ್ರಿಯೆ ನಡೆಯುತ್ತಿದೆ...",
+    ocrExtractedHeader: "ಹೊರತೆಗೆಯಲಾದ ದಾಖಲೆ ಪಠ್ಯ",
+    ocrConfidenceLabel: "OCR ವಿಶ್ವಾಸಾರ್ಹತೆ",
+    ocrIngestButton: "ಪ್ಲಾಂಟ್ ನಾಲೆಡ್ಜ್ ಫ್ಯಾಬ್ರಿಕ್‌ಗೆ ಇಂಡೆಕ್ಸ್ ಮಾಡಿ",
+    ocrIngesting: "ಜ್ಞಾನ ಭಂಡಾರಕ್ಕೆ ಇಂಡೆಕ್ಸ್ ಆಗುತ್ತಿದೆ...",
+    ocrIngestSuccess: "ಯಶಸ್ವಿಯಾಗಿ ಇಂಡೆಕ್ಸ್ ಮಾಡಲಾಗಿದೆ! ನೀವು ಈಗ AI ಕಾರ್ಯಕ್ಷೇತ್ರದಲ್ಲಿ ಈ ಡಾಕ್ಯುಮೆಂಟ್ ಕುರಿತು ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಬಹುದು.",
+    ocrPagesProcessed: "ಸಂಸ್ಕರಿಸಿದ ಪುಟಗಳು",
+    ocrCloseButton: "ಮುಚ್ಚಿ",
+
+    // Direct Vision Inspection Labels
+    visionFilenameLabel: "ಕಡತದ ಹೆಸರು",
+    visionMimeLabel: "MIME ಮಾದರಿ",
+    visionSizeLabel: "ಗಾತ್ರ",
+    visionShaLabel: "SHA256 ಡೈಜೆಸ್ಟ್",
+    visionConfidenceLabel: "ವಿಶ್ವಾಸಾರ್ಹತೆ",
+    visionObservedLabel: "ವೀಕ್ಷಿಸಿದ ಮೌಲ್ಯ",
+    visionSeverityLabel: "ತೀವ್ರತೆ",
   },
 };
 
@@ -2444,19 +2728,18 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("forge_language");
-        if (saved === "en" || saved === "hi" || saved === "kn") {
-          return saved;
-        }
-      } catch {
-        // ignore
+  const [language, setLanguageState] = useState<Language>("en");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("forge_language");
+      if (saved === "en" || saved === "hi" || saved === "kn") {
+        setLanguageState(saved);
       }
+    } catch {
+      // ignore
     }
-    return "en";
-  });
+  }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

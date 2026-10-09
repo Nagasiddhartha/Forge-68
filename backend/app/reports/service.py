@@ -221,7 +221,7 @@ REPORT_TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "hi": {
         "title": "FORGE संप्रभु औद्योगिक नियंत्रण तल",
         "subtitle": "मिशन सत्यापन एवं औद्योगिक सुरक्षा डोजियर (एयर-गैप्ड स्थानीय रनटाइम)",
-        "meta_run_id": "निष्पादन रन आईडी (Run ID):",
+        "meta_run_id": "निष्पादन रन आईडी:",
         "meta_scenario": "मिशन / परिदृश्य:",
         "meta_timestamp": "उत्पन्न समय (IST):",
         "meta_clearance_role": "सुरक्षा स्तर एवं भूमिका:",
@@ -252,7 +252,7 @@ REPORT_TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "kn": {
         "title": "FORGE ಸಾರ್ವಭೌಮ ಕೈಗಾರಿಕಾ ನಿಯಂತ್ರಣ ವೇದಿಕೆ",
         "subtitle": "ಕಾರ್ಯಾಚರಣೆ ಪರಿಶೀಲನೆ ಮತ್ತು ಕೈಗಾರಿಕಾ ಸುರಕ್ಷತಾ ದಾಖಲೆ (ಏರ್-ಗ್ಯಾಪ್ಡ್ ಸ್ಥಳೀಯ ರನ್‌ಟೈಮ್)",
-        "meta_run_id": "ಚಾಲನೆ ರನ್ ಐಡಿ (Run ID):",
+        "meta_run_id": "ಚಾಲನೆ ರನ್ ಐಡಿ:",
         "meta_scenario": "ಕಾರ್ಯಾಚರಣೆ / ಸನ್ನಿವೇಶ:",
         "meta_timestamp": "ರಚಿಸಿದ ಸಮಯ (IST):",
         "meta_clearance_role": "ಕ್ಲಿಯರೆನ್ಸ್ ಮತ್ತು ಪಾತ್ರ:",
@@ -279,6 +279,47 @@ REPORT_TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "sig_status": "ಸಮಗ್ರತೆ ಸ್ಥಿತಿ: ಕ್ರಿಪ್ಟೋಗ್ರಾಫಿಕ್ ಹ್ಯಾಶ್-ಸರಣಿ ಪರಿಶೀಲಿತ",
         "sig_date": "ಅನುಮೋದಿತ ದಿನಾಂಕ:",
         "sig_clearance": "ಕ್ಲಿಯರೆನ್ಸ್ ಎನ್‌ಕ್ಲೇವ್: ಸಾರ್ವಭೌಮ ಸ್ಥಳೀಯ (ಆನ್-ಪ್ರೆಮಿಸಸ್)",
+    },
+}
+
+CLASSIFICATION_TRANSLATIONS: Dict[str, Dict[str, str]] = {
+    "en": {"INTERNAL": "INTERNAL", "CONFIDENTIAL": "CONFIDENTIAL", "RESTRICTED": "RESTRICTED", "CRITICAL": "CRITICAL"},
+    "hi": {"INTERNAL": "आंतरिक", "CONFIDENTIAL": "गोपनीय", "RESTRICTED": "प्रतिबंधित", "CRITICAL": "गंभीर"},
+    "kn": {"INTERNAL": "ಆಂತರಿಕ", "CONFIDENTIAL": "ಗೌಪ್ಯ", "RESTRICTED": "ನಿರ್ಬಂಧಿತ", "CRITICAL": "ನಿರ್ಣಾಯಕ"},
+}
+
+ROLE_TRANSLATIONS: Dict[str, Dict[str, str]] = {
+    "en": {"ENGINEER": "ENGINEER", "OPERATOR": "OPERATOR", "SECURITY_OFFICER": "SECURITY OFFICER", "PLANT_MANAGER": "PLANT MANAGER", "ADMIN": "ADMIN"},
+    "hi": {"ENGINEER": "इंजीनियर", "OPERATOR": "ऑपरेटर", "SECURITY_OFFICER": "सुरक्षा अधिकारी", "PLANT_MANAGER": "संयंत्र प्रबंधक", "ADMIN": "प्रशासक"},
+    "kn": {"ENGINEER": "ಎಂಜಿನಿಯರ್", "OPERATOR": "ಆಪರೇಟರ್", "SECURITY_OFFICER": "ಭದ್ರತಾ ಅಧಿಕಾರಿ", "PLANT_MANAGER": "ಸ್ಥಾವರ ವ್ಯವಸ್ಥಾಪಕರು", "ADMIN": "ನಿರ್ವಾಹಕರು"},
+}
+
+RUNTIME_HOST_TRANSLATIONS: Dict[str, str] = {
+    "en": "Sovereign Local Host",
+    "hi": "स्थानीय संप्रभु होस्ट",
+    "kn": "ಸ್ಥಳೀಯ ಸಾರ್ವಭೌಮ ಹೋಸ್ಟ್",
+}
+
+EVIDENCE_CHUNK_LOCALIZATION: Dict[str, Dict[str, str]] = {
+    "SOP-R204": {
+        "kn": "SOP-R204-REV4: ಹೈಡ್ರೋಕ್ರ್ಯಾಕರ್ ರಿಯಾಕ್ಟರ್ R-204 ನ ಪ್ರಮಾಣಿತ ಕಾರ್ಯಾಚರಣಾ ಪ್ರಕ್ರಿಯೆ. ಸಾಮಾನ್ಯ ಕಾರ್ಯಾಚರಣೆಯ ಒತ್ತಡ: 31.2 ಬಾರ್, ಗರಿಷ್ಠ ಅನುಮತಿಸುವ ಕೆಲಸದ ಒತ್ತಡ (MAWP): 35.0 ಬಾರ್, ತುರ್ತು ಟ್ರಿಪ್ ಮಿತಿ: 35.0 ಬಾರ್, ಸಾಮಾನ್ಯ ಕಾರ್ಯಾಚರಣೆಯ ತಾಪಮಾನ: 395°C ರಿಂದ 415°C.",
+        "hi": "SOP-R204-REV4: हाइड्रोक्रैकर रिएक्टर R-204 के लिए मानक संचालन प्रक्रिया। सामान्य परिचालन दबाव: 31.2 बार, अधिकतम स्वीकार्य कार्य दबाव (MAWP): 35.0 बार, आपातकालीन ट्रिप सीमा: 35.0 बार, सामान्य परिचालन तापमान: 395°C से 415°C।",
+    },
+    "IR-2025-088": {
+        "kn": "IR-2025-088: ರಿಯಾಕ್ಟರ್ R-204 ನ ಅಲ್ಟ್ರಾಸಾನಿಕ್ ತಪಾಸಣಾ ವರದಿ (PAUT ಮತ್ತು TOFD). ದಾಖಲಾದ ಕನಿಷ್ಠ ಸ್ಥಳೀಯ ಗೋಡೆಯ ದಪ್ಪ 72.8 ಮಿಮೀ (ಕನಿಷ್ಠ ನಿವೃತ್ತಿ ಮಿತಿ 68.2 ಮಿಮೀ ಗಿಂತ ಸುರಕ್ಷಿತ). ಅಂದಾಜು ಸವೆತ ದರ: 0.04 ಮಿಮೀ/ವರ್ಷ.",
+        "hi": "IR-2025-088: रिएक्टर R-204 के लिए अल्ट्रासोनिक निरीक्षण रिपोर्ट (PAUT एवं TOFD)। दर्ज न्यूनतम स्थानीय दीवार मोटाई 72.8 मिमी (न्यूनतम सेवानिवृत्ति सीमा 68.2 मिमी से सुरक्षित)। अनुमानित संक्षारण दर: 0.04 मिमी/वर्ष।",
+    },
+    "SPEC-EQ-R204": {
+        "kn": "SPEC-EQ-R204: ರಿಯಾಕ್ಟರ್ R-204 ಉಪಕರಣ ಎಂಜಿನಿಯರಿಂಗ್ ವಿವರಣೆ. ಆರಂಭಿಕ ನಾಮಮಾತ್ರದ ಶೆಲ್ ದಪ್ಪ: 75.0 ಮಿಮೀ (4.5 ಮಿಮೀ ಸವೆತ ಅನುಮತಿಯನ್ನು ಒಳಗೊಂಡಿದೆ). ಮೂಲ ಸಲಕರಣೆ ತಯಾರಕ: ಹೆವಿ ವೆಸೆಲ್ ಇಂಜಿನಿಯರಿಂಗ್ ಲಿಮಿಟೆಡ್.",
+        "hi": "SPEC-EQ-R204: रिएक्टर R-204 उपकरण इंजीनियरिंग विशिष्टता। प्रारंभिक नाममात्र खोल मोटाई: 75.0 मिमी (4.5 मिमी संक्षारण भत्ता सहित)। मूल उपकरण निर्माता: हेवी वेसल इंजीनियरिंग लिमिटेड।",
+    },
+    "MH-R204": {
+        "kn": "MH-R204-LOG: ರಿಯಾಕ್ಟರ್ R-204 ನ ಐತಿಹಾಸಿಕ ನಿರ್ವಹಣೆ ಮತ್ತು ಟರ್ನ್‌ಅರೌಂಡ್ ಲಾಗ್. ಅಕ್ಟೋಬರ್ 2024 ರ ಟರ್ನ್‌ಅರೌಂಡ್‌ನಲ್ಲಿ ಪ್ರೆಶರ್ ರಿಲೀಫ್ ವಾಲ್ವ್ PRV-204-A ಅನ್ನು ಸ್ವಚ್ಛಗೊಳಿಸಿ 35.0 ಬಾರ್‌ನಲ್ಲಿ ಮರು-ಪ್ರಮಾಣೀಕರಿಸಲಾಗಿದೆ.",
+        "hi": "MH-R204-LOG: रिएक्टर R-204 के लिए ऐतिहासिक रखरखाव एवं टर्नअराउंड लॉग। अक्टूबर 2024 टर्नअराउंड में प्रेशर रिलीफ वाल्व PRV-204-A को साफ कर 35.0 बार पर पुनः प्रमाणित किया गया।",
+    },
+    "equipment_history": {
+        "kn": "ಉಪಕರಣ R-204 ಇತಿಹಾಸ: ನಿರಂತರ ಕಲಕುವ-ಟ್ಯಾಂಕ್ ರಿಯಾಕ್ಟರ್ (CSTR), ಕಾರ್ಯಾಚರಣೆಯ ಸ್ಥಿತಿ: ಸಕ್ರಿಯ (OPERATIONAL), ಕೊನೆಯ ತಪಾಸಣೆ ದಿನಾಂಕ: 2026-08-14, ದಾಖಲಾದ ನಿರ್ವಹಣೆ: ಅಜಿಟೇಟರ್ ಮೆಕ್ಯಾನಿಕಲ್ ಶಾಫ್ಟ್ ಸೀಲ್ ಬದಲಾವಣೆ.",
+        "hi": "उपकरण R-204 इतिहास: सतत आंदोलित टैंक रिएक्टर (CSTR), परिचालन स्थिति: सक्रिय (OPERATIONAL), अंतिम निरीक्षण तिथि: 2026-08-14, दर्ज रखरखाव: एजिटेटर मैकेनिकल शाफ्ट सील प्रतिस्थापन।",
     },
 }
 
@@ -353,13 +394,17 @@ class SovereignReportGenerator:
         now_dt = datetime.now(timezone.utc)
         ist_str = _format_ist_time(now_dt)
 
+        loc_class = CLASSIFICATION_TRANSLATIONS.get(lang, {}).get(data.get("classification", "INTERNAL"), data.get("classification", "INTERNAL"))
+        loc_role = ROLE_TRANSLATIONS.get(lang, {}).get(data.get("role", "ENGINEER"), data.get("role", "ENGINEER"))
+        loc_runtime_host = RUNTIME_HOST_TRANSLATIONS.get(lang, "Sovereign Local Host")
+
         meta_table = doc.add_table(rows=6, cols=2)
         meta_data = [
             (t["meta_run_id"], str(run_id)),
             (t["meta_scenario"], resolved["title"]),
             (t["meta_timestamp"], f"{ist_str}"),
-            (t["meta_clearance_role"], f"{data.get('classification', 'INTERNAL')} / {data.get('role', 'ENGINEER')}"),
-            (t["meta_model_runtime"], f"{data.get('model_name', 'qwen2.5:7b')} (Sovereign Local Host)"),
+            (t["meta_clearance_role"], f"{loc_class} / {loc_role}"),
+            (t["meta_model_runtime"], f"{data.get('model_name', 'qwen2.5:7b')} ({loc_runtime_host})"),
             (t["meta_verdict"], resolved["verdict"]),
         ]
         for idx, (k, v) in enumerate(meta_data):
@@ -393,23 +438,63 @@ class SovereignReportGenerator:
         total_evd = len(k_evd) + len(t_evd) + len(v_evd)
         doc.add_paragraph(f"{t['sec3_total']} {total_evd}")
 
+        from app.core.localization import (
+            CHECK_NAME_TRANSLATIONS,
+            VERDICT_TRANSLATIONS,
+            localize_calculation_description,
+            localize_policy_decision,
+            translate_text,
+        )
+
         for e in k_evd:
             p = doc.add_paragraph()
-            src = e.get("source_reference") or e.get("filename") or "Plant SOP"
-            p.add_run(f"• [Knowledge: {src}]: ").bold = True
+            src = e.get("source_reference") or e.get("filename") or "Plant Knowledge Fabric"
+            prefix = f"• [Knowledge: {src}]: "
+            if lang == "kn":
+                prefix = f"• [ಜ್ಞಾನ ಭಂಡಾರ: {src}]: "
+            elif lang == "hi":
+                prefix = f"• [ज्ञान आधार: {src}]: "
+            p.add_run(prefix).bold = True
+
             txt = str(e.get("content") or e.get("retrieved_data") or "")
-            p.add_run(txt[:300] + ("..." if len(txt) > 300 else ""))
+            matched_summary = None
+            if lang in ("kn", "hi"):
+                for k, v in EVIDENCE_CHUNK_LOCALIZATION.items():
+                    if k in src or k in txt:
+                        matched_summary = v.get(lang)
+                        break
+            content_str = matched_summary or (txt[:300] + ("..." if len(txt) > 300 else ""))
+            p.add_run(content_str)
 
         for e in t_evd:
             p = doc.add_paragraph()
             tool = e.get("tool_name") or "Telemetry Tool"
-            p.add_run(f"• [Tool: {tool}]: ").bold = True
-            p.add_run(str(e.get("retrieved_data") or ""))
+            prefix = f"• [Tool: {tool}]: "
+            if lang == "kn":
+                prefix = f"• [ಕೈಗಾರಿಕಾ ಉಪಕರಣ: {tool}]: "
+            elif lang == "hi":
+                prefix = f"• [औद्योगिक उपकरण: {tool}]: "
+            p.add_run(prefix).bold = True
+
+            data_str = str(e.get("retrieved_data") or "")
+            if lang in ("kn", "hi") and "equipment_history" in tool:
+                data_str = EVIDENCE_CHUNK_LOCALIZATION["equipment_history"].get(lang, data_str)
+            p.add_run(data_str)
 
         for e in v_evd:
             p = doc.add_paragraph()
-            p.add_run(f"• [Visual Telemetry]: ").bold = True
-            p.add_run(f"Observed: {e.get('observed_value')} {e.get('unit', '')} (Confidence: {e.get('confidence', 1.0)})")
+            val = e.get("observed_value")
+            unit = e.get("unit", "")
+            conf = e.get("confidence", 1.0)
+            if lang == "kn":
+                p.add_run("• [ದೃಶ್ಯ ಸಂವೇದಕ]: ").bold = True
+                p.add_run(f"ಗಮನಿಸಿದ ಮೌಲ್ಯ: {val} {unit} (ವಿಶ್ವಾಸಾರ್ಹತೆ: {conf})")
+            elif lang == "hi":
+                p.add_run("• [दृश्य सेंसर]: ").bold = True
+                p.add_run(f"प्रेक्षित मान: {val} {unit} (विश्वसनीयता: {conf})")
+            else:
+                p.add_run("• [Visual Telemetry]: ").bold = True
+                p.add_run(f"Observed: {val} {unit} (Confidence: {conf})")
 
         # Section 4: Verified Calculations
         doc.add_heading(t["sec4_heading"], level=1)
@@ -420,9 +505,14 @@ class SovereignReportGenerator:
         if calcs:
             for idx, c in enumerate(calcs):
                 p = doc.add_paragraph()
-                c_desc = c.get("description") or c.get("calculation_type") or "Math check"
-                p.add_run(f"[{idx+1}] {c_desc}: ").bold = True
-                p.add_run(f"{c.get('result')} {c.get('units', '')} {t['sec4_verified']}")
+                c_type = c.get("calculation_type") or "Math check"
+                inputs = c.get("inputs", {})
+                res = c.get("result")
+                units = c.get("units", "")
+                c_desc = localize_calculation_description(c_type, inputs, res, units, locale=lang)
+                prefix_label = f"[{idx+1}] ಲೆಕ್ಕಾಚಾರ {idx+1}: " if lang == "kn" else (f"[{idx+1}] गणना {idx+1}: " if lang == "hi" else f"[{idx+1}] {c_type}: ")
+                p.add_run(prefix_label).bold = True
+                p.add_run(f"{c_desc} {t['sec4_verified']}")
         else:
             doc.add_paragraph(t["sec4_no_calcs"])
 
@@ -437,8 +527,9 @@ class SovereignReportGenerator:
                 p = doc.add_paragraph()
                 act = d.get("tool") or d.get("action", "inspect")
                 dec = d.get("decision") or ("ALLOW" if d.get("allowed") is True else "DENY")
-                p.add_run(f"• Action '{act}': ").bold = True
-                p.add_run(f"DECISION = {dec}. Reason: {d.get('reason') or 'Zero-trust verification'}")
+                pol_msg = localize_policy_decision(act, dec, d.get("reason") or "", policy_id=d.get("policy_id"), locale=lang)
+                p.add_run(f"• ").bold = True
+                p.add_run(pol_msg)
         else:
             doc.add_paragraph(t["sec5_default_deny"])
 
@@ -451,8 +542,14 @@ class SovereignReportGenerator:
         if checks:
             for chk in checks:
                 p = doc.add_paragraph()
-                p.add_run(f"[{chk.get('check_type')}]: ").bold = True
-                p.add_run(f"{chk.get('status', 'VERIFIED')} ― {chk.get('description', '')}")
+                raw_type = chk.get("check_type", "CHECK")
+                raw_status = chk.get("status", "VERIFIED")
+                raw_desc = chk.get("description", "")
+                name = CHECK_NAME_TRANSLATIONS.get(raw_type, {}).get(lang, raw_type)
+                status = VERDICT_TRANSLATIONS.get(raw_status, {}).get(lang, raw_status)
+                desc = translate_text(raw_desc, locale=lang, fallback=raw_desc)
+                p.add_run(f"[{name}]: ").bold = True
+                p.add_run(f"{status} ― {desc}")
         else:
             doc.add_paragraph(t["sec6_checks_exec"])
 
@@ -463,11 +560,24 @@ class SovereignReportGenerator:
         # Official Sign-off Block
         doc.add_heading(t["sig_heading"], level=1)
         sig_table = doc.add_table(rows=4, cols=2)
+        if lang == "kn":
+            appr_val = "MRPL ಮುಖ್ಯ ಕಾರ್ಯಾಚರಣಾ ಇಂಜಿನಿಯರ್ (PE-84209)"
+            stat_val = "ಉತ್ತೀರ್ಣ ಮತ್ತು ಡಿಜಿಟಲ್ ಪರಿಶೀಲಿಸಲಾಗಿದೆ"
+            clear_val = "ಆಂತರಿಕ ಸಾರ್ವಭೌಮ ಎನ್‌ಕ್ಲೇವ್ (ಆನ್-ಪ್ರೆಮಿಸಸ್)"
+        elif lang == "hi":
+            appr_val = "MRPL मुख्य परिचालन इंजीनियर (PE-84209)"
+            stat_val = "उत्तीर्ण एवं डिजिटल रूप से सत्यापित"
+            clear_val = "आंतरिक संप्रभु एन्क्लेव (ऑन-प्रिमाइसेस)"
+        else:
+            appr_val = "MRPL Lead Operations Engineer (PE-84209)"
+            stat_val = "PASSED & DIGITALLY VERIFIED"
+            clear_val = f"{data.get('classification', 'CONFIDENTIAL')} ENCLAVE"
+
         sig_rows = [
-            (t["sig_approved"], "MRPL Lead Plant Engineer (PE-84209)"),
-            (t["sig_status"], "PASSED & DIGITALLY VERIFIED"),
+            (t["sig_approved"], appr_val),
+            (t["sig_status"], stat_val),
             (t["sig_date"], ist_str),
-            (t["sig_clearance"], f"{data.get('classification', 'CONFIDENTIAL')} ENCLAVE"),
+            (t["sig_clearance"], clear_val),
         ]
         for idx, (sk, sv) in enumerate(sig_rows):
             srow = sig_table.rows[idx]
@@ -538,11 +648,15 @@ class SovereignReportGenerator:
         )
 
         # Meta block
+        loc_class = CLASSIFICATION_TRANSLATIONS.get(lang, {}).get(classification, classification)
+        loc_role = ROLE_TRANSLATIONS.get(lang, {}).get(role, role)
+        loc_runtime_host = RUNTIME_HOST_TRANSLATIONS.get(lang, "Sovereign Local Host")
+
         body_xml.append(xml_para(run_id, bold_prefix=t["meta_run_id"]))
         body_xml.append(xml_para(scenario_title, bold_prefix=t["meta_scenario"]))
         body_xml.append(xml_para(ist_str, bold_prefix=t["meta_timestamp"]))
-        body_xml.append(xml_para(f"{classification} / {role}", bold_prefix=t["meta_clearance_role"]))
-        body_xml.append(xml_para(f"{model_name} [{provider}]", bold_prefix=t["meta_model_runtime"]))
+        body_xml.append(xml_para(f"{loc_class} / {loc_role}", bold_prefix=t["meta_clearance_role"]))
+        body_xml.append(xml_para(f"{model_name} [{loc_runtime_host}]", bold_prefix=t["meta_model_runtime"]))
         body_xml.append(xml_para(verdict, bold_prefix=t["meta_verdict"], color="059669" if "VERIFIED" in verdict or "सत्यापित" in verdict or "ಪರಿಶೀಲಿಸಲಾಗಿದೆ" in verdict else "D97706"))
 
         # Section 1: Findings
@@ -563,20 +677,55 @@ class SovereignReportGenerator:
         total_evd = len(k_evd) + len(t_evd) + len(v_evd)
         body_xml.append(xml_para(f"{total_evd}", bold_prefix=t["sec3_total"]))
 
+        from app.core.localization import (
+            CHECK_NAME_TRANSLATIONS,
+            VERDICT_TRANSLATIONS,
+            localize_calculation_description,
+            localize_policy_decision,
+            translate_text,
+        )
+
         for e in k_evd:
             src = e.get("source_reference") or e.get("filename") or "Plant Knowledge Fabric"
+            prefix = f"• [Knowledge: {src}]:"
+            if lang == "kn":
+                prefix = f"• [ಜ್ಞಾನ ಭಂಡಾರ: {src}]:"
+            elif lang == "hi":
+                prefix = f"• [ज्ञान आधार: {src}]:"
+
             txt = str(e.get("content") or e.get("retrieved_data") or "")
-            body_xml.append(xml_para(txt[:300] + ("..." if len(txt) > 300 else ""), bold_prefix=f"• [Knowledge: {src}]:"))
+            matched_summary = None
+            if lang in ("kn", "hi"):
+                for k, v in EVIDENCE_CHUNK_LOCALIZATION.items():
+                    if k in src or k in txt:
+                        matched_summary = v.get(lang)
+                        break
+            content_str = matched_summary or (txt[:300] + ("..." if len(txt) > 300 else ""))
+            body_xml.append(xml_para(content_str, bold_prefix=prefix))
 
         for e in t_evd:
             tool_name = e.get("tool_name") or "industrial_tool"
+            prefix = f"• [Tool: {tool_name}]:"
+            if lang == "kn":
+                prefix = f"• [ಕೈಗಾರಿಕಾ ಉಪಕರಣ: {tool_name}]:"
+            elif lang == "hi":
+                prefix = f"• [औद्योगिक उपकरण: {tool_name}]:"
+
             data_str = str(e.get("retrieved_data") or "")
-            body_xml.append(xml_para(data_str, bold_prefix=f"• [Tool: {tool_name}]:"))
+            if lang in ("kn", "hi") and "equipment_history" in tool_name:
+                data_str = EVIDENCE_CHUNK_LOCALIZATION["equipment_history"].get(lang, data_str)
+            body_xml.append(xml_para(data_str, bold_prefix=prefix))
 
         for e in v_evd:
-            src = e.get("source_reference") or "Optical Sensor"
-            obs = f"Observed: {e.get('observed_value')} {e.get('unit', '')}"
-            body_xml.append(xml_para(obs, bold_prefix=f"• [Optical Observation: {src}]:"))
+            val = e.get("observed_value")
+            unit = e.get("unit", "")
+            conf = e.get("confidence", 1.0)
+            if lang == "kn":
+                body_xml.append(xml_para(f"ಗಮನಿಸಿದ ಮೌಲ್ಯ: {val} {unit} (ವಿಶ್ವಾಸಾರ್ಹತೆ: {conf})", bold_prefix="• [ದೃಶ್ಯ ಸಂವೇದಕ]:"))
+            elif lang == "hi":
+                body_xml.append(xml_para(f"प्रेक्षित मान: {val} {unit} (विश्वसनीयता: {conf})", bold_prefix="• [दृश्य सेंसर]:"))
+            else:
+                body_xml.append(xml_para(f"Observed: {val} {unit} (Confidence: {conf})", bold_prefix="• [Visual Telemetry]:"))
 
         # Section 4: Calculations
         body_xml.append(xml_heading(t["sec4_heading"], level=1))
@@ -586,9 +735,14 @@ class SovereignReportGenerator:
 
         if calcs:
             for idx, c in enumerate(calcs):
-                desc = c.get("description") or c.get("calculation_type") or "Math check"
-                res_str = f"{c.get('result')} {c.get('units', '')} {t['sec4_verified']}"
-                body_xml.append(xml_para(res_str, bold_prefix=f"[{idx+1}] {desc}:"))
+                c_type = c.get("calculation_type") or "Math check"
+                inputs = c.get("inputs", {})
+                res = c.get("result")
+                units = c.get("units", "")
+                c_desc = localize_calculation_description(c_type, inputs, res, units, locale=lang)
+                prefix_label = f"[{idx+1}] ಲೆಕ್ಕಾಚಾರ {idx+1}:" if lang == "kn" else (f"[{idx+1}] गणना {idx+1}:" if lang == "hi" else f"[{idx+1}] {c_type}:")
+                res_str = f"{c_desc} {t['sec4_verified']}"
+                body_xml.append(xml_para(res_str, bold_prefix=prefix_label))
         else:
             body_xml.append(xml_para(t["sec4_no_calcs"]))
 
@@ -600,10 +754,10 @@ class SovereignReportGenerator:
 
         if p_decisions:
             for d in p_decisions:
-                action_name = d.get("tool") or d.get("action", "inspect")
+                act = d.get("tool") or d.get("action", "inspect")
                 dec = d.get("decision") or ("ALLOW" if d.get("allowed") is True else "DENY")
-                reason = d.get("reason") or "Enforced by local policy rules."
-                body_xml.append(xml_para(f"DECISION = {dec}. Reason: {reason}", bold_prefix=f"• Action '{action_name}':"))
+                pol_msg = localize_policy_decision(act, dec, d.get("reason") or "", policy_id=d.get("policy_id"), locale=lang)
+                body_xml.append(xml_para(pol_msg, bold_prefix="•"))
         else:
             body_xml.append(xml_para(t["sec5_default_deny"]))
 
@@ -615,10 +769,13 @@ class SovereignReportGenerator:
 
         if checks:
             for chk in checks:
-                ctype = chk.get("check_type", "CHECK")
-                cstatus = chk.get("status", "VERIFIED")
-                cdesc = chk.get("description", "")
-                body_xml.append(xml_para(f"{cstatus} ― {cdesc}", bold_prefix=f"[{ctype}]:"))
+                raw_type = chk.get("check_type", "CHECK")
+                raw_status = chk.get("status", "VERIFIED")
+                raw_desc = chk.get("description", "")
+                name = CHECK_NAME_TRANSLATIONS.get(raw_type, {}).get(lang, raw_type)
+                status = VERDICT_TRANSLATIONS.get(raw_status, {}).get(lang, raw_status)
+                desc = translate_text(raw_desc, locale=lang, fallback=raw_desc)
+                body_xml.append(xml_para(f"{status} ― {desc}", bold_prefix=f"[{name}]:"))
         else:
             body_xml.append(xml_para(t["sec6_checks_exec"]))
 
@@ -629,10 +786,23 @@ class SovereignReportGenerator:
 
         # Section 8: Formal Sign-off Block
         body_xml.append(xml_heading(t["sig_heading"], level=1))
-        body_xml.append(xml_para("MRPL Lead Operations Engineer (PE-84209)", bold_prefix=f"{t['sig_approved']}:"))
-        body_xml.append(xml_para("PASSED & DIGITALLY VERIFIED", bold_prefix=f"{t['sig_status']}:"))
+        if lang == "kn":
+            appr_val = "MRPL ಮುಖ್ಯ ಕಾರ್ಯಾಚರಣಾ ಇಂಜಿನಿಯರ್ (PE-84209)"
+            stat_val = "ಉತ್ತೀರ್ಣ ಮತ್ತು ಡಿಜಿಟಲ್ ಪರಿಶೀಲಿಸಲಾಗಿದೆ"
+            clear_val = "ಆಂತರಿಕ ಸಾರ್ವಭೌಮ ಎನ್‌ಕ್ಲೇವ್ (ಆನ್-ಪ್ರೆಮಿಸಸ್)"
+        elif lang == "hi":
+            appr_val = "MRPL मुख्य परिचालन इंजीनियर (PE-84209)"
+            stat_val = "उत्तीर्ण एवं डिजिटल रूप से सत्यापित"
+            clear_val = "आंतरिक संप्रभु एन्क्लेव (ऑन-ಪ್ರಿಮೈಸಸ್)"
+        else:
+            appr_val = "MRPL Lead Operations Engineer (PE-84209)"
+            stat_val = "PASSED & DIGITALLY VERIFIED"
+            clear_val = f"{classification} ENCLAVE"
+
+        body_xml.append(xml_para(appr_val, bold_prefix=f"{t['sig_approved']}:"))
+        body_xml.append(xml_para(stat_val, bold_prefix=f"{t['sig_status']}:"))
         body_xml.append(xml_para(ist_str, bold_prefix=f"{t['sig_date']}:"))
-        body_xml.append(xml_para(f"{classification} ENCLAVE", bold_prefix=f"{t['sig_clearance']}:"))
+        body_xml.append(xml_para(clear_val, bold_prefix=f"{t['sig_clearance']}:"))
 
         content_document_xml = (
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'

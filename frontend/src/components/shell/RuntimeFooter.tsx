@@ -60,7 +60,7 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
             flexWrap: "nowrap",
             overflowX: "auto",
           }}
-          title="Click to view full sovereign runtime diagnostics"
+          title={language === "hi" ? "पूर्ण संप्रभु रनटाइम डायग्नोस्टिक्स देखने के लिए क्लिक करें" : language === "kn" ? "ಸಂಪೂರ್ಣ ಸಾರ್ವಭೌಮ ರನ್‌ಟೈಮ್ ಡಯಾಗ್ನೋಸ್ಟಿಕ್ಸ್ ನೋಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ" : "Click to view full sovereign runtime diagnostics"}
         >
           {/* Reasoning */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>

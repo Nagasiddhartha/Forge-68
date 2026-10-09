@@ -413,15 +413,20 @@ def generate_mrpl_approval_docx(
     body_elements.append(heading(sec4_title, level=1))
     chk_rows = [chk_header]
     if checks:
+        from app.core.localization import CHECK_NAME_TRANSLATIONS, VERDICT_TRANSLATIONS, translate_text
         pass_lbl = "PASS (ಉತ್ತೀರ್ಣ)" if loc == "kn" else ("PASS (उत्तीर्ण)" if loc == "hi" else "PASS")
         fail_lbl = "FAIL (ವಿಫಲ)" if loc == "kn" else ("FAIL (विफल)" if loc == "hi" else "FAIL")
         for chk in checks:
             st = str(chk.get("status", "PASS")).upper()
-            status_text = pass_lbl if st == "PASS" else (fail_lbl if st == "FAIL" else st)
+            status_text = pass_lbl if st in ("PASS", "VERIFIED") else (fail_lbl if st in ("FAIL", "FAILED") else st)
+            raw_type = str(chk.get("check_type", "CHECK"))
+            raw_desc = str(chk.get("description", "Verified deterministically"))
+            t_name = CHECK_NAME_TRANSLATIONS.get(raw_type, {}).get(loc, raw_type)
+            t_desc = translate_text(raw_desc, locale=loc, fallback=raw_desc)
             chk_rows.append([
-                str(chk.get("check_type", "CHECK")),
+                t_name,
                 status_text,
-                str(chk.get("description", "Verified deterministically")),
+                t_desc,
             ])
     else:
         if loc == "kn":

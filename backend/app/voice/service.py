@@ -582,11 +582,11 @@ class SovereignVoiceService:
             except Exception as exc:
                 logger.error(f"Meta MMS Kannada synthesis error: {exc}", exc_info=True)
                 return VoiceSynthesizeResponse(
-                    status="ERROR",
+                    status="ENGINE_UNAVAILABLE",
                     engine="mms_tts",
                     language="kn",
                     duration_ms=round((time.perf_counter() - t_synth_start) * 1000.0, 2),
-                    error_message=f"MMS Kannada synthesis error: {str(exc)}",
+                    error_message=f"Local MMS Kannada voice engine error: {str(exc)}",
                 )
 
         # 2. English & Hindi Synthesis: Piper ONNX
@@ -618,11 +618,11 @@ class SovereignVoiceService:
                     # If English fails on Piper, fall back to pyttsx3
                     if request.language != "en":
                         return VoiceSynthesizeResponse(
-                            status="ERROR",
+                            status="ENGINE_UNAVAILABLE",
                             engine="piper",
                             language=request.language,
                             duration_ms=round((time.perf_counter() - t_synth_start) * 1000.0, 2),
-                            error_message=f"Piper synthesis error: {str(exc)}",
+                            error_message=f"Local Piper voice engine error: {str(exc)}",
                         )
 
         # 3. Fallback for English: Windows SAPI5 pyttsx3
@@ -657,11 +657,11 @@ class SovereignVoiceService:
                 )
             except Exception as exc:
                 return VoiceSynthesizeResponse(
-                    status="ERROR",
+                    status="ENGINE_UNAVAILABLE",
                     engine="pyttsx3",
                     language="en",
                     duration_ms=round((time.perf_counter() - t_synth_start) * 1000.0, 2),
-                    error_message=f"Host TTS fallback failed: {str(exc)}",
+                    error_message=f"Host TTS fallback engine failed: {str(exc)}",
                 )
 
         return VoiceSynthesizeResponse(

@@ -305,6 +305,11 @@ class AgentReasoningService:
         if plan.action == AgentActionType.DIRECT:
             final_answer = plan.direct_answer or plan.reasoning or ""
             if not final_answer.strip():
+                lang_dir = ""
+                if target_lang == "kn":
+                    lang_dir = " You MUST respond entirely in Kannada (ಕನ್ನಡ). All explanations and descriptions must be in Kannada script."
+                elif target_lang == "hi":
+                    lang_dir = " You MUST respond entirely in Hindi (हिंदी). All explanations and descriptions must be in Hindi script."
                 direct_req = ModelRequest(
                     messages=[
                         ModelMessage(
@@ -312,6 +317,7 @@ class AgentReasoningService:
                             content=(
                                 "You are the reasoning engine of FORGE Sovereign Industrial AI Control Plane. "
                                 "Provide a direct, accurate, and concise industrial engineering response."
+                                + lang_dir
                             ),
                         ),
                         ModelMessage(role="user", content=request.query),
@@ -332,6 +338,7 @@ class AgentReasoningService:
                 requester_role=request.role,
                 requester_classification=request.classification,
                 draft_response=final_answer,
+                locale=target_lang,
             )
             verification_duration_ms = (time.perf_counter() - t_verif_start) * 1000.0
 
@@ -428,6 +435,12 @@ class AgentReasoningService:
                 record_agent_trace(AgentEventType.KNOWLEDGE_RETRIEVAL_COMPLETED, {"query": kq.query, "retrieved_count": len(results)})
 
                 for evd in results:
+                    if target_lang in ("kn", "hi"):
+                        from app.reports.service import EVIDENCE_CHUNK_LOCALIZATION
+                        for k, v in EVIDENCE_CHUNK_LOCALIZATION.items():
+                            if k in (evd.source_reference or "") or k in (evd.filename or "") or k in (evd.retrieved_text or ""):
+                                evd.retrieved_text = v.get(target_lang, evd.retrieved_text)
+                                break
                     evidence_set.add_knowledge_evidence(evd)
                     logger.info("[EVIDENCE_CREATED] Knowledge Evidence ID: '%s' | Source: '%s'", evd.evidence_id, evd.source_reference)
                     record_agent_trace(AgentEventType.EVIDENCE_CREATED, {"evidence_id": evd.evidence_id, "source_reference": evd.source_reference})
@@ -515,12 +528,18 @@ class AgentReasoningService:
                         exec_result.data if isinstance(exec_result.data, dict) else {"data": exec_result.data}
                     )
 
+                tool_retrieved_text = json.dumps(exec_result.data) if exec_result.data else None
+                if target_lang in ("kn", "hi") and "equipment_history" in tc.tool_name:
+                    from app.reports.service import EVIDENCE_CHUNK_LOCALIZATION
+                    tool_retrieved_text = EVIDENCE_CHUNK_LOCALIZATION["equipment_history"].get(target_lang, tool_retrieved_text)
+
                 tool_evd = EvidenceRecord(
                     source_type="LOCAL_INDUSTRIAL_TOOL",
                     source_reference=f"tool:{tc.tool_name}",
                     tool_name=tc.tool_name,
                     tool_execution_id=exec_result.event_id,
                     retrieved_data=exec_result.data,
+                    retrieved_text=tool_retrieved_text,
                     classification=request.classification,
                 )
                 evidence_set.add_tool_evidence(tool_evd)
@@ -533,7 +552,7 @@ class AgentReasoningService:
         evidence_set.detected_conflicts = conflicts
 
         # 9. Deterministic Industrial Calculations
-        calculations = self._resolve_calculations(request.query, plan, evidence_set)
+        calculations = self._resolve_calculations(request.query, plan, evidence_set, locale=target_lang)
 
         # 10. Independent Verification Engine Execution
         logger.info("[VERIFICATION_STARTED] Commencing independent deterministic verification checks.")
@@ -550,6 +569,7 @@ class AgentReasoningService:
             requester_role=request.role,
             requester_classification=request.classification,
             calculations=calculations,
+            locale=target_lang,
         )
         verification_duration_ms = (time.perf_counter() - t_vf_start) * 1000.0
 
@@ -586,9 +606,17 @@ class AgentReasoningService:
             )
             logger.info("[AGENT_FINAL_RESPONSE] Blocked by policy: %s", first_denial_reason)
             record_agent_trace(AgentEventType.AGENT_FINAL_RESPONSE, {"status": AgentQueryStatus.POLICY_DENIED.value, "reason": first_denial_reason})
+            
+            if target_lang == "kn":
+                denial_answer = "ಸಾರ್ವಭೌಮ ಶೂನ್ಯ-ವಿಶ್ವಾಸ ನೀತಿಯಿಂದ ಕಾರ್ಯಗತಗೊಳಿಸುವಿಕೆಯನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ: ಅನಧಿಕೃತ ಸಾಧನ ನಿಯಂತ್ರಣ ಅಥವಾ ಅನುಮತಿ ಮಿತಿ ಮೀರಿದೆ."
+            elif target_lang == "hi":
+                denial_answer = "संप्रभु शून्य-विश्वास नीति द्वारा निष्पादन अवरुद्ध: अनधिकृत उपकरण संचालन अथवा सुरक्षा सीमा पार।"
+            else:
+                denial_answer = f"Execution blocked by sovereign policy: {first_denial_reason}"
+
             return AgentQueryResponse(
                 query=request.query,
-                final_answer=f"Execution blocked by sovereign policy: {first_denial_reason}",
+                final_answer=denial_answer,
                 status=AgentQueryStatus.POLICY_DENIED,
                 language=target_lang,
                 plan=plan,
@@ -621,9 +649,15 @@ class AgentReasoningService:
 
         if has_tool_error and evidence_set.is_empty:
             logger.error("[AGENT_FINAL_RESPONSE] Tool execution error occurred with no evidence.")
+            tool_err_ans = "Industrial tool execution failed."
+            if target_lang == "kn":
+                tool_err_ans = "ಕೈಗಾರಿಕಾ ಉಪಕರಣ ಕಾರ್ಯಗತಗೊಳಿಸುವಿಕೆ ವಿಫಲವಾಗಿದೆ."
+            elif target_lang == "hi":
+                tool_err_ans = "औद्योगिक उपकरण निष्पादन विफल रहा।"
+
             return AgentQueryResponse(
                 query=request.query,
-                final_answer="Industrial tool execution failed.",
+                final_answer=tool_err_ans,
                 status=AgentQueryStatus.TOOL_ERROR,
                 plan=plan,
                 agent_plan=plan,
@@ -694,18 +728,22 @@ class AgentReasoningService:
         calculations_formatted = "\n".join(calc_lines) if calc_lines else "None performed."
 
         target_language_instruction = ""
-        locale = (request.locale or "en").lower()
+        locale = (request.locale or request.language or "en").lower()
         if locale == "kn":
             target_language_instruction = (
-                "\n=== TARGET LANGUAGE INSTRUCTION ===\n"
-                "Synthesize the response in Kannada (ಕನ್ನಡ). Use clear, professional engineering terms. "
-                "Keep equipment identifiers (e.g., R-204, P-201, E-301), units (bar, mm, °C), and metric numbers in English."
+                "\n=== TARGET LANGUAGE INSTRUCTION (MANDATORY SOVEREIGN GOVERNANCE) ===\n"
+                "CRITICAL GOVERNANCE MANDATE: You MUST synthesize the entire response in Kannada (ಕನ್ನಡ ಲಿಪಿ). "
+                "Every explanation, paragraph, heading, diagnostic observation, and engineering recommendation MUST be written entirely in Kannada script. "
+                "Do NOT output English sentences or English explanations. "
+                "Only retain specific equipment identifiers (e.g., R-204, P-201, E-301), and standard engineering units (bar, mm, °C) in English."
             )
         elif locale == "hi":
             target_language_instruction = (
-                "\n=== TARGET LANGUAGE INSTRUCTION ===\n"
-                "Synthesize the response in Hindi (हिंदी). Use clear, professional engineering terms. "
-                "Keep equipment identifiers (e.g., R-204, P-201, E-301), units (bar, mm, °C), and metric numbers in English."
+                "\n=== TARGET LANGUAGE INSTRUCTION (MANDATORY SOVEREIGN GOVERNANCE) ===\n"
+                "CRITICAL GOVERNANCE MANDATE: You MUST synthesize the entire response in Hindi (हिंदी लिपि). "
+                "Every explanation, paragraph, heading, diagnostic observation, and engineering recommendation MUST be written entirely in Hindi script. "
+                "Do NOT output English sentences or English explanations. "
+                "Only retain specific equipment identifiers (e.g., R-204, P-201, E-301), and standard engineering units (bar, mm, °C) in English."
             )
 
         if is_offline_fallback:
@@ -829,6 +867,7 @@ class AgentReasoningService:
         query: str,
         plan: AgentPlan,
         evidence_set: EvidenceSet,
+        locale: str = "en",
     ) -> List[CalculationResult]:
         """Execute calculations requested in the plan or deterministically extract parameters from query."""
         results: List[CalculationResult] = []
@@ -840,6 +879,7 @@ class AgentReasoningService:
                     calculation=calc_req.calculation,
                     inputs=calc_req.inputs,
                     evidence_ids=calc_req.evidence_ids or [e.evidence_id for e in evidence_set.all_evidence],
+                    locale=locale,
                 )
                 results.append(res)
             except Exception as exc:
@@ -872,6 +912,7 @@ class AgentReasoningService:
                             "normal_operating_pressure_bar": float(norm_m.group(1)),
                         },
                         evidence_ids=all_evd_ids,
+                        locale=locale,
                     )
                     results.append(res)
                 except Exception as exc:
@@ -896,6 +937,7 @@ class AgentReasoningService:
                             "observed_pressure_bar": float(obs_m.group(1)),
                         },
                         evidence_ids=all_evd_ids,
+                        locale=locale,
                     )
                     results.append(res)
                 except Exception as exc:
@@ -916,6 +958,7 @@ class AgentReasoningService:
                             "projection_years": float(years_m.group(1)),
                         },
                         evidence_ids=all_evd_ids,
+                        locale=locale,
                     )
                     results.append(res)
                 except Exception as exc:

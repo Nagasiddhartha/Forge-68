@@ -679,6 +679,75 @@ async def synthesize_voice(
     return await voice_service.synthesize_speech(request)
 
 
+# =========================================================================
+# Sovereign OCR & Multimodal Document/Photo Extraction APIs
+# =========================================================================
+
+from app.ocr import OcrExtractResult, ocr_service
+
+
+@app.get("/api/v1/ocr/status", tags=["OCR"])
+async def get_ocr_status() -> Dict[str, Any]:
+    """Inspect status of local, on-premise document and photo OCR engine."""
+    return {
+        "status": "ONLINE" if ocr_service.is_available() else "UNAVAILABLE",
+        "engine": "Tesseract-5 Sovereign Enclave",
+        "supported_languages": ["eng", "hin", "kan"],
+        "supported_formats": [".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".pdf"],
+        "air_gapped": True,
+        "vram_profile": "0MB GPU VRAM (System CPU / Hardware Accelerated)",
+    }
+
+
+@app.post("/api/v1/ocr/extract", response_model=OcrExtractResult, tags=["OCR"])
+async def extract_ocr_text(
+    file: UploadFile = File(...),
+    language: str = Form("eng"),
+) -> OcrExtractResult:
+    """Extract text from physical engineering documents or photo captures on-premise."""
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File exceeds maximum allowable 50MB boundary.",
+        )
+    filename = file.filename or "upload.png"
+    ext = Path(filename).suffix.lower()
+    if ext == ".pdf":
+        return ocr_service.extract_from_pdf_bytes(content, filename=filename, lang=language)
+    return ocr_service.extract_from_image_bytes(content, filename=filename, lang=language)
+
+
+@app.post("/api/v1/ocr/ingest", tags=["OCR"])
+async def extract_and_ingest_ocr(
+    file: UploadFile = File(...),
+    language: str = Form("eng"),
+    classification: str = Form("INTERNAL"),
+    equipment_id: Optional[str] = Form(None),
+) -> Dict[str, Any]:
+    """Extract text from document/photo and index it into the Knowledge Fabric for QA."""
+    content = await file.read()
+    filename = file.filename or "upload.png"
+    ext = Path(filename).suffix.lower()
+    if ext == ".pdf":
+        extract_res = ocr_service.extract_from_pdf_bytes(content, filename=filename, lang=language)
+    else:
+        extract_res = ocr_service.extract_from_image_bytes(content, filename=filename, lang=language)
+
+    eq_ids = [equipment_id.strip()] if equipment_id and equipment_id.strip() else []
+    ingest_result = await ocr_service.ingest_to_knowledge_fabric(
+        extract_result=extract_res,
+        classification=classification,
+        equipment_ids=eq_ids,
+    )
+    return {
+        "status": "success",
+        "extraction": extract_res.model_dump(),
+        "ingestion": ingest_result,
+    }
+
+
+
 
 
 

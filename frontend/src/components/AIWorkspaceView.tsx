@@ -29,6 +29,7 @@ import {
 import { ROLE_PERMISSIONS, getLocalizedRolePermission } from "@/lib/permissions";
 import { useTranslation } from "@/lib/i18n";
 import { ReadAloudButton } from "@/components/ReadAloudButton";
+import { OcrModal } from "@/components/OcrModal";
 
 interface AIWorkspaceViewProps {
   role: Role;
@@ -70,6 +71,7 @@ export function AIWorkspaceView({
   const [isResetting, setIsResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [isExportingReport, setIsExportingReport] = useState<boolean>(false);
+  const [isOcrOpen, setIsOcrOpen] = useState<boolean>(false);
 
   // Sync response when lastResponse prop changes
   const [prevLastResponse, setPrevLastResponse] = useState<AgentQueryResponse | null>(lastResponse);
@@ -689,6 +691,15 @@ export function AIWorkspaceView({
               {t("consoleAnalyzeImageBtn")}
             </button>
 
+            <button
+              onClick={() => setIsOcrOpen(true)}
+              type="button"
+              className="btn-brass-secondary"
+              style={{ fontSize: "12px", padding: "5px 12px" }}
+            >
+              {t("ocrButton")}
+            </button>
+
             {/* Multilingual Selector */}
             <div
               style={{
@@ -702,7 +713,7 @@ export function AIWorkspaceView({
               }}
             >
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginRight: 2 }}>
-                Lang:
+                {t("consoleLangLabel")}
               </span>
               {(["en", "hi", "kn"] as const).map((lng) => (
                 <button
@@ -957,13 +968,13 @@ export function AIWorkspaceView({
                     </span>
                   </div>
                   <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.15 }}>
-                    {query || "Conversational Inquiry"}
+                    {query || t("convTitle")}
                   </h2>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-                    Status
+                    {t("statusLabel")}
                   </span>
                   <VerdictBadge verdict={response?.verification?.status === "VERIFIED" ? "VERIFIED" : response?.status === "DIRECT_ANSWER" ? "VERIFIED" : "REVIEW_REQUIRED"} />
                 </div>
@@ -996,25 +1007,25 @@ export function AIWorkspaceView({
                 }}
               >
                 <div>
-                  <span style={{ color: "var(--ink-3)", display: "block" }}>LATENCY</span>
+                  <span style={{ color: "var(--ink-3)", display: "block" }}>{t("latencyLabel")}</span>
                   <strong style={{ color: "var(--ink)", fontSize: "20px" }}>
-                    {(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms) ? (response?.latency_ms ?? (response as any)?.timing?.total_duration_ms).toFixed(0) : "N/A"} ms
+                    {(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms) ? (response?.latency_ms ?? (response as any)?.timing?.total_duration_ms).toFixed(0) : "N/A"} {t("unitMs")}
                   </strong>
-                  <span style={{ color: "var(--ink-3)", display: "block", fontSize: "11px", marginTop: 2 }}>Local on-premise execution</span>
+                  <span style={{ color: "var(--ink-3)", display: "block", fontSize: "11px", marginTop: 2 }}>{t("latencySubtext")}</span>
                 </div>
                 <div>
-                  <span style={{ color: "var(--ink-3)", display: "block" }}>REASONING MODEL</span>
+                  <span style={{ color: "var(--ink-3)", display: "block" }}>{t("reasoningModelLabel")}</span>
                   <strong style={{ color: "var(--sage)", fontSize: "20px" }}>
                     {response?.model_name || "Qwen3 8B"}
                   </strong>
-                  <span style={{ color: "var(--ink-3)", display: "block", fontSize: "11px", marginTop: 2 }}>Strictly sovereign / zero cloud egress</span>
+                  <span style={{ color: "var(--ink-3)", display: "block", fontSize: "11px", marginTop: 2 }}>{t("reasoningModelSubtext")}</span>
                 </div>
                 <div>
-                  <span style={{ color: "var(--ink-3)", display: "block" }}>PLANT ACTUATION</span>
+                  <span style={{ color: "var(--ink-3)", display: "block" }}>{t("plantActuationLabel")}</span>
                   <strong style={{ color: "var(--brass)", fontSize: "20px" }}>
-                    INERT (0 TOOLS)
+                    {language === "kn" ? "ನಿಷ್ಕ್ರಿಯ (0 ಉಪಕರಣಗಳು)" : language === "hi" ? "निष्क्रिय (0 उपकरण)" : "INERT (0 TOOLS)"}
                   </strong>
-                  <span style={{ color: "var(--ink-3)", display: "block", fontSize: "11px", marginTop: 2 }}>No physical plant mutation triggered</span>
+                  <span style={{ color: "var(--ink-3)", display: "block", fontSize: "11px", marginTop: 2 }}>{t("plantActuationSubtext")}</span>
                 </div>
               </div>
             </div>
@@ -1039,7 +1050,7 @@ export function AIWorkspaceView({
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-                    Policy Decision
+                    {t("policyDecisionLabel")}
                   </span>
                   <VerdictBadge verdict="ACTION_BLOCKED" />
                 </div>
@@ -1066,21 +1077,21 @@ export function AIWorkspaceView({
                 {/* Flow: REQUEST -> PERMISSION CHECK -> BLOCKED */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto 1fr", alignItems: "center", gap: 12, background: "var(--bg-0)", padding: "14px 18px", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)" }}>STEP 1</div>
-                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--ink)", marginTop: 2 }}>REQUEST</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)" }}>{language === "hi" ? "चरण 1" : language === "kn" ? "ಹಂತ 1" : "STEP 1"}</div>
+                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--ink)", marginTop: 2 }}>{language === "hi" ? "अनुरोध" : language === "kn" ? "ವಿನಂತಿ" : "REQUEST"}</div>
                     <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginTop: 2 }}>calibrate_prv</div>
                   </div>
                   <div style={{ color: "var(--brass)", fontSize: "18px" }}>→</div>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)" }}>STEP 2</div>
-                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--brass)", marginTop: 2 }}>PERMISSION CHECK</div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginTop: 2 }}>Role: {role}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)" }}>{language === "hi" ? "चरण 2" : language === "kn" ? "ಹಂತ 2" : "STEP 2"}</div>
+                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--brass)", marginTop: 2 }}>{language === "hi" ? "अनुमति जांच" : language === "kn" ? "ಅನುಮತಿ ಪರಿಶೀಲನೆ" : "PERMISSION CHECK"}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginTop: 2 }}>{language === "hi" ? "भूमिका:" : language === "kn" ? "ಪಾತ್ರ:" : "Role:"} {role}</div>
                   </div>
                   <div style={{ color: "var(--coral)", fontSize: "18px" }}>→</div>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--coral-text)" }}>STEP 3</div>
-                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--coral-text)", marginTop: 2 }}>BLOCKED</div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", marginTop: 2 }}>0 Tools Executed</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--coral-text)" }}>{language === "hi" ? "चरण 3" : language === "kn" ? "ಹಂತ 3" : "STEP 3"}</div>
+                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--coral-text)", marginTop: 2 }}>{language === "hi" ? "अवरुद्ध" : language === "kn" ? "ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ" : "BLOCKED"}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", marginTop: 2 }}>{language === "hi" ? "0 उपकरण निष्पादित" : language === "kn" ? "0 ಪರಿಕರಗಳು ಚಾಲಿತ" : "0 Tools Executed"}</div>
                   </div>
                 </div>
 
@@ -1107,14 +1118,14 @@ export function AIWorkspaceView({
                 <div style={{ background: "var(--bg-0)", padding: "12px 16px", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", color: "var(--ink-3)" }}>{t("case03MetricGateway")}</span>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "20px", color: "var(--coral-text)", fontWeight: 600, marginTop: 4 }}>
-                    DENIED
+                    {language === "hi" ? "अस्वीकृत" : language === "kn" ? "ನಿರಾಕರಿಸಲಾಗಿದೆ" : "DENIED"}
                   </div>
                   <span style={{ fontFamily: "var(--font-ui)", fontSize: "11.5px", color: "var(--ink-3)" }}>{t("case03MetricDeniedSub")}</span>
                 </div>
                 <div style={{ background: "var(--bg-0)", padding: "12px 16px", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", color: "var(--ink-3)" }}>{t("case03MetricAudit")}</span>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "20px", color: "var(--brass)", fontWeight: 600, marginTop: 4 }}>
-                    LOGGED
+                    {language === "hi" ? "दर्ज" : language === "kn" ? "ದಾಖಲಿಸಲಾಗಿದೆ" : "LOGGED"}
                   </div>
                   <span style={{ fontFamily: "var(--font-ui)", fontSize: "11.5px", color: "var(--ink-3)" }}>{t("case03MetricLoggedSub")}</span>
                 </div>
@@ -1141,7 +1152,7 @@ export function AIWorkspaceView({
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-                    Security Result
+                    {t("securityResultLabel")}
                   </span>
                   <VerdictBadge verdict="QUARANTINED" />
                 </div>
@@ -1171,21 +1182,21 @@ export function AIWorkspaceView({
                 {/* Visual Flow */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto 1fr", alignItems: "center", gap: 12, background: "var(--bg-0)", padding: "14px 18px", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)" }}>STEP 1</div>
-                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--ink)", marginTop: 2 }}>DOCUMENT INGESTED</div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginTop: 2 }}>Untrusted bulletin</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)" }}>{language === "hi" ? "चरण 1" : language === "kn" ? "ಹಂತ 1" : "STEP 1"}</div>
+                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--ink)", marginTop: 2 }}>{language === "hi" ? "दस्तावेज़ प्राप्त" : language === "kn" ? "ದಾಖಲೆ ಸ್ವೀಕರಿಸಲಾಗಿದೆ" : "DOCUMENT INGESTED"}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginTop: 2 }}>{language === "hi" ? "अविश्वसनीय बुलेटिन" : language === "kn" ? "ಅವಿಶ್ವಾಸನೀಯ ಬುಲೆಟಿನ್" : "Untrusted bulletin"}</div>
                   </div>
                   <div style={{ color: "var(--brass)", fontSize: "18px" }}>→</div>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)" }}>STEP 2</div>
-                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--pewter)", marginTop: 2 }}>INJECTION DETECTED</div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginTop: 2 }}>Data ≠ Authority</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--ink-3)" }}>{language === "hi" ? "चरण 2" : language === "kn" ? "ಹಂತ 2" : "STEP 2"}</div>
+                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--pewter)", marginTop: 2 }}>{language === "hi" ? "इंजेक्शन का पता चला" : language === "kn" ? "ಇಂಜೆಕ್ಷನ್ ಪತ್ತೆಯಾಗಿದೆ" : "INJECTION DETECTED"}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginTop: 2 }}>{language === "hi" ? "डेटा ≠ अधिकार" : language === "kn" ? "ಡೇಟಾ ≠ ಅಧಿಕಾರ" : "Data ≠ Authority"}</div>
                   </div>
                   <div style={{ color: "var(--sage)", fontSize: "18px" }}>→</div>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--sage)" }}>STEP 3</div>
-                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--sage)", marginTop: 2 }}>QUARANTINED</div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", marginTop: 2 }}>0 Tools Granted</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--sage)" }}>{language === "hi" ? "चरण 3" : language === "kn" ? "ಹಂತ 3" : "STEP 3"}</div>
+                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--sage)", marginTop: 2 }}>{language === "hi" ? "संगरोधित" : language === "kn" ? "ಪ್ರತ್ಯೇಕಿಸಲಾಗಿದೆ" : "QUARANTINED"}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", marginTop: 2 }}>{language === "hi" ? "0 उपकरण स्वीकृत" : language === "kn" ? "0 ಉಪಕರಣಗಳನ್ನು ನೀಡಲಾಗಿದೆ" : "0 Tools Granted"}</div>
                   </div>
                 </div>
               </div>
@@ -1202,7 +1213,7 @@ export function AIWorkspaceView({
                 <div style={{ background: "var(--bg-0)", padding: "12px 16px", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", color: "var(--ink-3)" }}>{t("case04MetricBoundary")}</span>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "20px", color: "var(--pewter)", fontWeight: 600, marginTop: 4 }}>
-                    QUARANTINED
+                    {language === "hi" ? "संगरोधित" : language === "kn" ? "ಪ್ರತ್ಯೇಕಿಸಲಾಗಿದೆ" : "QUARANTINED"}
                   </div>
                   <span style={{ fontFamily: "var(--font-ui)", fontSize: "11.5px", color: "var(--ink-3)" }}>{t("case04MetricQuarantinedSub")}</span>
                 </div>
@@ -1237,7 +1248,7 @@ export function AIWorkspaceView({
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-                    Independent Verdict
+                    {t("independentVerdictLabel")}
                   </span>
                   <VerdictBadge verdict="VERIFIED" />
                 </div>
@@ -1456,27 +1467,27 @@ export function AIWorkspaceView({
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 14px", fontSize: "12px", fontFamily: "var(--font-ui)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckTrace")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckComplete")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckPolicy")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckAccess")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckValues")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckMath")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                   </div>
 
@@ -1508,7 +1519,7 @@ export function AIWorkspaceView({
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-                    Independent Verdict
+                    {t("independentVerdictLabel")}
                   </span>
                   <VerdictBadge verdict={currentVerdict} />
                 </div>
@@ -1739,27 +1750,27 @@ export function AIWorkspaceView({
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 14px", fontSize: "12px", fontFamily: "var(--font-ui)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckTrace")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckComplete")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckPolicy")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckAccess")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckValues")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--ink-2)" }}>{t("case01CheckMath")}</span>
-                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>PASS</span>
+                      <span style={{ color: "var(--sage)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{t("verificationPassBadge")}</span>
                     </div>
                   </div>
 
@@ -1791,7 +1802,7 @@ export function AIWorkspaceView({
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-                    Verdict
+                    {t("missionVerdictLabel")}
                   </span>
                   <VerdictBadge verdict={currentVerdict} />
                 </div>
@@ -1804,14 +1815,14 @@ export function AIWorkspaceView({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
                   <div>
                     <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--brass)", fontWeight: 500, marginBottom: 6 }}>
-                      {response?.final_answer?.slice(0, 180) || "Mission completed successfully."}
+                      {response?.final_answer?.slice(0, 180) || (language === "kn" ? "ಕಾರ್ಯಾಚರಣೆ ಯಶಸ್ವಿಯಾಗಿ ಪೂರ್ಣಗೊಂಡಿದೆ." : language === "hi" ? "मिशन सफलतापूर्वक पूरा हुआ।" : "Mission completed successfully.")}
                     </div>
                     <div style={{ fontFamily: "var(--font-ui)", fontSize: "14.5px", color: "var(--ink)", fontWeight: 500 }}>
-                      Recommendation: {(response as DemoRunResponse)?.dossier?.finding_summary || "Review retrieved evidence bundle and verification record."}
+                      {t("missionRecommendation")}: {(response as DemoRunResponse)?.dossier?.finding_summary || (language === "kn" ? "ಹಿಂಪಡೆದ ಸಾಕ್ಷ್ಯಾಧಾರ ಕಟ್ಟು ಮತ್ತು ಪರಿಶೀಲನಾ ದಾಖಲೆಯನ್ನು ಪರಿಶೀಲಿಸಿ." : language === "hi" ? "पुನರ್प्राप्त साक्ष्य बंडल और सत्यापन रिकॉर्ड की समीक्षा करें।" : "Review retrieved evidence bundle and verification record.")}
                     </div>
                   </div>
                   <ReadAloudButton
-                    text={`${response?.final_answer || "Mission completed."} Recommendation: ${(response as DemoRunResponse)?.dossier?.finding_summary || "Review retrieved evidence bundle and verification record."}`}
+                    text={`${response?.final_answer || (language === "kn" ? "ಕಾರ್ಯಾಚರಣೆ ಪೂರ್ಣಗೊಂಡಿದೆ." : language === "hi" ? "मिशन पूरा हुआ।" : "Mission completed.")} ${t("missionRecommendation")}: ${(response as DemoRunResponse)?.dossier?.finding_summary || (language === "kn" ? "ಹಿಂಪಡೆದ ಸಾಕ್ಷ್ಯಾಧಾರ ಕಟ್ಟು ಮತ್ತು ಪರಿಶೀಲನಾ ದಾಖಲೆಯನ್ನು ಪರಿಶೀಲಿಸಿ." : language === "hi" ? "पुನರ್प्राप्त साक्ष्य बंडल और सत्यापन रिकॉर्ड की समीक्षा करें।" : "Review retrieved evidence bundle and verification record.")}`}
                   />
                 </div>
               </div>
@@ -1829,32 +1840,32 @@ export function AIWorkspaceView({
                 }}
               >
                 <div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>LATENCY</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t("latencyLabel")}</span>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--ink)", fontWeight: 600, marginTop: 4 }}>
-                    {(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms) ? `${(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms).toFixed(0)}` : "N/A"} <span style={{ fontSize: "14px", fontWeight: 400 }}>ms</span>
+                    {(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms) ? `${(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms).toFixed(0)}` : "N/A"} <span style={{ fontSize: "14px", fontWeight: 400 }}>{t("unitMs")}</span>
                   </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>Local sovereign runtime</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t("localSovereignRuntimeLabel")}</span>
                 </div>
                 <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>EVIDENCE</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t("evidenceLabel")}</span>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
-                    {totalEvidenceCount} <span style={{ fontSize: "14px", fontWeight: 400 }}>items</span>
+                    {totalEvidenceCount} <span style={{ fontSize: "14px", fontWeight: 400 }}>{t("evidenceItemLabel")}</span>
                   </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>Retrieved artifacts</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t("retrievedArtifactsLabel")}</span>
                 </div>
                 <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>POLICY DECISION</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t("policyDecisionLabel")}</span>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: (response?.policy_decision ? response.policy_decision.decision === "ALLOW" : response?.status !== "POLICY_DENIED") ? "var(--sage)" : "var(--coral-text)", fontWeight: 600, marginTop: 4 }}>
-                    {(response?.policy_decision ? response.policy_decision.decision === "ALLOW" : response?.status !== "POLICY_DENIED") ? "ALLOWED" : "DENIED"}
+                    {(response?.policy_decision ? response.policy_decision.decision === "ALLOW" : response?.status !== "POLICY_DENIED") ? t("verdictAllowed") : t("verdictDenied")}
                   </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>Actuation gateway check</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t("actuationGatewayCheckLabel")}</span>
                 </div>
                 <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>VERIFICATION</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t("verificationLabel")}</span>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
                     {response?.verification?.checks ? `${response.verification.checks.filter((c) => c.status === "VERIFIED").length}/${response.verification.checks.length}` : "7/7"}
                   </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>Independent safety checks</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t("independentSafetyChecksLabel")}</span>
                 </div>
               </div>
             </div>
@@ -1902,14 +1913,17 @@ export function AIWorkspaceView({
               <div style={{ background: "var(--bg-0)", border: "1px solid var(--line)", borderRadius: "var(--radius-panel)", padding: "18px 22px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-                    SYNTHESIZED TECHNICAL FINDINGS
+                    {t("synthesizedFindingsTitle")}
                   </span>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                    RUN ID: {runId}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <ReadAloudButton text={response.final_answer || ""} compact />
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                      {t("runIdPrefix")} {runId}
+                    </span>
+                  </div>
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                  {response.final_answer || "No narrative answer recorded."}
+                  {response.final_answer || t("noNarrativeAnswer")}
                 </div>
               </div>
 
@@ -1919,17 +1933,17 @@ export function AIWorkspaceView({
                 <div style={{ background: "var(--bg-0)", border: "1px solid var(--line)", borderRadius: "var(--radius-panel)", padding: "16px 20px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", letterSpacing: "0.06em" }}>
-                      POLICY DECISION
+                      {t("policyDecisionLabel")}
                     </span>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: (response.policy_decision ? response.policy_decision.decision === "ALLOW" : response.status !== "POLICY_DENIED") ? "var(--sage)" : "var(--coral-text)", fontWeight: 600 }}>
-                      {(response.policy_decision ? response.policy_decision.decision === "ALLOW" : response.status !== "POLICY_DENIED") ? "ALLOWED" : "DENIED"}
+                      {(response.policy_decision ? response.policy_decision.decision === "ALLOW" : response.status !== "POLICY_DENIED") ? t("verdictAllowed") : t("verdictDenied")}
                     </span>
                   </div>
                   <div style={{ fontSize: "12.5px", fontFamily: "var(--font-ui)", color: "var(--ink-2)", lineHeight: 1.5 }}>
-                    <div><strong>Action:</strong> {response.policy_decision?.tool || "agent_reasoning"}</div>
-                    <div><strong>Role Evaluated:</strong> {response.policy_decision?.role || role}</div>
+                    <div><strong>{t("actionLabel")}:</strong> {response.policy_decision?.tool || "agent_reasoning"}</div>
+                    <div><strong>{t("roleEvaluatedLabel")}:</strong> {response.policy_decision?.role || role}</div>
                     <div style={{ marginTop: 4, color: "var(--ink-3)", fontSize: "11.5px" }}>
-                      {response.policy_decision?.reason || "Autonomous evaluation against zero-trust local rule matrix."}
+                      {response.policy_decision?.reason || (language === "kn" ? "ಶೂನ್ಯ-ವಿಶ್ವಾಸಾರ್ಹ ಸ್ಥಳೀಯ ನಿಯಮ ಮ್ಯಾಟ್ರಿಕ್ಸ್ ವಿರುದ್ಧ ಸ್ವಾಯತ್ತ ಮೌಲ್ಯಮಾಪನ." : language === "hi" ? "शून्य-विश्वास स्थानीय नियम मैट्रिक्स के विरुद्ध स्वायत्त मूल्यांकन।" : "Autonomous evaluation against zero-trust local rule matrix.")}
                     </div>
                   </div>
                 </div>
@@ -1938,24 +1952,24 @@ export function AIWorkspaceView({
                 <div style={{ background: "var(--bg-0)", border: "1px solid var(--line)", borderRadius: "var(--radius-panel)", padding: "16px 20px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", letterSpacing: "0.06em" }}>
-                      MODEL & RUNTIME
+                      {t("modelAndRuntimeTitle")}
                     </span>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
-                      SOVEREIGN ON-PREM
+                      {t("sovereignOnPremBadge")}
                     </span>
                   </div>
                   <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div>Model: <strong style={{ color: "var(--ink)" }}>{response.model_name || "Sovereign Industrial LLM"}</strong></div>
-                    <div>Provider: <strong style={{ color: "var(--ink)" }}>{response.provider || "Local Runtime"}</strong></div>
-                    <div>Latency: <strong style={{ color: "var(--ink)" }}>{(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms) ? `${(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms).toFixed(1)} ms` : "N/A"}</strong></div>
+                    <div>{t("modelLabel")}: <strong style={{ color: "var(--ink)" }}>{response.model_name || "Sovereign Industrial LLM"}</strong></div>
+                    <div>{t("providerLabel")}: <strong style={{ color: "var(--ink)" }}>{response.provider || (language === "kn" ? "ಸ್ಥಳೀಯ ರನ್‌ಟೈಮ್" : language === "hi" ? "स्थानीय रनटाइम" : "Local Runtime")}</strong></div>
+                    <div>{t("latencyLabel")}: <strong style={{ color: "var(--ink)" }}>{(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms) ? `${(response?.latency_ms ?? (response as any)?.timing?.total_duration_ms).toFixed(1)} ${t("unitMs")}` : "N/A"}</strong></div>
                     {response.tokens && (
-                      <div>Tokens: {response.tokens.prompt_tokens} in / {response.tokens.completion_tokens} out</div>
+                      <div>{t("tokensLabel")}: {response.tokens.prompt_tokens} in / {response.tokens.completion_tokens} out</div>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* {t("case01Source3")}s Table if available */}
+              {/* Numerical Calculations Table if available */}
               {(((response.calculations && response.calculations.length > 0) || (response.verification?.calculations && response.verification.calculations.length > 0)) ? (
                 <div style={{ background: "var(--bg-0)", border: "1px solid var(--line)", borderRadius: "var(--radius-panel)", padding: "16px 20px" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em", display: "block", marginBottom: 10 }}>
@@ -1964,13 +1978,14 @@ export function AIWorkspaceView({
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {(response.calculations || response.verification?.calculations || []).map((calc: CalculationResult, idx: number) => (
                       <div key={calc.calculation_id || idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "var(--bg-1)", borderRadius: "var(--radius-sm)", fontFamily: "var(--font-mono)", fontSize: "12px" }}>
-                        <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ color: "var(--ink-3)", marginRight: 8 }}>[{idx + 1}]</span>
-                          <span style={{ color: "var(--ink)" }}>{calc.description || calc.calculation_type || "Math verification"}</span>
+                          <span style={{ color: "var(--ink)" }}>{calc.description || calc.calculation_type || t("mathVerificationLabel")}</span>
+                          <ReadAloudButton text={`${calc.description || calc.calculation_type || t("mathVerificationLabel")}. ${calc.result} ${calc.units || ""}`} compact />
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <span style={{ color: "var(--brass)", fontWeight: 600 }}>{calc.result} {calc.units || ""}</span>
-                          <span style={{ color: "var(--sage)", fontSize: "11px" }}>PASS</span>
+                          <span style={{ color: "var(--sage)", fontSize: "11px" }}>{t("verificationPassBadge")}</span>
                         </div>
                       </div>
                     ))}
@@ -2018,19 +2033,19 @@ export function AIWorkspaceView({
                 }}
               >
                 <div>
-                  <span style={{ color: "var(--ink-3)" }}>Filename: </span>
+                  <span style={{ color: "var(--ink-3)" }}>{t("visionFilenameLabel")}: </span>
                   <span style={{ color: "var(--ink)" }}>{visionDirectResult.image_provenance.filename}</span>
                 </div>
                 <div>
-                  <span style={{ color: "var(--ink-3)" }}>MIME: </span>
+                  <span style={{ color: "var(--ink-3)" }}>{t("visionMimeLabel")}: </span>
                   <span style={{ color: "var(--ink)" }}>{visionDirectResult.image_provenance.mime_type}</span>
                 </div>
                 <div>
-                  <span style={{ color: "var(--ink-3)" }}>Size: </span>
+                  <span style={{ color: "var(--ink-3)" }}>{t("visionSizeLabel")}: </span>
                   <span style={{ color: "var(--ink)" }}>{visionDirectResult.image_provenance.file_size_bytes} B</span>
                 </div>
                 <div>
-                  <span style={{ color: "var(--ink-3)" }}>SHA256: </span>
+                  <span style={{ color: "var(--ink-3)" }}>{t("visionShaLabel")}: </span>
                   <span style={{ color: "var(--ink)" }}>{visionDirectResult.image_provenance.sha256_hash.slice(0, 16)}...</span>
                 </div>
               </div>
@@ -2051,7 +2066,7 @@ export function AIWorkspaceView({
                         {f.finding_type}
                       </span>
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                        Confidence: {(f.confidence * 100).toFixed(0)}%
+                        {t("visionConfidenceLabel")}: {(f.confidence * 100).toFixed(0)}%
                       </span>
                     </div>
 
@@ -2062,10 +2077,10 @@ export function AIWorkspaceView({
                     <div style={{ display: "flex", gap: 12, fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--ink-3)" }}>
                       {f.observed_value !== undefined && (
                         <span style={{ color: "var(--brass)", fontWeight: 600 }}>
-                          Observed: {f.observed_value} {f.unit || ""}
+                          {t("visionObservedLabel")}: {f.observed_value} {f.unit || ""}
                         </span>
                       )}
-                      <span>Severity: {f.severity}</span>
+                      <span>{t("visionSeverityLabel")}: {f.severity}</span>
                     </div>
                   </div>
                 ))}
@@ -2094,17 +2109,33 @@ export function AIWorkspaceView({
               <span style={{ color: "var(--brass)", fontWeight: 600 }}>
                 {t("missionExecutionTiming")}
               </span>
-              <span>Total: <strong style={{ color: "var(--ink)" }}>{response.timing.total_duration_ms.toFixed(1)}ms</strong></span>
-              {response.timing.planning_duration_ms > 0 && <span>Plan: {response.timing.planning_duration_ms.toFixed(1)}ms</span>}
-              {response.timing.vision_duration_ms > 0 && <span>Vision: {response.timing.vision_duration_ms.toFixed(1)}ms</span>}
-              {response.timing.knowledge_retrieval_duration_ms > 0 && <span>Knowledge: {response.timing.knowledge_retrieval_duration_ms.toFixed(1)}ms</span>}
-              {response.timing.tool_execution_duration_ms > 0 && <span>Tool: {response.timing.tool_execution_duration_ms.toFixed(1)}ms</span>}
-              {response.timing.verification_duration_ms > 0 && <span>Verification: {response.timing.verification_duration_ms.toFixed(1)}ms</span>}
-              {response.timing.synthesis_duration_ms > 0 && <span>Synthesis: {response.timing.synthesis_duration_ms.toFixed(1)}ms</span>}
+              <span>{t("missionTimingTotal")}: <strong style={{ color: "var(--ink)" }}>{response.timing.total_duration_ms.toFixed(1)}{t("unitMs")}</strong></span>
+              {response.timing.planning_duration_ms > 0 && <span>{t("missionTimingPlan")}: {response.timing.planning_duration_ms.toFixed(1)}{t("unitMs")}</span>}
+              {response.timing.vision_duration_ms > 0 && <span>{t("missionTimingVision")}: {response.timing.vision_duration_ms.toFixed(1)}{t("unitMs")}</span>}
+              {response.timing.knowledge_retrieval_duration_ms > 0 && <span>{t("missionTimingKnowledge")}: {response.timing.knowledge_retrieval_duration_ms.toFixed(1)}{t("unitMs")}</span>}
+              {response.timing.tool_execution_duration_ms > 0 && <span>{t("missionTimingTool")}: {response.timing.tool_execution_duration_ms.toFixed(1)}{t("unitMs")}</span>}
+              {response.timing.verification_duration_ms > 0 && <span>{t("missionTimingVerification")}: {response.timing.verification_duration_ms.toFixed(1)}{t("unitMs")}</span>}
+              {response.timing.synthesis_duration_ms > 0 && <span>{t("missionTimingSynthesis")}: {response.timing.synthesis_duration_ms.toFixed(1)}{t("unitMs")}</span>}
             </div>
           )}
         </EnamelSurface>
       )}
+
+      {/* Sovereign Document & Photo OCR Modal */}
+      <OcrModal
+        isOpen={isOcrOpen}
+        onClose={() => setIsOcrOpen(false)}
+        clearance={clearance}
+        onDocumentIngested={(docId, fn, text) => {
+          setQuery(
+            language === "kn"
+              ? `ಹೊಸದಾಗಿ ಇಂಡೆಕ್ಸ್ ಮಾಡಲಾದ ದಾಖಲೆ ${fn} ಅನ್ನು ವಿಶ್ಲೇಷಿಸಿ ಮತ್ತು ಪರಿಶೀಲಿಸಿ.`
+              : language === "hi"
+              ? `नये इंडेक्स किए गए दस्तावेज़ ${fn} का विश्लेषण करें और सीमाएं सत्यापित करें।`
+              : `Analyze newly indexed document ${fn} and verify operating limits.`
+          );
+        }}
+      />
 
       <style jsx>{`
         @media (max-width: 860px) {

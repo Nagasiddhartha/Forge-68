@@ -149,7 +149,7 @@ export function EvidencePanel({
                     ID: {calc.calculation_id}
                   </span>
                   <ReadAloudButton
-                    text={`${calc.description}. Calculated result: ${calc.result} ${calc.units}`}
+                    text={`${calc.description}. ${calc.result} ${calc.units}`}
                     compact
                   />
                 </div>
@@ -167,7 +167,7 @@ export function EvidencePanel({
                   {calc.result > 0 ? `+${calc.result}` : calc.result} {calc.units}
                 </span>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)" }}>
-                  Inputs: {Object.entries(calc.inputs).map(([k, v]) => `${k}=${v}`).join(", ")}
+                  {t("evidenceInputsLabel")}: {Object.entries(calc.inputs).map(([k, v]) => `${k}=${v}`).join(", ")}
                 </span>
               </div>
 
@@ -190,7 +190,7 @@ export function EvidencePanel({
                 }}
               >
                 <span>{t("evidenceEnginePurePython")}</span>
-                <span>INPUTS: {JSON.stringify(calc.inputs)}</span>
+                <span>{t("evidenceInputsLabel").toUpperCase()}: {JSON.stringify(calc.inputs)}</span>
               </div>
             </div>
           ))}
@@ -255,7 +255,7 @@ export function EvidencePanel({
                   </span>
                   {record.retrieval_score && (
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
-                      {(record.retrieval_score * 100).toFixed(0)}% Match
+                      {(record.retrieval_score * 100).toFixed(0)}% {t("evidenceMatchLabel")}
                     </span>
                   )}
                   <ReadAloudButton

@@ -36,6 +36,7 @@ class VerificationEngine:
         requester_classification: DataClassification = DataClassification.INTERNAL,
         calculations: Optional[List[CalculationResult]] = None,
         draft_response: Optional[str] = None,
+        locale: str = "en",
     ) -> VerificationResult:
 
         """Run all verification checks and produce a typed VerificationResult."""
@@ -86,6 +87,25 @@ class VerificationEngine:
 
         # Generate Engineering Summary
         summary = self._generate_summary(overall_status, checks, evidence_set, calculations)
+
+        if locale and locale.lower() in ("kn", "hi"):
+            from app.core.localization import translate_text, localize_verification_summary
+            v_cnt = sum(1 for c in checks if c.status == VerificationStatus.VERIFIED)
+            summary = localize_verification_summary(
+                overall_status.value, v_cnt, len(checks), len(evidence_set.all_evidence), len(calculations), locale=locale
+            )
+            localized_checks: List[VerificationCheck] = []
+            for chk in checks:
+                loc_desc = translate_text(chk.description, locale=locale, fallback=chk.description)
+                localized_checks.append(
+                    VerificationCheck(
+                        check_type=chk.check_type,
+                        status=chk.status,
+                        description=loc_desc,
+                        evidence_ids=chk.evidence_ids,
+                    )
+                )
+            checks = localized_checks
 
         return VerificationResult(
             status=overall_status,

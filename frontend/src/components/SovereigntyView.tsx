@@ -250,7 +250,9 @@ export function SovereigntyView() {
             className="btn-brass-secondary"
             style={{ fontSize: "12px", padding: "8px 16px" }}
           >
-            {showTechnicalDetails ? "Hide Technical Details ▲" : "View Technical Runtime Details ▼"}
+            {showTechnicalDetails
+              ? (language === "hi" ? "तकनीकी विवरण छिपाएं ▲" : language === "kn" ? "ತಾಂತ್ರಿಕ ವಿವರಗಳನ್ನು ಮರೆಮಾಡಿ ▲" : "Hide Technical Details ▲")
+              : (language === "hi" ? "तकनीकी रनटाइम विवरण देखें ▼" : language === "kn" ? "ತಾಂತ್ರಿಕ ರನ್‌ಟೈಮ್ ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ ▼" : "View Technical Runtime Details ▼")}
           </button>
         </div>
 
@@ -310,7 +312,7 @@ export function SovereigntyView() {
       <EnamelSurface variant="base" padding="spacious">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <BrassLabel variant="solid">TASK MODEL ROUTER</BrassLabel>
+            <BrassLabel variant="solid">{language === "hi" ? "कार्य मॉडल राउटर" : language === "kn" ? "ಕಾರ್ಯ ಮಾದರಿ ರೂಟರ್" : "TASK MODEL ROUTER"}</BrassLabel>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "22px", color: "var(--ink)", fontWeight: 500, margin: 0 }}>
               {t("sovModelRouterTitle")}
             </h2>
@@ -326,7 +328,7 @@ export function SovereigntyView() {
               border: "1px solid var(--sage)",
             }}
           >
-            RTX 4060 LAPTOP GPU (8GB VRAM BOUNDARY)
+            {language === "hi" ? "RTX 4060 लैपटॉप GPU (8GB VRAM सीमा)" : language === "kn" ? "RTX 4060 ಲ್ಯಾಪ್‌ಟಾಪ್ GPU (8GB VRAM ಗಡಿ)" : "RTX 4060 LAPTOP GPU (8GB VRAM BOUNDARY)"}
           </span>
         </div>
 
@@ -348,8 +350,8 @@ export function SovereigntyView() {
               <tr style={{ borderBottom: "1px solid var(--line)", background: "var(--bg-0)" }}>
                 <th style={{ padding: "10px 12px", color: "var(--brass)" }}>{t("sovRouterColTask")}</th>
                 <th style={{ padding: "10px 12px", color: "var(--ink)" }}>{t("sovRouterColModel")}</th>
-                <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>PROVIDER</th>
-                <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>STATUS</th>
+                <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>{language === "hi" ? "प्रदाता" : language === "kn" ? "ಒದಗಿಸುವವರು" : "PROVIDER"}</th>
+                <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>{language === "hi" ? "स्थिति" : language === "kn" ? "ಸ್ಥಿತಿ" : "STATUS"}</th>
                 <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>{t("sovRouterColVram")}</th>
                 <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>{t("sovRouterColRationale")}</th>
               </tr>
@@ -399,7 +401,7 @@ export function SovereigntyView() {
               ) : (
                 <tr>
                   <td colSpan={6} style={{ padding: "20px", textAlign: "center", color: "var(--ink-3)" }}>
-                    Loading sovereign model routing table...
+                    {language === "hi" ? "संप्रभु मॉडल रूटिंग तालिका लोड हो रही है..." : language === "kn" ? "ಸಾರ್ವಭೌಮ ಮಾದರಿ ರೂಟಿಂಗ್ ಕೋಷ್ಟಕ ಲೋಡ್ ಆಗುತ್ತಿದೆ..." : "Loading sovereign model routing table..."}
                   </td>
                 </tr>
               )}
@@ -413,7 +415,7 @@ export function SovereigntyView() {
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              DEEP RUNTIME ENCLAVE INSPECTOR
+              {language === "hi" ? "गहन रनटाइम एन्क्लेव निरीक्षक" : language === "kn" ? "ಆಳವಾದ ರನ್‌ಟೈಮ್ ಎನ್‌ಕ್ಲೇವ್ ಇನ್ಸ್‌ಪೆಕ್ಟರ್" : "DEEP RUNTIME ENCLAVE INSPECTOR"}
             </span>
             <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
           </div>
@@ -448,7 +450,7 @@ export function SovereigntyView() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "वर्तमान स्थिति" : language === "kn" ? "ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ" : "Current State"}</div>
               <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
                 {sovereignty?.model_provider.default_model || "qwen3:8b"} via {sovereignty?.model_provider.type.toUpperCase() || "OLLAMA"}
               </div>
@@ -458,17 +460,17 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "क्या लागू किया गया है" : language === "kn" ? "ಏನು ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ" : "What is Enforced"}</div>
               <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
                 Zero public cloud AI API calls. Zero external AI SDK dependencies.
               </div>
               <div style={{ color: "var(--ink-2)", fontSize: "11.5px", marginTop: 2 }}>
-                Cloud fallback: <strong style={{ color: "var(--sage)" }}>DISABLED (FAIL-CLOSED)</strong>
+                Cloud fallback: <strong style={{ color: "var(--sage)" }}>{language === "hi" ? "अक्षम (फ़ेल-क्लोज़्ड)" : language === "kn" ? "ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ (ಫೇಲ್-ಕ್ಲೋಸ್ಡ್)" : "DISABLED (FAIL-CLOSED)"}</strong>
               </div>
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "इसे कैसे सत्यापित किया जाता है" : language === "kn" ? "ಇದನ್ನು ಹೇಗೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ" : "How it is Verified"}</div>
               <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
                 Loopback socket binding (127.0.0.1) & strict BaseModelProvider abstract interface injection.
               </div>
@@ -499,17 +501,17 @@ export function SovereigntyView() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "वर्तमान स्थिति" : language === "kn" ? "ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ" : "Current State"}</div>
               <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
                 Deterministic / On-Premise Vector Embedding ({runtime.embeddingModel || sovereignty?.embedding_provider.model || "Configured Local Model"})
               </div>
               <div style={{ color: "var(--ink-3)", fontSize: "11px", marginTop: 2 }}>
-                Vector Cloud: <strong style={{ color: "var(--sage)" }}>BLOCKED (NO PINECONE/WEAVIATE CLOUD)</strong>
+                Vector Cloud: <strong style={{ color: "var(--sage)" }}>{language === "hi" ? "अवरुद्ध (क्लाउड मुक्त)" : language === "kn" ? "ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ (ಕ್ಲೌಡ್ ಮುಕ್ತ)" : "BLOCKED (NO PINECONE/WEAVIATE CLOUD)"}</strong>
               </div>
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "क्या लागू किया गया है" : language === "kn" ? "ಏನು ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ" : "What is Enforced"}</div>
               <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
                 Clearance lattice boundary strictly limits document passage retrievals.
               </div>
@@ -519,7 +521,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "इसे कैसे सत्यापित किया जाता है" : language === "kn" ? "ಇದನ್ನು ಹೇಗೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ" : "How it is Verified"}</div>
               <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
                 Pre-retrieval clearance filter check & post-retrieval classification verification check.
               </div>
@@ -550,7 +552,7 @@ export function SovereigntyView() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "वर्तमान स्थिति" : language === "kn" ? "ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ" : "Current State"}</div>
               <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
                 {isVisionInstalled ? "Live Local VLM (qwen2.5-vl:7b)" : "Deterministic Synthetic Fixture (Advisory Gauge)"}
               </div>
@@ -560,7 +562,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "क्या लागू किया गया है" : language === "kn" ? "ಏನು ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ" : "What is Enforced"}</div>
               <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
                 No cloud vision provider configured. Images remain within the local processing boundary.
               </div>
@@ -570,7 +572,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "इसे कैसे सत्यापित किया जाता है" : language === "kn" ? "ಇದನ್ನು ಹೇಗೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ" : "How it is Verified"}</div>
               <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
                 Digest verified against image provenance record; visual finding tagged as advisory until confirmed.
               </div>
@@ -601,7 +603,7 @@ export function SovereigntyView() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "वर्तमान स्थिति" : language === "kn" ? "ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ" : "Current State"}</div>
               <div style={{ color: "var(--coral-text)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
                 Default Gateway Action: DENY (FAIL-CLOSED)
               </div>
@@ -611,7 +613,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "क्या लागू किया गया है" : language === "kn" ? "ಏನು ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ" : "What is Enforced"}</div>
               <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
                 Tool sandbox execution intercepted before handler invocation.
               </div>
@@ -621,7 +623,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "इसे कैसे सत्यापित किया जाता है" : language === "kn" ? "ಇದನ್ನು ಹೇಗೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ" : "How it is Verified"}</div>
               <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
                 10/10 adversarial test proofs verify denied tools trigger zero sandbox code execution.
               </div>
@@ -652,7 +654,7 @@ export function SovereigntyView() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "वर्तमान स्थिति" : language === "kn" ? "ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ" : "Current State"}</div>
               <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
                 {sovereignty?.verification_engine.deterministic_checks_count || 7} Discrete Verification Checkpoints
               </div>
@@ -662,7 +664,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "क्या लागू किया गया है" : language === "kn" ? "ಏನು ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ" : "What is Enforced"}</div>
               <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
                 LLM self-verification is strictly prohibited.
               </div>
@@ -672,7 +674,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "इसे कैसे सत्यापित किया जाता है" : language === "kn" ? "ಇದನ್ನು ಹೇಗೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ" : "How it is Verified"}</div>
               <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
                 Independent VerificationPanel renders discrete pass/fail per checkpoint with proof traces.
               </div>
@@ -703,7 +705,7 @@ export function SovereigntyView() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontFamily: "var(--font-mono)", fontSize: "12px" }}>
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>Current State</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "वर्तमान स्थिति" : language === "kn" ? "ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ" : "Current State"}</div>
               <div style={{ color: "var(--ink)", fontWeight: 600, fontSize: "13px", marginTop: 2 }}>
                 Append-only in-memory & local file sink
               </div>
@@ -713,7 +715,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>What is Enforced</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "क्या लागू किया गया है" : language === "kn" ? "ಏನು ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ" : "What is Enforced"}</div>
               <div style={{ color: "var(--sage)", fontWeight: 500, marginTop: 2 }}>
                 No events can be retroactively rewritten or truncated during mission execution.
               </div>
@@ -723,7 +725,7 @@ export function SovereigntyView() {
             </div>
 
             <div style={{ background: "var(--bg-0)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
-              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>How it is Verified</div>
+              <div style={{ color: "var(--ink-3)", fontSize: "11px", textTransform: "uppercase" }}>{language === "hi" ? "इसे कैसे सत्यापित किया जाता है" : language === "kn" ? "ಇದನ್ನು ಹೇಗೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ" : "How it is Verified"}</div>
               <div style={{ color: "var(--ink-2)", fontSize: "11.5px" }}>
                 Deterministic audit trail reader correlates each action with a unique event ID.
               </div>

@@ -525,8 +525,8 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                       }}
                     >
                       <div style={{ display: "flex", gap: 10 }}>
-                        <span>Chunks: <strong style={{ color: "var(--ink)" }}>{doc.chunks_count}</strong></span>
-                        <span>Hash: <span style={{ color: "var(--brass)" }}>{doc.sha256_hash ? `${doc.sha256_hash.slice(0, 8)}...` : "SHA256"}</span></span>
+                        <span>{t("knowledgeChunksLabel")} <strong style={{ color: "var(--ink)" }}>{doc.chunks_count}</strong></span>
+                        <span>{t("knowledgeHashLabel")} <span style={{ color: "var(--brass)" }}>{doc.sha256_hash ? `${doc.sha256_hash.slice(0, 8)}...` : "SHA256"}</span></span>
                       </div>
 
                       <div style={{ display: "flex", gap: 6 }}>
@@ -799,7 +799,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 600 }}>
-                          PASSAGE [{String(idx + 1).padStart(2, "0")}]
+                          {language === "hi" ? `अनुच्छेद [${String(idx + 1).padStart(2, "0")}]` : language === "kn" ? `ಭಾಗ [${String(idx + 1).padStart(2, "0")}]` : `PASSAGE [${String(idx + 1).padStart(2, "0")}]`}
                         </span>
                         <span style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", color: "var(--ink)", background: "var(--bg-2)", padding: "1px 6px", borderRadius: "var(--radius-sm)" }}>
                           {docName}
@@ -811,25 +811,25 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
 
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 600 }}>
-                          {(r.score * 100).toFixed(1)}% MATCH
+                          {(r.score * 100).toFixed(1)}% {language === "hi" ? "मिलान" : language === "kn" ? "ಹೊಂದಾಣಿಕೆ" : "MATCH"}
                         </span>
                         <button
                           onClick={() => handleOpenReader(r.chunk.document_id || docName)}
                           className="btn-brass-secondary"
                           style={{ fontSize: "10px", padding: "2px 8px" }}
                         >
-                          Inspect Document ↗
+                          {language === "hi" ? "दस्तावेज़ जांचें ↗" : language === "kn" ? "ದಾಖಲೆ ಪರಿಶೀಲಿಸಿ ↗" : "Inspect Document ↗"}
                         </button>
                       </div>
                     </div>
 
                     {/* Section & Asset Association */}
                     <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: "10.5px", color: "var(--ink-3)" }}>
-                      <span>Section: <strong style={{ color: "var(--ink-2)" }}>{section}</strong></span>
+                      <span>{language === "hi" ? "अनुभाग:" : language === "kn" ? "ವಿಭಾಗ:" : "Section:"} <strong style={{ color: "var(--ink-2)" }}>{section}</strong></span>
                       <span>·</span>
-                      <span>Asset: <strong style={{ color: "var(--brass)" }}>{asset}</strong></span>
+                      <span>{language === "hi" ? "उपकरण:" : language === "kn" ? "ಉಪಕರಣ:" : "Asset:"} <strong style={{ color: "var(--brass)" }}>{asset}</strong></span>
                       <span>·</span>
-                      <span>Source: <span style={{ color: "var(--ink-3)" }}>{sourcePath}</span></span>
+                      <span>{language === "hi" ? "स्रोत:" : language === "kn" ? "ಮೂಲ:" : "Source:"} <span style={{ color: "var(--ink-3)" }}>{sourcePath}</span></span>
                     </div>
 
                     <p
@@ -996,13 +996,13 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                   </span>
                   <span>·</span>
                   <span>
-                    Chunks: <strong style={{ color: "var(--ink)" }}>{readerDoc.chunks_count}</strong>
+                    {t("knowledgeChunksLabel")} <strong style={{ color: "var(--ink)" }}>{readerDoc.chunks_count}</strong>
                   </span>
                 </div>
 
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   <span style={{ color: "var(--ink-3)" }}>
-                    SHA-256: {readerDoc.content_hash.slice(0, 16)}...
+                    {t("knowledgeHashLabel")} {readerDoc.content_hash.slice(0, 16)}...
                   </span>
                   <div style={{ display: "flex", gap: 4 }}>
                     <button
@@ -1017,7 +1017,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                         cursor: "pointer",
                       }}
                     >
-                      Full Text
+                      {language === "hi" ? "पूरा पाठ" : language === "kn" ? "ಪೂರ್ಣ ಪಠ್ಯ" : "Full Text"}
                     </button>
                     <button
                       onClick={() => setReaderViewTab("chunks")}
@@ -1031,7 +1031,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                         cursor: "pointer",
                       }}
                     >
-                      Chunks ({readerDoc.chunks.length})
+                      {language === "hi" ? `खंड (${readerDoc.chunks.length})` : language === "kn" ? `ಖಂಡಗಳು (${readerDoc.chunks.length})` : `Chunks (${readerDoc.chunks.length})`}
                     </button>
                   </div>
                 </div>
@@ -1042,7 +1042,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
             <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>
               {isLoadingReader ? (
                 <div style={{ textAlign: "center", padding: "40px", color: "var(--ink-3)" }}>
-                  Extracting and verifying document content on sovereign storage...
+                  {language === "hi" ? "संप्रभु स्टोरेज पर दस्तावेज़ सामग्री निकाली और सत्यापित की जा रही है..." : language === "kn" ? "ಸಾರ್ವಭೌಮ ಸಂಗ್ರಹಣೆಯಲ್ಲಿ ಡಾಕ್ಯುಮೆಂಟ್ ವಿಷಯವನ್ನು ಹೊರತೆಗೆಯಲಾಗುತ್ತಿದೆ ಮತ್ತು ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ..." : "Extracting and verifying document content on sovereign storage..."}
                 </div>
               ) : readerError ? (
                 <div
@@ -1239,10 +1239,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                       fontSize: "12px",
                     }}
                   >
-                    <option value="INTERNAL">INTERNAL</option>
-                    <option value="CONFIDENTIAL">CONFIDENTIAL</option>
-                    <option value="RESTRICTED">RESTRICTED</option>
-                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="INTERNAL">{language === "hi" ? "आंतरिक (INTERNAL)" : language === "kn" ? "ಆಂತರಿಕ (INTERNAL)" : "INTERNAL"}</option>
+                    <option value="CONFIDENTIAL">{language === "hi" ? "गोपनीय (CONFIDENTIAL)" : language === "kn" ? "ಗೋಪ್ಯ (CONFIDENTIAL)" : "CONFIDENTIAL"}</option>
+                    <option value="RESTRICTED">{language === "hi" ? "प्रतिबंधित (RESTRICTED)" : language === "kn" ? "ನಿರ್ಬಂಧಿತ (RESTRICTED)" : "RESTRICTED"}</option>
+                    <option value="CRITICAL">{language === "hi" ? "महत्वपूर्ण (CRITICAL)" : language === "kn" ? "ನಿರ್ಣಾಯಕ (CRITICAL)" : "CRITICAL"}</option>
                   </select>
                 </div>
 
@@ -1264,10 +1264,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                       fontSize: "12px",
                     }}
                   >
-                    <option value="TECHNICAL_MANUAL">TECHNICAL_MANUAL</option>
-                    <option value="SOP">OPERATING_SOP</option>
-                    <option value="INSPECTION">INSPECTION_REPORT</option>
-                    <option value="MAINTENANCE">MAINTENANCE_LOG</option>
+                    <option value="TECHNICAL_MANUAL">{language === "hi" ? "तकनीकी नियमावली (TECHNICAL_MANUAL)" : language === "kn" ? "ತಾಂತ್ರಿಕ ಕೈಪಿಡಿ (TECHNICAL_MANUAL)" : "TECHNICAL_MANUAL"}</option>
+                    <option value="SOP">{language === "hi" ? "मानक संचालन प्रक्रिया (OPERATING_SOP)" : language === "kn" ? "ಕಾರ್ಯಾಚರಣಾ ಪ್ರಕ್ರಿಯೆ (OPERATING_SOP)" : "OPERATING_SOP"}</option>
+                    <option value="INSPECTION">{language === "hi" ? "निरीक्षण रिपोर्ट (INSPECTION_REPORT)" : language === "kn" ? "ಪರಿಶೀಲನಾ ವರದಿ (INSPECTION_REPORT)" : "INSPECTION_REPORT"}</option>
+                    <option value="MAINTENANCE">{language === "hi" ? "रखरखाव लॉग (MAINTENANCE_LOG)" : language === "kn" ? "ನಿರ್ವಹಣಾ ಲಾಗ್ (MAINTENANCE_LOG)" : "MAINTENANCE_LOG"}</option>
                   </select>
                 </div>
               </div>
@@ -1280,7 +1280,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                   type="text"
                   value={uploadEquipment}
                   onChange={(e) => setUploadEquipment(e.target.value)}
-                  placeholder="e.g. R-204, PI-204"
+                  placeholder={language === "hi" ? "उदा. R-204, PI-204" : language === "kn" ? "ಉದಾ. R-204, PI-204" : "e.g. R-204, PI-204"}
                   style={{
                     width: "100%",
                     padding: "8px 12px",

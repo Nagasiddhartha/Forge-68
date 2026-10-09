@@ -156,6 +156,7 @@ export function Header({
             return (
               <button
                 key={item.id}
+                suppressHydrationWarning
                 ref={(el) => {
                   if (el) buttonRefs.current.set(item.id, el);
                   else buttonRefs.current.delete(item.id);
@@ -199,7 +200,7 @@ export function Header({
         {/* Boundary Chip */}
         <button
           onClick={() => onSelectDestination("boundary")}
-          title="Inspect sovereignty boundary and runtime verification"
+          title={language === "hi" ? "संप्रभुता सीमा और रनटाइम सत्यापन का निरीक्षण करें" : language === "kn" ? "ಸಾರ್ವಭೌಮತ್ವದ ಗಡಿ ಮತ್ತು ರನ್‌ಟೈಮ್ ಪರಿಶೀಲನೆಯನ್ನು ಪರೀಕ್ಷಿಸಿ" : "Inspect sovereignty boundary and runtime verification"}
           style={{
             background: "var(--bg-1)",
             border: "1px solid var(--line)",
@@ -224,7 +225,7 @@ export function Header({
               boxShadow: isOnline ? "0 0 6px var(--sage)" : "0 0 6px var(--coral)",
             }}
           />
-          <span>{isOnline ? t("navLocalOnly") : t("navOffline")}</span>
+          <span suppressHydrationWarning>{isOnline ? t("navLocalOnly") : t("navOffline")}</span>
         </button>
 
         {/* Global Language Selector (EN / HI / KN) */}
@@ -238,7 +239,7 @@ export function Header({
             borderRadius: "var(--radius-pill)",
             padding: "2px 5px",
           }}
-          title="Switch application language (English / Hindi / Kannada)"
+          title={language === "hi" ? "एप्लिकेशन भाषा बदलें (अंग्रेजी / हिंदी / कन्नड़)" : language === "kn" ? "ಅಪ್ಲಿಕೇಶನ್ ಭಾಷೆಯನ್ನು ಬದಲಿಸಿ (ಇಂಗ್ಲಿಷ್ / ಹಿಂದಿ / ಕನ್ನಡ)" : "Switch application language (English / Hindi / Kannada)"}
         >
           {(["en", "hi", "kn"] as const).map((lng) => {
             const isSelected = language === lng;
@@ -269,7 +270,7 @@ export function Header({
         {/* Persistent Voice Assistant Trigger */}
         <button
           onClick={onOpenVoice}
-          title="Open sovereign local voice assistant"
+          title={language === "hi" ? "संप्रभु स्थानीय आवाज़ सहायक खोलें" : language === "kn" ? "ಸಾರ್ವಭೌಮ ಸ್ಥಳೀಯ ಧ್ವನಿ ಸಹಾಯಕರನ್ನು ತೆರೆಯಿರಿ" : "Open sovereign local voice assistant"}
           style={{
             background: "var(--bg-1)",
             border: "1px solid var(--line)",
@@ -286,7 +287,7 @@ export function Header({
           }}
         >
           <span>🎙</span>
-          <span>{t("navVoiceButton")}</span>
+          <span suppressHydrationWarning>{t("navVoiceButton")}</span>
         </button>
 
         {/* Demo Persona Selector */}
@@ -307,7 +308,7 @@ export function Header({
               cursor: "pointer",
             }}
           >
-            <span style={{ color: "var(--ink-3)" }}>{t("navPersona")}:</span>
+            <span style={{ color: "var(--ink-3)" }} suppressHydrationWarning>{t("navPersona")}:</span>
             <span style={{ fontWeight: 500 }}>{role}</span>
             <span style={{ color: "var(--line-strong)" }}>·</span>
             <span style={{ color: "var(--brass)" }}>{clearance}</span>
@@ -377,7 +378,7 @@ export function Header({
                           </span>
                           {isCurrent && (
                             <span style={{ fontSize: "10px", color: "var(--sage)", fontFamily: "var(--font-mono)" }}>
-                              ✓ ACTIVE
+                              {language === "hi" ? "✓ सक्रिय" : language === "kn" ? "✓ ಸಕ್ರಿಯ" : "✓ ACTIVE"}
                             </span>
                           )}
                         </div>
@@ -391,12 +392,12 @@ export function Header({
                       </p>
 
                       <div style={{ display: "flex", gap: 10, fontSize: "10.5px", fontFamily: "var(--font-mono)", color: "var(--ink-3)", marginTop: 2 }}>
-                        <span>Read: <strong style={{ color: "var(--sage)" }}>✓</strong></span>
-                        <span>Investigate: <strong style={{ color: "var(--sage)" }}>✓</strong></span>
-                        <span>Actuate: <strong style={{ color: cfg.actuate === "ALLOWED" ? "var(--sage)" : cfg.actuate === "NEEDS_APPROVAL" ? "var(--brass)" : "var(--coral-text)" }}>
-                          {cfg.actuate === "ALLOWED" ? "✓" : cfg.actuate === "NEEDS_APPROVAL" ? "⚠ Req. Approval" : "✕ Blocked"}
+                        <span>{t("govColRead")}: <strong style={{ color: "var(--sage)" }}>✓</strong></span>
+                        <span>{t("govColInvestigate")}: <strong style={{ color: "var(--sage)" }}>✓</strong></span>
+                        <span>{t("govColActuate")}: <strong style={{ color: cfg.actuate === "ALLOWED" ? "var(--sage)" : cfg.actuate === "NEEDS_APPROVAL" ? "var(--brass)" : "var(--coral-text)" }}>
+                          {cfg.actuate === "ALLOWED" ? "✓" : cfg.actuate === "NEEDS_APPROVAL" ? (language === "hi" ? "⚠ स्वीकृति आवश्यक" : language === "kn" ? "⚠ ಅನುಮೋದನೆ ಅಗತ್ಯ" : "⚠ Req. Approval") : (language === "hi" ? "✕ अवरुद्ध" : language === "kn" ? "✕ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ" : "✕ Blocked")}
                         </strong></span>
-                        <span>Admin: <strong style={{ color: cfg.admin === "ALLOWED" ? "var(--sage)" : "var(--mist)" }}>
+                        <span>{t("govColAdmin")}: <strong style={{ color: cfg.admin === "ALLOWED" ? "var(--sage)" : "var(--mist)" }}>
                           {cfg.admin === "ALLOWED" ? "✓" : "✕"}
                         </strong></span>
                       </div>
@@ -408,7 +409,7 @@ export function Header({
               {/* Custom Clearance override toggle */}
               <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                  Clearance Override:
+                  {language === "hi" ? "निकासी ओवरराइड:" : language === "kn" ? "ಅನುಮತಿ ತಿದ್ದುಪಡಿ:" : "Clearance Override:"}
                 </span>
                 <select
                   value={clearance}
@@ -428,11 +429,11 @@ export function Header({
                     fontSize: "11px",
                   }}
                 >
-                  <option value="PUBLIC">PUBLIC</option>
-                  <option value="INTERNAL">INTERNAL</option>
-                  <option value="CONFIDENTIAL">CONFIDENTIAL</option>
-                  <option value="RESTRICTED">RESTRICTED</option>
-                  <option value="CRITICAL">CRITICAL</option>
+                  <option value="PUBLIC">{language === "hi" ? "सार्वजनिक (PUBLIC)" : language === "kn" ? "ಸಾರ್ವಜನಿಕ (PUBLIC)" : "PUBLIC"}</option>
+                  <option value="INTERNAL">{language === "hi" ? "आंतरिक (INTERNAL)" : language === "kn" ? "ಆಂತರಿಕ (INTERNAL)" : "INTERNAL"}</option>
+                  <option value="CONFIDENTIAL">{language === "hi" ? "गोपनीय (CONFIDENTIAL)" : language === "kn" ? "ಗೋಪ್ಯ (CONFIDENTIAL)" : "CONFIDENTIAL"}</option>
+                  <option value="RESTRICTED">{language === "hi" ? "प्रतिबंधित (RESTRICTED)" : language === "kn" ? "ನಿರ್ಬಂಧಿತ (RESTRICTED)" : "RESTRICTED"}</option>
+                  <option value="CRITICAL">{language === "hi" ? "महत्वपूर्ण (CRITICAL)" : language === "kn" ? "ನಿರ್ಣಾಯಕ (CRITICAL)" : "CRITICAL"}</option>
                 </select>
               </div>
             </div>
@@ -484,7 +485,7 @@ export function Header({
             display: "none",
           }}
           className="mobile-menu-btn"
-          aria-label="Toggle navigation menu"
+          aria-label={language === "hi" ? "नेविगेशन मेनू टॉगल करें" : language === "kn" ? "ನ್ಯಾವಿಗೇಷನ್ ಮೆನುವನ್ನು ಟಾಗಲ್ ಮಾಡಿ" : "Toggle navigation menu"}
         >
           <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="1.8">
             <line x1="0" y1="1" x2="18" y2="1" />

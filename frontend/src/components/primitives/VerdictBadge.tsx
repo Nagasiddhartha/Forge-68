@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { useTranslation } from "@/lib/i18n";
 
 export type VerdictType =
   | "VERIFIED"
@@ -13,7 +16,19 @@ export interface VerdictBadgeProps extends React.HTMLAttributes<HTMLSpanElement>
 }
 
 export function VerdictBadge({ verdict, className = "", style, ...props }: VerdictBadgeProps) {
+  const { t } = useTranslation();
   const normVerdict = verdict.toUpperCase().replace(/\s+/g, "_");
+
+  const localizedLabels: Record<string, string> = {
+    VERIFIED: t("verdictVerified"),
+    REVIEW_REQUIRED: t("verdictReviewRequired"),
+    NEEDS_REVIEW: t("verdictReviewRequired"),
+    INSUFFICIENT_EVIDENCE: t("verdictInsufficientEvidence"),
+    ACTION_BLOCKED: t("verdictActionBlocked"),
+    POLICY_DENIED: t("verdictActionBlocked"),
+    QUARANTINED: t("verdictQuarantined"),
+    FAILED: t("verdictFailed"),
+  };
 
   const config: Record<
     string,
@@ -148,7 +163,7 @@ export function VerdictBadge({ verdict, className = "", style, ...props }: Verdi
       {...props}
     >
       {item.icon}
-      <span>{item.label}</span>
+      <span>{localizedLabels[normVerdict] || item.label}</span>
     </span>
   );
 }

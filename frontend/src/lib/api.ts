@@ -897,5 +897,84 @@ export async function synthesizeVoiceSpeech(
   });
 }
 
+export interface OcrPageResult {
+  page_number: number;
+  text: string;
+  confidence: number;
+  word_count: number;
+}
+
+export interface OcrExtractResult {
+  filename: string;
+  content_type: string;
+  language: string;
+  total_pages: number;
+  total_words: number;
+  full_text: string;
+  pages: OcrPageResult[];
+  sha256: string;
+  is_air_gapped: boolean;
+  ocr_engine: string;
+}
+
+export interface OcrIngestResponse {
+  status: string;
+  extraction: OcrExtractResult;
+  ingestion: {
+    document_id: string;
+    filename: string;
+    chunks_created: number;
+    content_hash?: string;
+  };
+}
+
+export async function extractOcrText(
+  file: File | Blob,
+  filename: string,
+  language: string = "eng"
+): Promise<OcrExtractResult> {
+  const url = `${BACKEND_URL}/api/v1/ocr/extract`;
+  const formData = new FormData();
+  formData.append("file", file, filename);
+  formData.append("language", language);
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || `OCR extraction failed with HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function ingestOcrDocument(
+  file: File | Blob,
+  filename: string,
+  language: string = "eng",
+  classification: DataClassification = "INTERNAL",
+  equipmentId?: string
+): Promise<OcrIngestResponse> {
+  const url = `${BACKEND_URL}/api/v1/ocr/ingest`;
+  const formData = new FormData();
+  formData.append("file", file, filename);
+  formData.append("language", language);
+  formData.append("classification", classification);
+  if (equipmentId) {
+    formData.append("equipment_id", equipmentId);
+  }
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || `OCR ingestion failed with HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 
 

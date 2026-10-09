@@ -4,6 +4,7 @@ import React, { useEffect, useId, useState } from "react";
 import { synthesizeVoiceSpeech } from "@/lib/api";
 import { useTranslation, Language } from "@/lib/i18n";
 import { readAloudCoordinator } from "@/lib/readAloudCoordinator";
+import { kannadaToPhonetic } from "@/lib/kannadaPhonetics";
 
 interface ReadAloudButtonProps {
   text: string;
@@ -96,18 +97,38 @@ export function ReadAloudButton({
         const voices = window.speechSynthesis.getVoices();
         const targetPrefix = effectiveLanguage === "hi" ? "hi" : effectiveLanguage === "kn" ? "kn" : "en";
 
-        // Find language-matching voice first, or default voice
-        let matchedVoice = voices.find((v) => v.lang.toLowerCase().startsWith(targetPrefix));
-        if (!matchedVoice && voices.length > 0) {
+        // Find language-matching voice first
+        let matchedVoice = voices.find(
+          (v) =>
+            v.lang.toLowerCase().startsWith(targetPrefix) ||
+            (effectiveLanguage === "kn" && (v.name.toLowerCase().includes("kannada") || v.name.toLowerCase().includes("kann"))) ||
+            (effectiveLanguage === "hi" && v.name.toLowerCase().includes("hindi"))
+        );
+
+        let textToSend = textToSpeak;
+        let rateToUse = 0.95;
+
+        // If Kannada requested but host environment lacks an installed kn-IN voice pack,
+        // convert text to genuine phonetic syllables so available speech engines pronounce Kannada clearly.
+        if (effectiveLanguage === "kn") {
+          if (!matchedVoice) {
+            textToSend = kannadaToPhonetic(textToSpeak);
+            matchedVoice =
+              voices.find((v) => v.lang.toLowerCase().startsWith("hi")) ||
+              voices.find((v) => v.lang.toLowerCase().startsWith("en")) ||
+              voices[0];
+            rateToUse = 0.88;
+          }
+        } else if (!matchedVoice && voices.length > 0) {
           matchedVoice = voices.find((v) => v.default) || voices[0];
         }
 
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        const utterance = new SpeechSynthesisUtterance(textToSend);
         if (matchedVoice) {
           utterance.voice = matchedVoice;
         }
-        utterance.lang = targetPrefix === "hi" ? "hi-IN" : targetPrefix === "kn" ? "kn-IN" : "en-US";
-        utterance.rate = 0.95;
+        utterance.lang = matchedVoice ? matchedVoice.lang : targetPrefix === "hi" ? "hi-IN" : targetPrefix === "kn" ? "kn-IN" : "en-US";
+        utterance.rate = rateToUse;
 
         readAloudCoordinator.setActiveSpeechSynthesis(componentId, utterance);
         if (window.speechSynthesis.paused) {

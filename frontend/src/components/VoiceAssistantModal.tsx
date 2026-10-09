@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { readAloudCoordinator } from "@/lib/readAloudCoordinator";
+import { kannadaToPhonetic } from "@/lib/kannadaPhonetics";
 
 interface VoiceAssistantModalProps {
   isOpen: boolean;
@@ -400,16 +401,35 @@ export function VoiceAssistantModal({
       if (typeof window !== "undefined" && window.speechSynthesis) {
         const voices = window.speechSynthesis.getVoices();
         const targetPrefix = language === "hi" ? "hi" : language === "kn" ? "kn" : "en";
-        let matchedVoice = voices.find((v) => v.lang.toLowerCase().startsWith(targetPrefix));
-        if (!matchedVoice && voices.length > 0) {
+        let matchedVoice = voices.find(
+          (v) =>
+            v.lang.toLowerCase().startsWith(targetPrefix) ||
+            (language === "kn" && (v.name.toLowerCase().includes("kannada") || v.name.toLowerCase().includes("kann"))) ||
+            (language === "hi" && v.name.toLowerCase().includes("hindi"))
+        );
+
+        let textToSend = currentResponseText.slice(0, 1000);
+        let rateToUse = 0.95;
+
+        if (language === "kn") {
+          if (!matchedVoice) {
+            textToSend = kannadaToPhonetic(textToSend);
+            matchedVoice =
+              voices.find((v) => v.lang.toLowerCase().startsWith("hi")) ||
+              voices.find((v) => v.lang.toLowerCase().startsWith("en")) ||
+              voices[0];
+            rateToUse = 0.88;
+          }
+        } else if (!matchedVoice && voices.length > 0) {
           matchedVoice = voices.find((v) => v.default) || voices[0];
         }
 
-        const utterance = new SpeechSynthesisUtterance(currentResponseText.slice(0, 1000));
+        const utterance = new SpeechSynthesisUtterance(textToSend);
         if (matchedVoice) {
           utterance.voice = matchedVoice;
         }
-        utterance.lang = targetPrefix === "hi" ? "hi-IN" : targetPrefix === "kn" ? "kn-IN" : "en-US";
+        utterance.lang = matchedVoice ? matchedVoice.lang : targetPrefix === "hi" ? "hi-IN" : targetPrefix === "kn" ? "kn-IN" : "en-US";
+        utterance.rate = rateToUse;
         utterance.onend = () => setIsSpeaking(false);
         utterance.onerror = () => setIsSpeaking(false);
 
@@ -593,12 +613,12 @@ export function VoiceAssistantModal({
             }}
           >
             <div style={{ fontWeight: 600, color: "var(--ink)", marginBottom: 6 }}>
-              Local Offline Voice Stack Diagnostics:
+              {language === "hi" ? "स्थानीय ऑफ़लाइन वॉयस स्टैक निदान:" : language === "kn" ? "ಸ್ಥಳೀಯ ಆಫ್‌ಲೈನ್ ಧ್ವನಿ ಸ್ಟ್ಯಾಕ್ ಡಯಾಗ್ನೋಸ್ಟಿಕ್ಸ್:" : "Local Offline Voice Stack Diagnostics:"}
             </div>
-            <div>• STT Engine: <strong style={{ color: "var(--brass)" }}>{engineStatus?.stt_engine || "faster-whisper"}</strong></div>
-            <div>• TTS Engine: <strong style={{ color: "var(--brass)" }}>{engineStatus?.tts_engine || "Host SAPI5 / SpeechSynthesis"}</strong></div>
+            <div>{language === "hi" ? "• STT इंजन:" : language === "kn" ? "• STT ಇಂಜಿನ್:" : "• STT Engine:"} <strong style={{ color: "var(--brass)" }}>{engineStatus?.stt_engine || "faster-whisper"}</strong></div>
+            <div>{language === "hi" ? "• TTS इंजन:" : language === "kn" ? "• TTS ಇಂಜಿನ್:" : "• TTS Engine:"} <strong style={{ color: "var(--brass)" }}>{engineStatus?.tts_engine || "Host SAPI5 / SpeechSynthesis"}</strong></div>
             <div style={{ marginTop: 6, color: "var(--sage)" }}>
-              ✓ Zero-cloud guarantee: Audio recorded and transcribed completely on host with faster-whisper.
+              {language === "hi" ? "✓ शून्य-क्लाउड गारंटी: ऑडियो पूरी तरह से स्थानीय होस्ट पर रिकॉर्ड और ट्रांसक्राइब किया गया।" : language === "kn" ? "✓ ಶೂನ್ಯ-ಕ್ಲೌಡ್ ಭರವಸೆ: ಆಡಿಯೊವನ್ನು ಸ್ಥಳೀಯ ಹೋಸ್ಟ್‌ನಲ್ಲಿ ಸಂಪೂರ್ಣವಾಗಿ ರೆಕಾರ್ಡ್ ಮಾಡಲಾಗಿದೆ ಮತ್ತು ಲಿಪ್ಯಂತರಗೊಳಿಸಲಾಗಿದೆ." : "✓ Zero-cloud guarantee: Audio recorded and transcribed completely on host with faster-whisper."}
             </div>
           </div>
         )}

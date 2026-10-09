@@ -23,7 +23,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
   const baselineChecks = [
     {
       check_name: "PROVENANCE",
-      plainTitle: "Sources traceable",
+      plainTitle: t("checkSourcesTraceable"),
       title: t("verificationCheckProvTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "All ingested document chunks, tool telemetry, and visual observations possess verifiable source references and SHA-256 digests.",
@@ -31,7 +31,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "COMPLETENESS",
-      plainTitle: "Evidence complete",
+      plainTitle: t("checkEvidenceComplete"),
       title: t("verificationCheckCompTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "Every reasoning claim in the agent's plan has corresponding backing records across knowledge, tooling, and sensor telemetry.",
@@ -39,7 +39,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "POLICY",
-      plainTitle: "Within policy rules",
+      plainTitle: t("checkWithinPolicyRules"),
       title: t("verificationCheckPolicyTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "All requested operations evaluated against role clearance. Zero execution of unauthorized, critical-risk, or write-actuation tool handlers.",
@@ -47,7 +47,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "CLASSIFICATION",
-      plainTitle: "Within your access",
+      plainTitle: t("checkWithinYourAccess"),
       title: t("verificationCheckClassTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "Data classification levels respected. Requester clearance strictly subsumes retrieved document tiers.",
@@ -55,7 +55,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "PARAMETER_CONSISTENCY",
-      plainTitle: "Values agree",
+      plainTitle: t("checkValuesAgree"),
       title: t("verificationCheckParamTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "Operating readings and engineering baselines are compared across multiple sources. Variances are flagged for review.",
@@ -63,7 +63,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "CALCULATION",
-      plainTitle: "Math independently checked",
+      plainTitle: t("checkMathChecked"),
       title: t("verificationCheckCalcTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "All numerical variances and engineering calculations are calculated by pure Python code, not by the language model.",
@@ -71,7 +71,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
     },
     {
       check_name: "GROUNDING",
-      plainTitle: "Answer supported by evidence",
+      plainTitle: t("checkAnswerSupported"),
       title: t("verificationCheckGroundTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "Response text is checked for factual grounding against verified evidence. Speculative assertions are purged.",
@@ -285,6 +285,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <ReadAloudButton text={`${chk.plainTitle}. ${chk.description}. ${chk.details}`} compact />
                     <span
                       style={{
                         fontFamily: "var(--font-mono)",
@@ -297,7 +298,19 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                         border: `1px solid ${isPassed ? "var(--sage)" : "var(--brass)"}`,
                       }}
                     >
-                      {chk.status === "VERIFIED" ? t("verificationPassBadge") : chk.status}
+                      {chk.status === "VERIFIED"
+                        ? t("verificationPassBadge")
+                        : (chk.status === "NEEDS_REVIEW" || (chk.status as string) === "REVIEW_REQUIRED")
+                        ? t("verdictReviewRequired")
+                        : ((chk.status as string) === "ACTION_BLOCKED" || (chk.status as string) === "POLICY_DENIED")
+                        ? t("verdictActionBlocked")
+                        : (chk.status as string) === "QUARANTINED"
+                        ? t("verdictQuarantined")
+                        : chk.status === "FAILED"
+                        ? t("verdictFailed")
+                        : chk.status === "INSUFFICIENT_EVIDENCE"
+                        ? t("verdictInsufficientEvidence")
+                        : chk.status}
                     </span>
                     <span style={{ color: "var(--ink-3)", fontSize: "12px" }}>
                       {isExpanded ? "▲" : "▼"}
@@ -323,7 +336,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                       borderRadius: "var(--radius-sm)",
                     }}
                   >
-                    Verification Trace: {chk.details}
+                    {t("verificationTraceLabel")}: {chk.details}
                   </div>
                 )}
               </div>

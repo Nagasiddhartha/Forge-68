@@ -173,7 +173,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
           >
             <Metric
               value="33.0"
-              unit="bar"
+              unit={t("unitBar")}
               label={t("overviewCurrentCondition")}
               subtext={t("overviewCurrentConditionSub")}
               highlight={true}
@@ -181,7 +181,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
               <Metric
                 value="31.2"
-                unit="bar"
+                unit={t("unitBar")}
                 label={t("overviewNormalBaseline")}
                 subtext={t("overviewNormalBaselineSub")}
               />
@@ -189,7 +189,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
               <Metric
                 value="+1.8"
-                unit="bar"
+                unit={t("unitBar")}
                 label={t("overviewObservedDeviation")}
                 subtext={t("overviewObservedDeviationSub")}
                 highlight={true}
@@ -198,7 +198,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
               <Metric
                 value="33.5"
-                unit="bar"
+                unit={t("unitBar")}
                 label={t("overviewHighAlarmLimit")}
                 subtext={t("overviewHighAlarmLimitSub")}
               />
@@ -206,7 +206,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
               <Metric
                 value="35.0"
-                unit="bar"
+                unit={t("unitBar")}
                 label={t("overviewTripThreshold")}
                 subtext={t("overviewTripThresholdSub")}
               />

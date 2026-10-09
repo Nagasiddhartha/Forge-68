@@ -150,11 +150,11 @@ export default function Home() {
                     flexWrap: "wrap",
                   }}
                 >
-                  <Metric value="31.2" unit="bar" label={t("heroBaselineLabel")} subtext="SOP §3.2" />
+                  <Metric value="31.2" unit={t("unitBar")} label={t("heroBaselineLabel")} subtext={t("heroBaselineSubtext")} />
                   <div style={{ width: 1, height: 42, backgroundColor: "var(--line-strong)" }} />
-                  <Metric value="+1.8" unit="bar" label={t("heroDeviationLabel")} highlight={true} subtext="PI-204 reading" />
+                  <Metric value="+1.8" unit={t("unitBar")} label={t("heroDeviationLabel")} highlight={true} subtext={t("heroDeviationSubtext")} />
                   <div style={{ width: 1, height: 42, backgroundColor: "var(--line-strong)" }} />
-                  <Metric value="0.5" unit="bar" label={t("heroAlarmDistanceLabel")} subtext="Alarm at 33.5" />
+                  <Metric value="0.5" unit={t("unitBar")} label={t("heroAlarmDistanceLabel")} subtext={t("heroAlarmDistanceSubtext")} />
                 </div>
               </div>
 
@@ -165,7 +165,7 @@ export default function Home() {
                   normal={31.2}
                   alarm={33.5}
                   trip={35.0}
-                  unit="bar"
+                  unit={t("unitBar")}
                   tag="PI-204"
                   label={t("heroDialLabel")}
                 />
