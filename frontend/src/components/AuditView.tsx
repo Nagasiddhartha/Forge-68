@@ -6,22 +6,46 @@ import {
   AuditEventsResponse,
   ExecutionEvent,
   fetchAuditEvents,
+  resetDemo,
 } from "@/lib/api";
 import {
   EnamelSurface,
   BrassLabel,
   Divider,
 } from "@/components/primitives";
-import { Locale, TRANSLATIONS } from "@/lib/i18n";
+import { useTranslation } from "@/lib/i18n";
 
 type EventFilter = "ALL" | "AGENT" | "TOOL" | "POLICY" | "VERIFICATION" | "KNOWLEDGE";
 
-export function AuditView({ locale = "en" }: { locale?: Locale }) {
-  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
+function formatISTTimestamp(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return isoString;
+    return (
+      d.toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }) + " IST"
+    );
+  } catch {
+    return isoString;
+  }
+}
+
+export function AuditView() {
+  const { t } = useTranslation();
   const [auditData, setAuditData] = useState<AuditEventsResponse | null>(null);
   const [filter, setFilter] = useState<EventFilter>("ALL");
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isResetting, setIsResetting] = useState<boolean>(false);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadAuditData = async () => {
@@ -34,6 +58,20 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResetAudit = async () => {
+    setIsResetting(true);
+    setError(null);
+    try {
+      const res = await resetDemo();
+      setResetMessage(`Cleared ${res.cleared_audit_events_count} transient audit events.`);
+      await loadAuditData();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -64,6 +102,10 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
   // Combine agent and tool events into unified timeline
   interface UnifiedEvent {
     id: string;
+    runId?: string;
+    scenarioId?: string;
+    tool?: string;
+    policy?: string;
     timestamp: string;
     type: string;
     category: "AGENT" | "TOOL" | "POLICY" | "VERIFICATION" | "KNOWLEDGE";
@@ -81,37 +123,55 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
     else if (e.event_type.includes("VERIFICATION")) cat = "VERIFICATION";
     else if (e.event_type.includes("TOOL")) cat = "TOOL";
 
-    const summary = e.details?.query
-      ? String(e.details.query)
-      : e.details?.reasoning
-      ? String(e.details.reasoning)
-      : e.details?.summary
-      ? String(e.details.summary)
-      : JSON.stringify(e.details || {});
+    const details = (e.details || {}) as Record<string, unknown>;
+    const runId = (details.run_id as string) || undefined;
+    const scenarioId = (details.scenario_id as string) || undefined;
+    const tool = (details.tool_name as string) || (details.tool as string) || undefined;
+    const policy = (details.policy_id as string) || (details.policy as string) || undefined;
+
+    const summary = details?.query
+      ? String(details.query)
+      : details?.reasoning
+      ? String(details.reasoning)
+      : details?.summary
+      ? String(details.summary)
+      : JSON.stringify(details);
 
     return {
       id: e.event_id,
+      runId,
+      scenarioId,
+      tool,
+      policy,
       timestamp: e.timestamp,
       type: e.event_type,
       category: cat,
       actor: e.requester || "engineer_operator",
       role: e.role || "ENGINEER",
       summary,
-      raw: e.details as Record<string, unknown>,
+      raw: details,
     };
   });
 
-  const toolEvents: UnifiedEvent[] = (auditData?.tool_events || []).map((te: ExecutionEvent) => ({
-    id: te.event_id,
-    timestamp: te.timestamp,
-    type: `TOOL_${te.tool.toUpperCase()}`,
-    category: "TOOL",
-    actor: te.requester,
-    role: te.role,
-    summary: `Tool '${te.tool}' evaluated: ${te.decision} (${te.reason})`,
-    decision: te.decision,
-    raw: te as unknown as Record<string, unknown>,
-  }));
+  const toolEvents: UnifiedEvent[] = (auditData?.tool_events || []).map((te: ExecutionEvent) => {
+    const params = (te.parameters || {}) as Record<string, unknown>;
+    const runId = (params.run_id as string) || undefined;
+
+    return {
+      id: te.event_id,
+      runId,
+      tool: te.tool,
+      policy: te.reason,
+      timestamp: te.timestamp,
+      type: `TOOL_${te.tool.toUpperCase()}`,
+      category: "TOOL",
+      actor: te.requester,
+      role: te.role,
+      summary: `Tool '${te.tool}' evaluated: ${te.decision} (${te.reason})`,
+      decision: te.decision,
+      raw: te as unknown as Record<string, unknown>,
+    };
+  });
 
   const allEvents = [...agentEvents, ...toolEvents].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -130,44 +190,44 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
 
     if (evt.type.includes("QUERY") || (evt.category === "AGENT" && evt.type.includes("START"))) {
       return {
-        humanTitle: t.evtQuestionReceivedTitle,
-        explanation: t.evtQuestionReceivedDesc,
+        humanTitle: "Question received from operator",
+        explanation: "Operator submitted an industrial telemetry or procedure inquiry to the sovereign control plane.",
       };
     }
     if (evt.category === "KNOWLEDGE") {
       return {
-        humanTitle: t.evtKnowledgeConsultedTitle,
-        explanation: t.evtKnowledgeConsultedDesc,
+        humanTitle: "Plant records consulted",
+        explanation: "Sovereign local vector search retrieved private operating procedures within clearance bounds.",
       };
     }
     if (evt.category === "POLICY") {
       if (isDenied) {
         return {
-          humanTitle: t.evtPolicyBlockedTitle,
-          explanation: t.evtPolicyBlockedDesc,
+          humanTitle: "Permission checked → BLOCKED",
+          explanation: `FORGE verified ${evt.role} permissions and blocked the requested action before execution.`,
         };
       }
       return {
-        humanTitle: t.evtPolicyAllowedTitle,
-        explanation: t.evtPolicyAllowedDesc,
+        humanTitle: "Permission checked → Allowed",
+        explanation: `Action validated against policy rules for ${evt.role} role clearance.`,
       };
     }
     if (evt.category === "TOOL") {
       if (isDenied) {
         return {
-          humanTitle: t.evtToolBlockedTitle,
-          explanation: t.evtToolBlockedDesc,
+          humanTitle: "Tool execution blocked",
+          explanation: "Policy gateway prevented tool dispatch. Sandboxed code executed: 0 times.",
         };
       }
       return {
-        humanTitle: t.evtToolExecutedTitle,
-        explanation: t.evtToolExecutedDesc,
+        humanTitle: "Tool allowed & executed",
+        explanation: "Industrial tool executed inside local sandboxed environment with verified arguments.",
       };
     }
     if (evt.category === "VERIFICATION") {
       return {
-        humanTitle: t.evtVerifiedTitle,
-        explanation: t.evtVerifiedDesc,
+        humanTitle: "Answer verified independently",
+        explanation: "Deterministic Python checks evaluated calculations, consistency, and grounding.",
       };
     }
     return {
@@ -183,7 +243,7 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-              <BrassLabel variant="outline">{t.auditBadgeActivity}</BrassLabel>
+              <BrassLabel variant="outline">ACTIVITY TIMELINE</BrassLabel>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
                 FORENSIC LOG
               </span>
@@ -198,30 +258,63 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
                   border: "1px solid var(--sage)",
                 }}
               >
-                {t.auditBadgeAppendOnly}
+                LOCAL APPEND-ONLY AUDIT
               </span>
             </div>
 
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
-              {t.auditTitle}
+              {t("auditTitle")}
             </h1>
 
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink-2)", marginTop: 6, maxWidth: 680 }}>
-              {t.auditSubtitle}
+              {t("auditSubtitle")}
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <button
+              onClick={handleResetAudit}
+              disabled={isLoading || isResetting}
+              className="btn-brass-secondary"
+              style={{ fontSize: "12px", padding: "6px 14px", cursor: isResetting ? "not-allowed" : "pointer" }}
+            >
+              {isResetting ? t("auditResetting") : t("auditResetButton")}
+            </button>
             <button
               onClick={loadAuditData}
               disabled={isLoading}
               className="btn-brass-secondary"
               style={{ fontSize: "12px", padding: "6px 14px" }}
             >
-              {isLoading ? t.refreshingActivityBtn : t.refreshActivityBtn}
+              {isLoading ? "Refreshing..." : "↻ Refresh Activity"}
             </button>
           </div>
         </div>
+
+        {resetMessage && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: "8px 12px",
+              background: "rgba(156, 195, 168, 0.08)",
+              border: "1px solid var(--sage)",
+              borderRadius: "var(--radius-sm)",
+              fontSize: "12.5px",
+              color: "var(--sage)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>✓ {resetMessage}</span>
+            <button
+              onClick={() => setResetMessage(null)}
+              style={{ background: "none", border: "none", color: "var(--sage)", cursor: "pointer" }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         <Divider style={{ margin: "20px 0" }} />
 
@@ -238,7 +331,7 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
               <span style={{ color: "var(--sage)", fontSize: "12px" }}>✓</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 600 }}>
-                {t.normalFlowTitle}
+                NORMAL INVESTIGATION (ALLOWED)
               </span>
             </div>
             <div
@@ -269,7 +362,7 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
               <span style={{ color: "var(--coral)", fontSize: "12px" }}>✕</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 600 }}>
-                {t.blockedFlowTitle}
+                UNAUTHORIZED ACTUATION (BLOCKED)
               </span>
             </div>
             <div
@@ -302,7 +395,7 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
         >
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.kpiTotalEvents}
+              TOTAL RECORDED EVENTS
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--brass)", fontWeight: 600, marginTop: 2 }}>
               {totalEventsCount}
@@ -314,7 +407,7 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.kpiToolPolicy}
+              TOOL & POLICY EXECUTIONS
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--sage)", fontWeight: 600, marginTop: 2 }}>
               {auditData?.total_tool_events || 0}
@@ -326,25 +419,25 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.kpiStorageMode}
+              AUDIT STORAGE MODE
             </span>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--ink)", fontWeight: 600, marginTop: 8 }}>
-              {t.kpiSinkModeVal}
+              LOCAL APPEND-ONLY SINK
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.kpiSinkModeSub}
+              Local memory & file store
             </span>
           </div>
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.kpiOutsideAi}
+              OUTSIDE AI SERVICES
             </span>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--sage)", fontWeight: 600, marginTop: 8 }}>
-              {t.kpiNoneConfiguredVal}
+              NONE CONFIGURED
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.kpiNoneConfiguredSub}
+              Loopback inference only
             </span>
           </div>
         </div>
@@ -373,12 +466,20 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              {t.forensicSpineTitle} ({filteredEvents.length})
+              FORENSIC SPINE ({filteredEvents.length} EVENTS)
             </span>
           </div>
 
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {(["ALL", "AGENT", "KNOWLEDGE", "POLICY", "TOOL", "VERIFICATION"] as const).map((cat) => {
+            {[
+              { id: "ALL", label: t("auditFilterAll") },
+              { id: "AGENT", label: t("auditFilterAgent") },
+              { id: "KNOWLEDGE", label: t("auditFilterKnowledge") },
+              { id: "POLICY", label: t("auditFilterPolicy") },
+              { id: "TOOL", label: t("auditFilterTool") },
+              { id: "VERIFICATION", label: t("auditFilterVerification") },
+            ].map((catItem) => {
+              const cat = catItem.id as EventFilter;
               const isSelected = filter === cat;
               return (
                 <button
@@ -396,7 +497,7 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
                     transition: "all var(--dur-fast) var(--ease-out)",
                   }}
                 >
-                  {cat}
+                  {catItem.label}
                 </button>
               );
             })}
@@ -449,8 +550,11 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                        {evt.timestamp}
+                      <span
+                        title={evt.timestamp}
+                        style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", cursor: "help" }}
+                      >
+                        {formatISTTimestamp(evt.timestamp)}
                       </span>
                       <button
                         onClick={() => toggleExpand(evt.id)}
@@ -465,7 +569,7 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
                           cursor: "pointer",
                         }}
                       >
-                        {isExpanded ? t.closeJsonBtn : t.inspectJsonBtn}
+                        {isExpanded ? "Close JSON ▲" : "Inspect JSON ▼"}
                       </button>
                     </div>
                   </div>
@@ -493,11 +597,28 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
                       color: "var(--ink-3)",
                     }}
                   >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      <span>
+                        Actor: <strong style={{ color: "var(--ink-2)" }}>{evt.actor}</strong> ({evt.role})
+                      </span>
+                      {evt.runId && (
+                        <span>
+                          Run ID: <strong style={{ color: "var(--brass)" }}>{evt.runId}</strong>
+                        </span>
+                      )}
+                      {evt.tool && (
+                        <span>
+                          Tool: <strong style={{ color: "var(--sage)" }}>{evt.tool}</strong>
+                        </span>
+                      )}
+                      {evt.scenarioId && (
+                        <span>
+                          Scenario: <strong style={{ color: "var(--ink)" }}>{evt.scenarioId}</strong>
+                        </span>
+                      )}
+                    </div>
                     <span>
-                      {t.actorLabel} <strong style={{ color: "var(--ink-2)" }}>{evt.actor}</strong> ({evt.role})
-                    </span>
-                    <span>
-                      {t.eventIdLabel} {evt.id}
+                      Event ID: {evt.id}
                     </span>
                   </div>
 
@@ -537,10 +658,10 @@ export function AuditView({ locale = "en" }: { locale?: Locale }) {
         ) : (
           <div style={{ padding: "48px 20px", textAlign: "center", color: "var(--ink-3)" }}>
             <p style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--ink-2)", marginBottom: 6 }}>
-              No audit events recorded for current filter
+              {t("auditEmptyTitle")}
             </p>
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "13px" }}>
-              Run queries in the AI Workspace or execute tool actions to observe real-time audit event append operations.
+              {t("auditEmptyDesc")}
             </p>
           </div>
         )}

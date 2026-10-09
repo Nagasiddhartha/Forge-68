@@ -2,101 +2,121 @@
 
 import React, { useState } from "react";
 import { VerificationResult, VerificationStatus } from "@/lib/api";
-import { Locale, TRANSLATIONS } from "@/lib/i18n";
 import {
   EnamelSurface,
   VerdictBadge,
   BrassLabel,
   Divider,
-  AudioReadoutButton,
 } from "@/components/primitives";
+import { useTranslation } from "@/lib/i18n";
+import { ReadAloudButton } from "@/components/ReadAloudButton";
 
 interface VerificationPanelProps {
   verification?: VerificationResult | null;
-  locale?: Locale;
 }
 
-export function VerificationPanel({ verification, locale = "en" }: VerificationPanelProps) {
-  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
+export function VerificationPanel({ verification }: VerificationPanelProps) {
+  const { t } = useTranslation();
   const [expandedCheckName, setExpandedCheckName] = useState<string | null>(null);
 
   // Baseline 7 checks for Reactor R-204 investigation if none dynamically provided
   const baselineChecks = [
     {
       check_name: "PROVENANCE",
-      plainTitle: t.checkTraceable,
-      title: "Evidence Provenance & Integrity",
+      plainTitle: "Sources traceable",
+      title: t("verificationCheckProvTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "All ingested document chunks, tool telemetry, and visual observations possess verifiable source references and SHA-256 digests.",
-      details: "4/4 evidence records verified to source digests. No orphaned claims detected.",
+      details: "Evidence records verified to source digests. No orphaned claims detected.",
     },
     {
       check_name: "COMPLETENESS",
-      plainTitle: t.checkEvidenceComplete,
-      title: "Requirement & Evidence Completeness",
+      plainTitle: "Evidence complete",
+      title: t("verificationCheckCompTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "Every reasoning claim in the agent's plan has corresponding backing records across knowledge, tooling, and sensor telemetry.",
-      details: "Full coverage across SOP limits, ultrasonic PAUT thickness, and analog gauge reading.",
+      details: "Evidence coverage confirmed across ingested references and tool records.",
     },
     {
       check_name: "POLICY",
-      plainTitle: t.checkWithinPolicy,
-      title: "Policy Gateway Compliance",
+      plainTitle: "Within policy rules",
+      title: t("verificationCheckPolicyTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "All requested operations evaluated against role clearance. Zero execution of unauthorized, critical-risk, or write-actuation tool handlers.",
-      details: "Gateway default-deny confirmed. Calibration overrides strictly blocked.",
+      details: "Gateway default-deny confirmed. Critical mutations blocked.",
     },
     {
       check_name: "CLASSIFICATION",
-      plainTitle: t.checkWithinAccess,
-      title: "Data Classification Boundary",
+      plainTitle: "Within your access",
+      title: t("verificationCheckClassTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "Data classification levels respected. Requester clearance strictly subsumes retrieved document tiers.",
       details: "Zero clearance leakage. Bounded within sovereign enclave.",
     },
     {
       check_name: "PARAMETER_CONSISTENCY",
-      plainTitle: t.checkValuesAgree,
-      title: "Cross-Source Parameter Consistency",
+      plainTitle: "Values agree",
+      title: t("verificationCheckParamTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "Operating readings and engineering baselines are compared across multiple sources. Variances are flagged for review.",
-      details: "+1.8 bar delta between PI-204 (33.0 bar) and SOP §3.2 (31.2 bar). Non-conflicting semantic roles.",
+      details: "Cross-source parameter consistency verified against available reference baselines.",
     },
     {
       check_name: "CALCULATION",
-      plainTitle: t.checkMath,
-      title: "Deterministic Math Validation",
+      plainTitle: "Math independently checked",
+      title: t("verificationCheckCalcTitle"),
       status: "VERIFIED" as VerificationStatus,
-      description: "All numerical variances and pressure alarm margins are calculated by pure Python code, not by the language model.",
-      details: "Variance: 33.0 - 31.2 = +1.8 bar. Alarm margin: 33.5 - 33.0 = 0.5 bar. Math exact.",
+      description: "All numerical variances and engineering calculations are calculated by pure Python code, not by the language model.",
+      details: "Deterministic math verified via Python engine.",
     },
     {
       check_name: "GROUNDING",
-      plainTitle: t.checkEvidenceComplete,
-      title: "Synthesis Grounding & Hallucination Gate",
+      plainTitle: "Answer supported by evidence",
+      title: t("verificationCheckGroundTitle"),
       status: "VERIFIED" as VerificationStatus,
       description: "Response text is checked for factual grounding against verified evidence. Speculative assertions are purged.",
-      details: "100% of asserted quantities match verified evidence records.",
+      details: "Asserted quantities verified against backing evidence records.",
     },
   ];
 
-  const activeChecks = verification?.checks && verification.checks.length > 0
+  if (!verification) {
+    return (
+      <EnamelSurface variant="base" padding="spacious">
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <BrassLabel variant="outline">{t("verificationGatewayTitle")}</BrassLabel>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", marginTop: 12, marginBottom: 8, fontWeight: 500 }}>
+            {t("verificationEmptyTitle")}
+          </h2>
+          <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", maxWidth: "54ch", margin: "0 auto" }}>
+            {t("verificationEmptyDesc")}
+          </p>
+        </div>
+      </EnamelSurface>
+    );
+  }
+
+  const activeChecks = verification.checks && verification.checks.length > 0
     ? verification.checks.map((chk) => {
         const matchingBaseline = baselineChecks.find((b) => b.check_name === chk.check_type);
+        const detailsStr = chk.details && Object.keys(chk.details).length > 0
+          ? (typeof chk.details === "string" ? chk.details : JSON.stringify(chk.details))
+          : (chk.evidence_ids && chk.evidence_ids.length > 0
+              ? `Evaluated against ${chk.evidence_ids.length} evidence records.`
+              : matchingBaseline?.details || "Deterministic verification check evaluated.");
+
         return {
           check_name: chk.check_type,
           plainTitle: matchingBaseline?.plainTitle || chk.check_type.replace(/_/g, " "),
           title: matchingBaseline?.title || chk.check_type.replace(/_/g, " "),
           status: chk.status,
           description: chk.description,
-          details: matchingBaseline?.details || `Evidence items: ${chk.evidence_ids?.length || 0}`,
+          details: detailsStr,
         };
       })
-    : baselineChecks;
+    : [];
 
-  const currentStatus = verification?.status || "REVIEW_REQUIRED";
-  const summaryText = verification?.summary ||
-    "VERIFIED (7/7 checks passed). Supported by 4 multi-source evidence records and 2 deterministic calculations. Parameter variance (+1.8 bar) detected; human engineering review required before next shift.";
+  const currentStatus = verification.status || "REVIEW_REQUIRED";
+  const summaryText = verification.summary || "Independent verification evaluation complete.";
 
   const toggleCheck = (name: string) => {
     setExpandedCheckName((prev) => (prev === name ? null : name));
@@ -117,7 +137,7 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <BrassLabel variant="outline">{t.modelDoesNotVerifyTitle}</BrassLabel>
+            <BrassLabel variant="outline">THE MODEL DOES NOT VERIFY ITSELF</BrassLabel>
             <span
               style={{
                 fontFamily: "var(--font-mono)",
@@ -129,24 +149,24 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
                 border: "1px solid var(--sage)",
               }}
             >
-              {t.independentCodeChecksBadge}
+              7 INDEPENDENT CODE CHECKS
             </span>
           </div>
 
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--ink)", fontWeight: 500 }}>
-            {t.whyTrustTitle}
+            {t("verificationGatewaySubtitle")}
           </h2>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", marginTop: 4, maxWidth: 680 }}>
-            {t.checkedByPythonNotice}
+            {t("verificationGatewayDesc")}
           </p>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-            {t.deterministicVerdictLabel}
+            Deterministic Verdict
           </span>
-          <VerdictBadge verdict={currentStatus} locale={locale} />
+          <VerdictBadge verdict={currentStatus} />
         </div>
       </div>
 
@@ -163,21 +183,15 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
           marginBottom: 24,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-            {t.assessmentSummaryLabel}
+            VERIFICATION ASSESSMENT SUMMARY
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
               Checks Evaluated: {activeChecks.length} / 7
             </span>
-            <AudioReadoutButton
-              id="verification-summary-audio"
-              text={summaryText}
-              locale={locale}
-              variant="compact"
-              label={t.listenToAudit}
-            />
+            <ReadAloudButton text={summaryText} compact />
           </div>
         </div>
 
@@ -187,17 +201,9 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
 
         {verification?.conflicts && verification.conflicts.length > 0 && (
           <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 600 }}>
-                Flagged Parameter Discrepancy:
-              </span>
-              <AudioReadoutButton
-                id="verification-conflicts-audio"
-                text={`Flagged parameter discrepancy: ${verification.conflicts.map((c) => `${c.metric_or_topic}: ${c.source_a} ${c.value_a} compared to ${c.source_b} ${c.value_b}. ${c.description}`).join(". ")}`}
-                locale={locale}
-                variant="compact"
-              />
-            </div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 600 }}>
+              Flagged Parameter Discrepancy:
+            </span>
             {verification.conflicts.map((c, i) => (
               <p key={i} style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)", marginTop: 2 }}>
                 • {c.metric_or_topic}: {c.source_a} ({c.value_a}) vs {c.source_b} ({c.value_b}) — {c.description}
@@ -279,12 +285,6 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <AudioReadoutButton
-                      id={`chk-audio-${chk.check_name}`}
-                      text={`Check ${idx + 1}: ${chk.plainTitle}. ${chk.title}. Status: ${chk.status === "VERIFIED" ? "Passed" : chk.status}. ${chk.description}. Verification trace: ${chk.details}`}
-                      locale={locale}
-                      variant="compact"
-                    />
                     <span
                       style={{
                         fontFamily: "var(--font-mono)",
@@ -356,15 +356,7 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
           </h3>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <AudioReadoutButton
-            id="verification-terminal-status-audio"
-            text={`Final Deterministic Pipeline Status: Trust Boundary Assured. Human Operator Review Retained. Final verdict: ${currentStatus}.`}
-            locale={locale}
-            variant="compact"
-          />
-          <VerdictBadge verdict={currentStatus} locale={locale} />
-        </div>
+        <VerdictBadge verdict={currentStatus} />
       </div>
     </EnamelSurface>
   );

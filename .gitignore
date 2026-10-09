@@ -60,6 +60,12 @@ data/storage/
 *.sqlite3
 *.db
 backend/app/artifacts/store/
+backend/data/models/
+data/models/
+*.onnx
+*.bin
+*.safetensors
+*.pt
 
 # Local Knowledge Indexes & Embeddings Cache
 backend/data/knowledge_index/
@@ -69,8 +75,6 @@ backend/.knowledge_cache/
 embeddings.npz
 sentence_transformers/
 .cache/
-
-# Generated deliverables
 backend/data/deliverables/*.docx
-!backend/data/deliverables/.gitkeep
+backend/data/reports/*.docx
 

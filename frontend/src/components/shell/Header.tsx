@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { DataClassification, Role } from "@/lib/api";
 import { ComputedRuntimeState } from "@/lib/runtime";
 import { ROLE_PERMISSIONS } from "@/lib/permissions";
-import { Locale, TRANSLATIONS } from "@/lib/i18n";
+import { useTranslation } from "@/lib/i18n";
 
 export type ShellDestination = "missions" | "library" | "governance" | "audit" | "boundary";
 
@@ -16,8 +16,7 @@ export interface HeaderProps {
   clearance: DataClassification;
   onChangeClearance: (c: DataClassification) => void;
   runtime: ComputedRuntimeState;
-  locale?: Locale;
-  onChangeLocale?: (l: Locale) => void;
+  onOpenVoice?: () => void;
 }
 
 export function Header({
@@ -28,23 +27,23 @@ export function Header({
   clearance,
   onChangeClearance,
   runtime,
-  locale = "en",
-  onChangeLocale,
+  onOpenVoice,
 }: HeaderProps) {
-  const t = TRANSLATIONS[locale];
-  const navItems: Array<{ id: ShellDestination; label: string }> = [
-    { id: "missions", label: t.navMissions },
-    { id: "library", label: t.navKnowledge },
-    { id: "governance", label: t.navGovernance },
-    { id: "audit", label: t.navAudit },
-    { id: "boundary", label: t.navBoundary },
-  ];
+  const { language, setLanguage, t } = useTranslation();
   const [personaOpen, setPersonaOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const navContainerRef = useRef<HTMLDivElement>(null);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const navItems: Array<{ id: ShellDestination; label: string }> = [
+    { id: "missions", label: t("navMissions") },
+    { id: "library", label: t("navKnowledge") },
+    { id: "governance", label: t("navGovernance") },
+    { id: "audit", label: t("navAudit") },
+    { id: "boundary", label: t("navBoundary") },
+  ];
 
   // Underline slide position
   const [underlineStyle, setUnderlineStyle] = useState<{ left: number; width: number }>({
@@ -60,7 +59,7 @@ export function Header({
     if (def) {
       onChangeClearance(def.defaultClearance);
     }
-    setToastMessage(`Access context updated: Operating as ${newRole} (${def?.defaultClearance || clearance})`);
+    setToastMessage(`${t("navContextUpdated")} ${newRole} (${def?.defaultClearance || clearance})`);
     setTimeout(() => {
       setToastMessage(null);
     }, 4500);
@@ -78,7 +77,7 @@ export function Header({
         width: btnRect.width,
       });
     }
-  }, [activeDestination]);
+  }, [activeDestination, language]);
 
   // Close popover on outside click
   useEffect(() => {
@@ -137,7 +136,7 @@ export function Header({
             }}
             className="md-show-inline"
           >
-            {t.brandTitle}
+            Industrial AI Control Plane
           </span>
         </div>
 
@@ -195,78 +194,8 @@ export function Header({
         </nav>
       </div>
 
-      {/* Right Controls: Language Selector, Zero-Egress Air-Gap, Boundary Chip & Persona */}
+      {/* Right Controls: Boundary Chip, Language Selector, Voice, & Persona */}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        {/* Language Selector Pill */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            background: "var(--bg-1)",
-            border: "1px solid var(--line)",
-            borderRadius: "var(--radius-pill)",
-            padding: "2px",
-          }}
-        >
-          {(["en", "hi", "kn"] as Locale[]).map((loc) => {
-            const isActive = (locale || "en") === loc;
-            const label = loc === "en" ? "EN" : loc === "hi" ? "हिंदी" : "ಕನ್ನಡ";
-            return (
-              <button
-                key={loc}
-                onClick={() => onChangeLocale?.(loc)}
-                style={{
-                  background: isActive ? "var(--bg-3)" : "none",
-                  border: "none",
-                  color: isActive ? "var(--brass)" : "var(--ink-2)",
-                  fontWeight: isActive ? 600 : 400,
-                  fontSize: "11.5px",
-                  fontFamily: "var(--font-ui)",
-                  borderRadius: "var(--radius-pill)",
-                  padding: "3px 9px",
-                  cursor: "pointer",
-                  transition: "all var(--dur-fast) var(--ease-out)",
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Live Zero-Egress Air-Gap Pill */}
-        <div
-          onClick={() => onSelectDestination("boundary")}
-          title="Host Network Isolation Verified: 0 B outbound traffic (Air-Gapped)"
-          style={{
-            background: "rgba(156, 195, 168, 0.12)",
-            border: "1px solid var(--sage)",
-            borderRadius: "var(--radius-pill)",
-            padding: "4px 10px",
-            fontFamily: "var(--font-mono)",
-            fontSize: "11.5px",
-            color: "var(--sage)",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              backgroundColor: "var(--sage)",
-              boxShadow: "0 0 6px var(--sage)",
-              flexShrink: 0,
-            }}
-          />
-          <span style={{ whiteSpace: "nowrap" }}>{t.airGappedBadge}</span>
-        </div>
-
         {/* Boundary Chip */}
         <button
           onClick={() => onSelectDestination("boundary")}
@@ -295,7 +224,69 @@ export function Header({
               boxShadow: isOnline ? "0 0 6px var(--sage)" : "0 0 6px var(--coral)",
             }}
           />
-          <span>{isOnline ? t.localOnly : t.offline}</span>
+          <span>{isOnline ? t("navLocalOnly") : t("navOffline")}</span>
+        </button>
+
+        {/* Global Language Selector (EN / HI / KN) */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            background: "var(--bg-1)",
+            border: "1px solid var(--line)",
+            borderRadius: "var(--radius-pill)",
+            padding: "2px 5px",
+          }}
+          title="Switch application language (English / Hindi / Kannada)"
+        >
+          {(["en", "hi", "kn"] as const).map((lng) => {
+            const isSelected = language === lng;
+            return (
+              <button
+                key={lng}
+                type="button"
+                onClick={() => setLanguage(lng)}
+                style={{
+                  background: isSelected ? "var(--brass)" : "transparent",
+                  color: isSelected ? "#000" : "var(--ink-2)",
+                  border: "none",
+                  borderRadius: "var(--radius-pill)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "11px",
+                  fontWeight: isSelected ? 700 : 500,
+                  padding: "3px 8px",
+                  cursor: "pointer",
+                  transition: "all var(--dur-fast) var(--ease-out)",
+                }}
+              >
+                {lng.toUpperCase()}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Persistent Voice Assistant Trigger */}
+        <button
+          onClick={onOpenVoice}
+          title="Open sovereign local voice assistant"
+          style={{
+            background: "var(--bg-1)",
+            border: "1px solid var(--line)",
+            borderRadius: "var(--radius-pill)",
+            padding: "5px 12px",
+            fontFamily: "var(--font-ui)",
+            fontSize: "12px",
+            color: "var(--ink)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            cursor: "pointer",
+            transition: "border-color var(--dur-fast) var(--ease-out)",
+          }}
+        >
+          <span>🎙</span>
+          <span>{t("navVoiceButton")}</span>
         </button>
 
         {/* Demo Persona Selector */}
@@ -316,7 +307,7 @@ export function Header({
               cursor: "pointer",
             }}
           >
-            <span style={{ color: "var(--ink-3)" }}>{t.personaLabel}</span>
+            <span style={{ color: "var(--ink-3)" }}>{t("navPersona")}:</span>
             <span style={{ fontWeight: 500 }}>{role}</span>
             <span style={{ color: "var(--line-strong)" }}>·</span>
             <span style={{ color: "var(--brass)" }}>{clearance}</span>
@@ -347,14 +338,14 @@ export function Header({
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 500, color: "var(--ink)" }}>
-                    {t.selectPersonaTitle}
+                    {t("navPersonaSelectTitle")}
                   </span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
-                    {t.rbacEnforcedBadge}
+                    {t("navRbacBadge")}
                   </span>
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-2)", marginTop: 4 }}>
-                  {t.selectPersonaDesc}
+                  {t("navRbacExplanation")}
                 </div>
               </div>
 
@@ -417,7 +408,7 @@ export function Header({
               {/* Custom Clearance override toggle */}
               <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                  {t.clearanceOverride}
+                  Clearance Override:
                 </span>
                 <select
                   value={clearance}

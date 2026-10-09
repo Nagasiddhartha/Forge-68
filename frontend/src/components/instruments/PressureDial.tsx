@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useId, useMemo, useState } from "react";
-import { Locale } from "@/lib/i18n";
 
 export interface PressureDialProps {
   value: number;
@@ -17,7 +16,6 @@ export interface PressureDialProps {
   animate?: boolean;
   className?: string;
   style?: React.CSSProperties;
-  locale?: Locale;
 }
 
 /**
@@ -61,7 +59,6 @@ export function PressureDial({
   animate = true,
   className = "",
   style,
-  locale = "en",
 }: PressureDialProps) {
   const gradientId = useId();
 
@@ -166,12 +163,7 @@ export function PressureDial({
   // Accessible narration
   const deviation = (value - normal).toFixed(1);
   const deviationSign = value >= normal ? "+" : "";
-  const ariaDescription =
-    locale === "kn"
-      ? `ಒತ್ತಡ ಡಯಲ್ ವಾಚನ ${value.toFixed(1)} ${unit}. ಸಾಮಾನ್ಯ ಬೇಸ್‌ಲೈನ್ ${normal} ${unit} (${deviationSign}${deviation} ${unit}). ಅಲಾರ್ಮ್ ಮಿತಿ ${alarm} ${unit}. ಟ್ರಿಪ್ ಮಿತಿ ${trip} ${unit}.`
-      : locale === "hi"
-      ? `दबाव डायल रीडिंग ${value.toFixed(1)} ${unit}. सामान्य बेसलाइन ${normal} ${unit} (${deviationSign}${deviation} ${unit}). अलार्म सीमा ${alarm} ${unit}. ट्रिप सीमा ${trip} ${unit}.`
-      : `Pressure dial reading ${value.toFixed(1)} ${unit}. Normal baseline is ${normal} ${unit} (${deviationSign}${deviation} ${unit}). Alarm threshold is ${alarm} ${unit}. Trip threshold is ${trip} ${unit}.`;
+  const ariaDescription = `Pressure dial reading ${value.toFixed(1)} ${unit}. Normal baseline is ${normal} ${unit} (${deviationSign}${deviation} ${unit}). Alarm threshold is ${alarm} ${unit}. Trip threshold is ${trip} ${unit}.`;
 
   return (
     <div

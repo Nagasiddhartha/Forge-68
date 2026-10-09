@@ -5,7 +5,6 @@ import { DataClassification, Role } from "@/lib/api";
 import { ComputedRuntimeState } from "@/lib/runtime";
 import { Header, ShellDestination } from "./Header";
 import { RuntimeFooter } from "./RuntimeFooter";
-import { Locale } from "@/lib/i18n";
 
 export interface AppShellProps {
   activeDestination: ShellDestination;
@@ -16,8 +15,7 @@ export interface AppShellProps {
   onChangeClearance: (c: DataClassification) => void;
   runtime: ComputedRuntimeState;
   onRefreshRuntime?: () => void;
-  locale?: Locale;
-  onChangeLocale?: (l: Locale) => void;
+  onOpenVoice?: () => void;
   children: React.ReactNode;
 }
 
@@ -30,8 +28,7 @@ export function AppShell({
   onChangeClearance,
   runtime,
   onRefreshRuntime,
-  locale = "en",
-  onChangeLocale,
+  onOpenVoice,
   children,
 }: AppShellProps) {
   return (
@@ -54,8 +51,7 @@ export function AppShell({
         clearance={clearance}
         onChangeClearance={onChangeClearance}
         runtime={runtime}
-        locale={locale}
-        onChangeLocale={onChangeLocale}
+        onOpenVoice={onOpenVoice}
       />
 
       {/* 2. Main Work Area (1360px max width, centered) */}
@@ -73,7 +69,7 @@ export function AppShell({
       </main>
 
       {/* 3. Runtime Truth Footer (36px fixed) */}
-      <RuntimeFooter runtime={runtime} onRefresh={onRefreshRuntime} locale={locale} />
+      <RuntimeFooter runtime={runtime} onRefresh={onRefreshRuntime} />
 
       <style jsx>{`
         @media (max-width: 780px) {

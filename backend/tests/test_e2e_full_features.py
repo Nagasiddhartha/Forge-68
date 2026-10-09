@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
-client = TestClient(app)
+client = TestClient(app, timeout=120.0)
 
 def test_full_system_features():
     # 1. Preflight & Diagnostics

@@ -2,30 +2,28 @@
 
 import React, { useState } from "react";
 import { CalculationResult, EvidenceRecord, EvidenceSet } from "@/lib/api";
-import { Locale, TRANSLATIONS } from "@/lib/i18n";
 import {
   EnamelSurface,
   BrassLabel,
   Divider,
-  AudioReadoutButton,
 } from "@/components/primitives";
+import { useTranslation } from "@/lib/i18n";
+import { ReadAloudButton } from "@/components/ReadAloudButton";
 
 interface EvidencePanelProps {
   evidenceSet?: EvidenceSet | null;
   evidenceList?: EvidenceRecord[];
   calculations?: CalculationResult[];
   title?: string;
-  locale?: Locale;
 }
 
 export function EvidencePanel({
   evidenceSet,
   evidenceList,
   calculations = [],
-  title = "Evidence Dossier",
-  locale = "en",
+  title,
 }: EvidencePanelProps) {
-  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<"ALL" | "DOCUMENT" | "TOOL" | "VISUAL" | "CALCULATION">("ALL");
 
   // Gather items
@@ -39,70 +37,9 @@ export function EvidencePanel({
       ]
     : [];
 
-  // Default baseline evidence for Reactor R-204 if none dynamically captured
-  const displayRecords: EvidenceRecord[] = allRecords.length > 0 ? allRecords : [
-    {
-      evidence_id: "evd-doc-r204-sop",
-      source_type: "knowledge_document",
-      source_reference: "doc:r204_operating_sop.md#chunk_0",
-      classification: "INTERNAL",
-      retrieved_data: {},
-      timestamp: "2026-10-06T00:00:00Z",
-      verified: true,
-      retrieved_text: "SOP-R204 Rev C §3.2: Normal operating baseline pressure is 31.2 bar. High alarm threshold is configured at 33.5 bar. Safety trip shutdown interlock triggers at 35.0 bar.",
-      filename: "r204_operating_sop.md",
-      retrieval_score: 0.94,
-      chunk_id: "chunk_0",
-    },
-    {
-      evidence_id: "evd-vis-pi204-dial",
-      source_type: "visual_inspection",
-      source_reference: "img:r204_pressure_gauge.png#dial_pi204",
-      classification: "INTERNAL",
-      retrieved_data: {},
-      timestamp: "2026-10-06T00:00:00Z",
-      verified: true,
-      retrieved_text: "Visual inspection of analog gauge PI-204 needle reveals steady-state reading at 33.0 bar. Dial condition intact with valid calibration stamp.",
-      finding_type: "ANALOG_GAUGE_OBSERVATION",
-      source_image_hash: "f48b11c0993ad8371948ba1283c74829",
-    },
-    {
-      evidence_id: "evd-tool-paut-thickness",
-      source_type: "LOCAL_INDUSTRIAL_TOOL",
-      source_reference: "tool:query_equipment_history",
-      classification: "INTERNAL",
-      retrieved_data: {},
-      timestamp: "2026-10-06T00:00:00Z",
-      verified: true,
-      retrieved_text: "PAUT ultrasonic inspection record 204-07 indicates minimum cylindrical shell wall thickness of 2.2 mm at nozzle junction N2.",
-      tool_name: "query_equipment_history",
-    },
-  ];
-
-  const defaultCalculations: CalculationResult[] = [
-    {
-      calculation_id: "calc-press-var-01",
-      calculation_type: "PRESSURE_VARIANCE",
-      result: 1.8,
-      units: "bar",
-      supporting_evidence_ids: ["evd-doc-r204-sop", "evd-vis-pi204-dial"],
-      timestamp: "2026-10-06T00:00:00Z",
-      description: "Observed telemetry reading (33.0 bar) is +1.8 bar above normal operating baseline (31.2 bar).",
-      inputs: { observed_bar: 33.0, baseline_bar: 31.2 },
-    },
-    {
-      calculation_id: "calc-alarm-margin-02",
-      calculation_type: "ALARM_MARGIN",
-      result: 0.5,
-      units: "bar",
-      supporting_evidence_ids: ["evd-doc-r204-sop", "evd-vis-pi204-dial"],
-      timestamp: "2026-10-06T00:00:00Z",
-      description: "Remaining margin to high pressure alarm threshold (33.5 bar) is 0.5 bar.",
-      inputs: { alarm_bar: 33.5, observed_bar: 33.0 },
-    },
-  ];
-
-  const activeCalculations = calculations.length > 0 ? calculations : (allRecords.length === 0 ? defaultCalculations : []);
+  // Only render actual execution evidence records strictly belonging to current run
+  const displayRecords: EvidenceRecord[] = allRecords;
+  const activeCalculations: CalculationResult[] = calculations;
 
   const filteredRecords = displayRecords.filter((rec) => {
     if (filter === "ALL") return true;
@@ -130,59 +67,50 @@ export function EvidencePanel({
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <BrassLabel variant="outline">{t.whatSupportsTitle.toUpperCase()}</BrassLabel>
+            <BrassLabel variant="outline">{t("evidenceDossierSubtitle")}</BrassLabel>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.multiSourceDossierTitle}
+              {t("evidenceDossierSubtitle")}
             </span>
           </div>
 
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", color: "var(--ink)", fontWeight: 500 }}>
-            {title === "Execution Evidence Records" ? t.evidenceHeaderTitle : (title || t.whatSupportsTitle)}
+            {title || t("evidenceDossierTitle")}
           </h2>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", marginTop: 2 }}>
-            {t.evidenceDossierSubtitle}
+            {t("evidenceDossierDesc")}
           </p>
         </div>
 
-        {/* Filter Pills & Audio Button */}
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <AudioReadoutButton
-            id="evidence-dossier-header-audio"
-            text={`${title === "Execution Evidence Records" ? t.evidenceHeaderTitle : (title || t.whatSupportsTitle)}. ${t.evidenceDossierSubtitle}. Total records: ${displayRecords.length}. Calculations: ${activeCalculations.length}.`}
-            locale={locale}
-            variant="compact"
-            label={t.readOutLoud}
-          />
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {[
-              { id: "ALL", label: t.filterAllEvidence },
-              { id: "DOCUMENT", label: t.filterProcedures },
-              { id: "TOOL", label: t.filterSensors },
-              { id: "VISUAL", label: t.filterGauges },
-              { id: "CALCULATION", label: t.filterMath },
-            ].map((tab) => {
-              const isSelected = filter === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setFilter(tab.id as typeof filter)}
-                  style={{
-                    background: isSelected ? "var(--bg-3)" : "var(--bg-0)",
-                    border: isSelected ? "1px solid var(--brass)" : "1px solid var(--line)",
-                    borderRadius: "var(--radius-pill)",
-                    color: isSelected ? "var(--ink)" : "var(--ink-3)",
-                    fontFamily: "var(--font-ui)",
-                    fontSize: "12px",
-                    padding: "5px 12px",
-                    cursor: "pointer",
-                    transition: "all var(--dur-fast) var(--ease-out)",
-                  }}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+        {/* Filter Pills */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {[
+            { id: "ALL", label: t("evidenceFilterAll") },
+            { id: "DOCUMENT", label: t("evidenceFilterDoc") },
+            { id: "TOOL", label: t("evidenceFilterTool") },
+            { id: "VISUAL", label: t("evidenceFilterVisual") },
+            { id: "CALCULATION", label: t("evidenceFilterCalc") },
+          ].map((tab) => {
+            const isSelected = filter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setFilter(tab.id as typeof filter)}
+                style={{
+                  background: isSelected ? "var(--bg-3)" : "var(--bg-0)",
+                  border: isSelected ? "1px solid var(--brass)" : "1px solid var(--line)",
+                  borderRadius: "var(--radius-pill)",
+                  color: isSelected ? "var(--ink)" : "var(--ink-3)",
+                  fontFamily: "var(--font-ui)",
+                  fontSize: "12px",
+                  padding: "5px 12px",
+                  cursor: "pointer",
+                  transition: "all var(--dur-fast) var(--ease-out)",
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -213,16 +141,14 @@ export function EvidencePanel({
                   </span>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <AudioReadoutButton
-                    id={`calc-audio-${calc.calculation_id}`}
-                    text={`Deterministic Calculation: ${calc.calculation_type}. Result: ${calc.result} ${calc.units}. Inputs: ${Object.entries(calc.inputs).map(([k, v]) => `${k} is ${v}`).join(", ")}. Description: ${calc.description}`}
-                    locale={locale}
-                    variant="compact"
-                  />
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
                     ID: {calc.calculation_id}
                   </span>
+                  <ReadAloudButton
+                    text={`${calc.description}. Calculated result: ${calc.result} ${calc.units}`}
+                    compact
+                  />
                 </div>
               </div>
 
@@ -321,12 +247,6 @@ export function EvidencePanel({
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <AudioReadoutButton
-                    id={`evidence-audio-${record.evidence_id}`}
-                    text={`Evidence Record ${footnoteNumber}. ${typeLabel} from ${record.source_reference}. Text: ${record.retrieved_text}`}
-                    locale={locale}
-                    variant="compact"
-                  />
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
                     ID: {record.evidence_id}
                   </span>
@@ -335,6 +255,10 @@ export function EvidencePanel({
                       {(record.retrieval_score * 100).toFixed(0)}% Match
                     </span>
                   )}
+                  <ReadAloudButton
+                    text={record.retrieved_text || ""}
+                    compact
+                  />
                 </div>
               </div>
 
@@ -407,7 +331,7 @@ export function EvidencePanel({
       {totalCount === 0 && (
         <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--ink-3)" }}>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: "13px" }}>
-            No evidence records currently match filter criteria.
+            {t("evidenceEmptyTitle")}
           </p>
         </div>
       )}

@@ -32,13 +32,34 @@ class DemoScenarioMetadata(BaseModel):
     highlights: List[str] = Field(default_factory=list)
 
 
+from pydantic import model_validator
+
+
 class DemoRunRequest(BaseModel):
     """Payload to execute an end-to-end industrial demo mission."""
-    scenario: DemoScenarioId = Field(..., description="Scenario identifier to execute")
+    scenario: Optional[DemoScenarioId] = Field(default=None, description="Scenario identifier to execute")
+    scenario_id: Optional[DemoScenarioId] = Field(default=None, description="Explicit scenario identifier alias")
+    run_id: Optional[str] = Field(default=None, description="Unique execution run identifier")
     role: Optional[Role] = Field(default=None, description="Optional override role")
     classification: Optional[DataClassification] = Field(default=None, description="Optional override clearance")
+    clearance: Optional[DataClassification] = Field(default=None, description="Optional alias for classification")
     deterministic: bool = Field(default=True, description="Enforce deterministic sovereign execution mode")
-    locale: Optional[str] = Field(default="en", description="Target language locale: en, hi, kn")
+    language: Optional[str] = Field(default="en", description="Target interaction language: 'en', 'hi', or 'kn'")
+    locale: Optional[str] = Field(default="en", description="Target language locale alias")
+
+    @model_validator(mode="after")
+    def validate_fields(self) -> "DemoRunRequest":
+        if not self.scenario and self.scenario_id:
+            self.scenario = self.scenario_id
+        if not self.scenario:
+            raise ValueError("Field 'scenario' or 'scenario_id' is required.")
+        if not self.classification and self.clearance:
+            self.classification = self.clearance
+        if self.locale and self.locale != "en" and self.language == "en":
+            self.language = self.locale
+        elif self.language and self.language != "en" and self.locale == "en":
+            self.locale = self.language
+        return self
 
 
 
@@ -68,6 +89,9 @@ class DemoResetResponse(BaseModel):
 class DemoRunResponse(AgentQueryResponse):
     """Structured response for M8 UI containing complete auditable demo trajectory."""
     scenario: DemoScenarioId
+    scenario_id: DemoScenarioId = Field(..., description="Explicit scenario identifier")
+    run_id: str = Field(..., description="Unique execution run identifier")
+    execution_state: str = Field(default="COMPLETED", description="Current execution state")
     scenario_title: str
     execution_phases: List[str] = Field(default_factory=list)
     audit_events: List[Dict[str, Any]] = Field(default_factory=list)
@@ -77,4 +101,5 @@ class DemoRunResponse(AgentQueryResponse):
     timing: Optional[DemoExecutionTiming] = Field(default=None, description="Monotonic execution timing breakdown in ms")
     is_synthetic: bool = True
     synthetic_notice: str = "SYNTHETIC INDUSTRIAL TELEMETRY — AIR-GAPPED DEMONSTRATION DATA ONLY"
+
 

@@ -1,5 +1,4 @@
 import React from "react";
-import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
 export interface SubsystemCardProps {
   code: string;
@@ -8,7 +7,6 @@ export interface SubsystemCardProps {
   status: "active" | "ready" | "staged";
   path: string;
   details: string;
-  locale?: Locale;
 }
 
 export const SubsystemCard: React.FC<SubsystemCardProps> = ({
@@ -17,10 +15,8 @@ export const SubsystemCard: React.FC<SubsystemCardProps> = ({
   description,
   status,
   path,
-  details,
-  locale = "en",
+  details
 }) => {
-  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
   const statusColors = {
     active: { text: "var(--accent-emerald)", bg: "rgba(16, 185, 129, 0.1)", border: "rgba(16, 185, 129, 0.3)" },
     ready: { text: "var(--accent-cyan)", bg: "rgba(0, 240, 255, 0.1)", border: "rgba(0, 240, 255, 0.3)" },
@@ -28,7 +24,6 @@ export const SubsystemCard: React.FC<SubsystemCardProps> = ({
   };
 
   const currentTheme = statusColors[status];
-  const statusLabel = status === "active" ? t.subsystemActive : status === "ready" ? t.subsystemReady : t.subsystemStaged;
 
   return (
     <div style={{
@@ -69,7 +64,7 @@ export const SubsystemCard: React.FC<SubsystemCardProps> = ({
             textTransform: "uppercase",
             fontWeight: 700
           }}>
-            {statusLabel}
+            {status}
           </span>
         </div>
 

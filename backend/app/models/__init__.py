@@ -120,6 +120,13 @@ from app.vision.provider import (
     get_vision_provider,
 )
 
+from app.models.router import (
+    RouteDecision,
+    TaskModelRouter,
+    TaskType,
+    task_model_router,
+)
+
 __all__ = [
     "BaseModelProvider",
     "ModelMessage",
@@ -139,4 +146,8 @@ __all__ = [
     "VisionRequest",
     "VisionResponse",
     "get_vision_provider",
+    "RouteDecision",
+    "TaskModelRouter",
+    "TaskType",
+    "task_model_router",
 ]

@@ -8,15 +8,15 @@ import {
   fetchTools,
 } from "@/lib/api";
 import { EnamelSurface, SectionHeader, BrassLabel } from "./primitives";
-import { Locale, TRANSLATIONS } from "@/lib/i18n";
+import { useTranslation } from "@/lib/i18n";
+import { ROLE_PERMISSIONS } from "@/lib/permissions";
 
 interface GovernanceViewProps {
   role?: string;
-  locale?: Locale;
 }
 
-export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceViewProps) {
-  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
+export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
+  const { t } = useTranslation();
   const [securityReport, setSecurityReport] = useState<SecurityBoundaryReport | null>(null);
   const [tools, setTools] = useState<ToolMetadata[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -42,77 +42,34 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
     };
   }, []);
 
-  const permissionMatrix = [
-    {
-      role: t.roleEngineer,
-      clearance: "CONFIDENTIAL",
-      read: t.badgeAllowed,
-      investigate: t.badgeAllowed,
-      actuate: t.badgeApprovalRequired,
-      admin: t.badgeBlocked,
-      summary: t.roleSummaryEngineer,
-      rawRole: "ENGINEER",
-    },
-    {
-      role: t.roleInspector,
-      clearance: "INTERNAL",
-      read: t.badgeAllowed,
-      investigate: t.badgeAllowed,
-      actuate: t.badgeBlocked,
-      admin: t.badgeBlocked,
-      summary: t.roleSummaryInspector,
-      rawRole: "INSPECTOR",
-    },
-    {
-      role: t.roleAiOperator,
-      clearance: "RESTRICTED",
-      read: t.badgeAllowed,
-      investigate: t.badgeAllowed,
-      actuate: t.badgeBlocked,
-      admin: t.badgeBlocked,
-      summary: t.roleSummaryAiOperator,
-      rawRole: "AI_OPERATOR",
-    },
-    {
-      role: t.roleAdmin,
-      clearance: "CRITICAL",
-      read: t.badgeAllowed,
-      investigate: t.badgeAllowed,
-      actuate: t.badgeApprovalRequired,
-      admin: t.badgeAllowed,
-      summary: t.roleSummaryAdmin,
-      rawRole: "ADMIN",
-    },
-    {
-      role: t.roleSecurityOfficer,
-      clearance: "CRITICAL",
-      read: t.badgeAllowed,
-      investigate: t.badgeAllowed,
-      actuate: t.badgeBlocked,
-      admin: t.badgeBlocked,
-      summary: t.roleSummarySecurityOfficer,
-      rawRole: "SECURITY_OFFICER",
-    },
-  ];
+  const permissionMatrix = Object.values(ROLE_PERMISSIONS).map((p) => ({
+    role: p.role,
+    clearance: p.defaultClearance,
+    read: p.read === "ALLOWED" ? "✓ Allowed" : "✕ Blocked",
+    investigate: p.investigate === "ALLOWED" ? "✓ Allowed" : "✕ Blocked",
+    actuate: p.actuate === "ALLOWED" ? "✓ Allowed" : p.actuate === "NEEDS_APPROVAL" ? "⚠ Approval required" : "✕ Blocked",
+    admin: p.admin === "ALLOWED" ? "✓ Allowed" : p.admin === "NEEDS_APPROVAL" ? "⚠ Approval required" : "✕ Blocked",
+    summary: p.summary,
+  }));
 
   const getStatusBadge = (status: string) => {
-    if (status === t.badgeAllowed || status.includes("Allowed") || status.includes("✓")) {
+    if (status.includes("✓ Allowed") || status.includes("Allowed") || status.includes("अनुमत") || status.includes("ಅನುಮತಿಸಲಾಗಿದೆ")) {
       return (
         <span style={{ color: "var(--sage)", background: "rgba(156, 195, 168, 0.1)", border: "1px solid var(--sage)", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "11px", fontWeight: 600 }}>
-          {t.badgeAllowed}
+          {t("govStatusAllowed")}
         </span>
       );
     }
-    if (status === t.badgeApprovalRequired || status.includes("Approval") || status.includes("⚠")) {
+    if (status.includes("⚠ Approval required") || status.includes("Approval") || status.includes("अनुमोदन") || status.includes("ಅನುಮೋದನೆ")) {
       return (
         <span style={{ color: "var(--brass)", background: "rgba(200, 161, 90, 0.1)", border: "1px solid var(--brass)", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "11px", fontWeight: 600 }}>
-          {t.badgeApprovalRequired}
+          {t("govStatusApproval")}
         </span>
       );
     }
     return (
       <span style={{ color: "var(--pewter)", background: "rgba(141, 180, 214, 0.08)", border: "1px solid var(--line-strong)", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "11px", fontWeight: 600 }}>
-        {t.badgeBlocked}
+        {t("govStatusBlocked")}
       </span>
     );
   };
@@ -122,7 +79,7 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
       {/* Editorial Header */}
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-          <BrassLabel variant="outline">{t.authorityLedgerBadge}</BrassLabel>
+          <BrassLabel variant="outline">AUTHORITY LEDGER</BrassLabel>
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -134,7 +91,7 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
               border: "1px solid var(--coral)",
             }}
           >
-            {t.defaultDenyBadge}
+            DEFAULT-DENY ENFORCED
           </span>
           <span
             style={{
@@ -148,7 +105,7 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
               fontWeight: 600,
             }}
           >
-            {t.securityPassBadge}
+            SECURITY TESTS: 10 / 10 PASSED
           </span>
         </div>
 
@@ -162,7 +119,7 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
             letterSpacing: "-0.01em",
           }}
         >
-          {t.governanceTitle}
+          {t("govTitle")}
         </h1>
 
         <p
@@ -174,7 +131,7 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
             maxWidth: "68ch",
           }}
         >
-          {t.governanceSubtitle}
+          {t("govSubtitle")}
         </p>
       </div>
 
@@ -199,13 +156,13 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              {t.permissionMatrixTitle}
+              PERMISSION MATRIX
             </span>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: "4px 0" }}>
-              {t.permissionMatrixTitle}
+              Role Permissions Matrix
             </h2>
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)" }}>
-              {t.activePersonaLabel} <strong style={{ color: "var(--brass)" }}>{role}</strong>. {t.selectPersonaDesc}
+              Current active persona: <strong style={{ color: "var(--brass)" }}>{role}</strong>. Switching personas in the header updates your execution boundaries instantly.
             </p>
           </div>
 
@@ -223,7 +180,8 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
               color: "var(--sage)",
             }}
           >
-            <span>{t.policyGatewayActive}</span>
+            <span>Policy Gateway:</span>
+            <strong>ACTIVE & ENFORCING</strong>
           </div>
         </div>
 
@@ -231,17 +189,17 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
           <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "var(--font-ui)", fontSize: "14px", textAlign: "left" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--line-strong)", color: "var(--ink-3)" }}>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colRole}</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colRead}</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colInvestigate}</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colActuate}</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colAdmin}</th>
-                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t.colSummary}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t("govColRole")}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t("govColRead")}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t("govColInvestigate")}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t("govColActuate")}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t("govColAdmin")}</th>
+                <th style={{ padding: "12px 14px", fontWeight: 600 }}>{t("govColSummary")}</th>
               </tr>
             </thead>
             <tbody>
               {permissionMatrix.map((p, idx) => {
-                const isActive = p.rawRole === role || p.role.toUpperCase() === role.toUpperCase().replace("_", " ");
+                const isActive = p.role.toUpperCase() === role.toUpperCase().replace("_", " ") || p.role === role;
                 return (
                   <tr
                     key={idx}
@@ -319,10 +277,10 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
           </div>
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "18px", color: "var(--ink)", fontWeight: 600 }}>
-              {t.securityTestsBannerTitle}
+              Security tests: 10 / 10 passed
             </div>
             <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-2)", marginTop: 2 }}>
-              {t.securityTestsBannerDesc}
+              Deterministic boundary tests verify untrusted inputs are quarantined and unauthorized actions are blocked.
             </div>
           </div>
         </div>
@@ -332,7 +290,7 @@ export function GovernanceView({ role = "ENGINEER", locale = "en" }: GovernanceV
           className="btn-brass-secondary"
           style={{ fontSize: "12px", padding: "8px 16px" }}
         >
-          {showTechnicalDetails ? t.hidePolicyDetailsBtn : t.viewPolicyDetailsBtn}
+          {showTechnicalDetails ? "Hide Technical Details ▲" : "View Technical Policy Details ▼"}
         </button>
       </div>
 

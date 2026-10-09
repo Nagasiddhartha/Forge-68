@@ -8,7 +8,7 @@ export type DataClassification = "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "RESTR
 export type PolicyDecisionType = "ALLOW" | "DENY";
 export type VerificationStatus = "VERIFIED" | "PARTIALLY_VERIFIED" | "INSUFFICIENT_EVIDENCE" | "NEEDS_REVIEW" | "FAILED";
 export type AgentActionType = "direct" | "knowledge" | "tool" | "combined";
-export type AgentQueryStatus = "SUCCESS" | "POLICY_DENIED" | "TOOL_ERROR" | "DIRECT_ANSWER" | "INVALID_MODEL_OUTPUT" | "OFFLINE_FALLBACK";
+export type AgentQueryStatus = "SUCCESS" | "POLICY_DENIED" | "TOOL_ERROR" | "DIRECT_ANSWER" | "INVALID_MODEL_OUTPUT";
 
 export interface PolicyDecision {
   decision: PolicyDecisionType;
@@ -120,28 +120,45 @@ export interface VerificationResult {
 
 export interface AgentQueryRequest {
   query: string;
+  scenario_id?: string;
+  run_id?: string;
   role?: Role;
   requester?: string;
   classification?: DataClassification;
   has_approval?: boolean;
   image_path?: string;
   image_base64?: string;
-  locale?: string;
+  language?: "en" | "hi" | "kn";
 }
 
 export interface AgentQueryResponse {
   query: string;
   final_answer: string;
   status: AgentQueryStatus;
+  language?: string;
+  scenario_id?: string;
+  run_id?: string;
+  execution_state?: string;
+  model_route?: Record<string, unknown>;
   plan?: AgentPlan;
   agent_plan?: AgentPlan;
   knowledge_queries: KnowledgeQueryPlan[];
   tool_calls: ToolCallPlan[];
   policy_decisions: PolicyDecision[];
+  policy_decision?: PolicyDecision;
+  calculations?: CalculationResult[];
   evidence_set?: EvidenceSet;
   verification?: VerificationResult;
   execution_event_id?: string;
   timing?: DemoExecutionTiming;
+  model_name?: string;
+  provider?: string;
+  latency_ms?: number;
+  tokens?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }
 
 
@@ -310,6 +327,9 @@ export interface KnowledgeSearchResponse {
   total_results: number;
   results: RetrievalResult[];
   evidence: EvidenceRecord[];
+  synthesized_answer?: string;
+  cited_sources?: string[];
+  language?: string;
 }
 
 export interface ToolMetadata {
@@ -368,30 +388,49 @@ export async function fetchModels(): Promise<ModelsResponse> {
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
-async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${BACKEND_URL}${endpoint}`;
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-  if (!res.ok) {
-    let errorDetail = `HTTP ${res.status}`;
-    try {
-      const errJson = await res.json();
-      errorDetail = errJson.detail || JSON.stringify(errJson);
-    } catch {
-      // fallback
-    }
-    throw new Error(errorDetail);
-  }
-
-  return res.json();
+export interface ApiFetchOptions extends RequestInit {
+  timeoutMs?: number;
 }
+
+async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Promise<T> {
+  const { timeoutMs = 30000, ...fetchOptions } = options;
+  const url = `${BACKEND_URL}${endpoint}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      ...fetchOptions,
+      signal: fetchOptions.signal || controller.signal,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        ...fetchOptions.headers,
+      },
+    });
+
+    if (!res.ok) {
+      let errorDetail = `HTTP ${res.status}`;
+      try {
+        const errJson = await res.json();
+        errorDetail = errJson.detail || JSON.stringify(errJson);
+      } catch {
+        // fallback
+      }
+      throw new Error(errorDetail);
+    }
+
+    return res.json();
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(`Request to ${endpoint} timed out after ${timeoutMs}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 
 export async function fetchHealth(): Promise<HealthResponse> {
   return apiFetch<HealthResponse>("/health");
@@ -416,7 +455,9 @@ export async function fetchKnowledgeDocuments(): Promise<KnowledgeDocsResponse> 
 export async function searchKnowledge(
   query: string,
   top_k: number = 5,
-  classification?: DataClassification
+  classification?: DataClassification,
+  language?: "en" | "hi" | "kn",
+  synthesize: boolean = true
 ): Promise<KnowledgeSearchResponse> {
   return apiFetch<KnowledgeSearchResponse>("/api/v1/knowledge/search", {
     method: "POST",
@@ -424,7 +465,10 @@ export async function searchKnowledge(
       query,
       top_k,
       classification,
+      language,
+      synthesize,
     }),
+    timeoutMs: 60000,
   });
 }
 
@@ -442,6 +486,7 @@ export async function ingestKnowledgeDocument(
       document_type,
       equipment_ids,
     }),
+    timeoutMs: 30000,
   });
 }
 
@@ -449,6 +494,7 @@ export async function queryAgent(request: AgentQueryRequest): Promise<AgentQuery
   return apiFetch<AgentQueryResponse>("/api/v1/agent/query", {
     method: "POST",
     body: JSON.stringify(request),
+    timeoutMs: 120000,
   });
 }
 
@@ -456,6 +502,7 @@ export async function analyzeVision(request: VisionAnalyzeRequest): Promise<Visi
   return apiFetch<VisionAnalyzeResponse>("/api/v1/vision/analyze", {
     method: "POST",
     body: JSON.stringify(request),
+    timeoutMs: 90000,
   });
 }
 
@@ -488,14 +535,19 @@ export interface DemoScenarioMetadata {
 
 export interface DemoRunRequest {
   scenario: DemoScenarioId;
+  scenario_id?: DemoScenarioId;
+  run_id?: string;
   role?: Role;
   classification?: DataClassification;
   deterministic?: boolean;
-  locale?: string;
+  language?: "en" | "hi" | "kn";
 }
 
 export interface DemoRunResponse extends AgentQueryResponse {
   scenario: DemoScenarioId;
+  scenario_id: DemoScenarioId;
+  run_id: string;
+  execution_state: string;
   scenario_title: string;
   execution_phases: string[];
   audit_events: Array<{
@@ -515,6 +567,12 @@ export interface DemoRunResponse extends AgentQueryResponse {
   timing?: DemoExecutionTiming;
   is_synthetic: boolean;
   synthetic_notice: string;
+  dossier?: {
+    finding_summary?: string;
+    operational_status?: string;
+    verdict?: string;
+    evidence_count?: number;
+  };
 }
 
 export interface DemoExecutionTiming {
@@ -566,6 +624,7 @@ export async function runDemoScenario(request: DemoRunRequest): Promise<DemoRunR
   return apiFetch<DemoRunResponse>("/api/v1/demo/run", {
     method: "POST",
     body: JSON.stringify(request),
+    timeoutMs: 120000,
   });
 }
 
@@ -673,57 +732,169 @@ export async function fetchRuntimeCapabilities(): Promise<RuntimeCapabilities> {
 }
 
 // =========================================================================
-// Deliverables & Network Egress APIs
+// Phase 2, 4, 5: Document Reader, Upload, Word Report, Model Routing APIs
 // =========================================================================
 
-export interface ApprovalNoteRequest {
-  query?: string;
-  asset_id?: string;
-  role?: Role;
-  requester?: string;
-  classification?: DataClassification;
-  locale?: string;
-  agent_response?: AgentQueryResponse;
-  demo_response?: DemoRunResponse;
+export interface DocumentChunkItem {
+  chunk_id: string;
+  chunk_index: number;
+  text: string;
 }
 
-export interface ApprovalNoteResponse {
-  status: string;
-  file_id: string;
+export interface DocumentContentResponse {
+  document_id: string;
   filename: string;
-  download_url: string;
-  deliverable_type: string;
-  asset_id: string;
-  sha256_hash: string;
-  file_size_bytes: number;
-  created_at: string;
-  verification_verdict: string;
+  classification: string;
+  document_type: string;
+  chunks_count: number;
+  content_hash: string;
+  ocr_status: "EXTRACTED" | "OCR_REQUIRED" | "FAILED" | string;
+  extracted_text: string;
+  chunks: DocumentChunkItem[];
 }
 
-export interface EgressStatusResponse {
-  status: string;
-  air_gapped: boolean;
-  egress_bytes: number;
-  external_requests_count: number;
-  cloud_ai_sdks_blocked: boolean;
-  network_interfaces: string;
-  message: string;
+export async function fetchDocumentContent(documentId: string): Promise<DocumentContentResponse> {
+  return apiFetch<DocumentContentResponse>(`/api/v1/knowledge/documents/${encodeURIComponent(documentId)}/content`);
 }
 
-export async function generateApprovalNote(request: ApprovalNoteRequest): Promise<ApprovalNoteResponse> {
-  return apiFetch<ApprovalNoteResponse>("/api/v1/deliverables/approval-note", {
+export async function uploadKnowledgeDocument(formData: FormData): Promise<{
+  document_id: string;
+  filename: string;
+  chunks_count: number;
+  content_hash: string;
+  classification: string;
+}> {
+  const url = `${BACKEND_URL}/api/v1/knowledge/upload`;
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    let parsedMessage = errorText;
+    try {
+      const errObj = JSON.parse(errorText);
+      parsedMessage = errObj.detail || errObj.message || errorText;
+    } catch {
+      // Keep errorText
+    }
+    throw new Error(parsedMessage || `Upload failed with HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function exportWordReport(runData: Record<string, unknown>): Promise<Blob> {
+  const url = `${BACKEND_URL}/api/v1/reports/export`;
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
+    body: JSON.stringify(runData),
   });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || `Report export failed with HTTP ${res.status}`);
+  }
+  return res.blob();
 }
 
-export function getDeliverableDownloadUrl(fileId: string): string {
-  return `${BACKEND_URL}/api/v1/deliverables/download/${fileId}`;
+export interface ModelRouteInfo {
+  task: string;
+  target_model: string;
+  provider: string;
+  status: string;
+  reason: string;
+  vram_profile: string;
+  is_local: boolean;
+  notes: string;
 }
 
-export async function fetchEgressStatus(): Promise<EgressStatusResponse> {
-  return apiFetch<EgressStatusResponse>("/api/v1/system/egress");
+export async function fetchModelRoutes(): Promise<ModelRouteInfo[]> {
+  return apiFetch<ModelRouteInfo[]>("/api/v1/models/routes");
+}
+
+export interface VoiceEngineStatus {
+  stt_available: boolean;
+  tts_available: boolean;
+  stt_engine: string;
+  tts_engine: string;
+  supported_languages: string[];
+  installed_models: Record<string, string>;
+  stt_models?: Record<string, string>;
+  tts_voices?: Record<string, string>;
+  installed_voices_details?: Array<{ id: string; name: string; languages?: string[]; engine?: string }>;
+  models_loaded?: Record<string, boolean>;
+  inference_tested?: Record<string, boolean>;
+  cloud_providers_configured?: number;
+  sovereign_guarantee: string;
+  setup_instructions: Record<string, string>;
+}
+
+export interface VoiceTranscribeResponse {
+  status: "SUCCESS" | "EMPTY_AUDIO" | "ENGINE_UNAVAILABLE" | "ERROR";
+  text: string;
+  language: string;
+  confidence: number;
+  engine: string;
+  error_message?: string;
+  sovereign_verified: boolean;
+}
+
+export interface VoiceSynthesizeResponse {
+  status: "SUCCESS" | "VOICE_UNAVAILABLE" | "ENGINE_UNAVAILABLE" | "ERROR";
+  audio_format: string;
+  audio_base64?: string;
+  engine: string;
+  language: string;
+  voice_name?: string;
+  error_message?: string;
+}
+
+export async function fetchVoiceStatus(): Promise<VoiceEngineStatus> {
+  return apiFetch<VoiceEngineStatus>("/api/v1/voice/status", { timeoutMs: 4000 });
+}
+
+export async function transcribeVoiceAudio(
+  audioBlob: Blob,
+  language: "en" | "hi" | "kn" = "en"
+): Promise<VoiceTranscribeResponse> {
+  const url = `${BACKEND_URL}/api/v1/voice/transcribe`;
+  const formData = new FormData();
+  formData.append("file", audioBlob, "speech_recording.wav");
+  formData.append("language", language);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      body: formData,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(errorText || `Audio transcription failed with HTTP ${res.status}`);
+    }
+    return res.json();
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Local speech transcription timed out after 60000ms");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function synthesizeVoiceSpeech(
+  text: string,
+  language: "en" | "hi" | "kn" = "en"
+): Promise<VoiceSynthesizeResponse> {
+  return apiFetch<VoiceSynthesizeResponse>("/api/v1/voice/synthesize", {
+    method: "POST",
+    body: JSON.stringify({ text, language }),
+    timeoutMs: 60000,
+  });
 }
 
 

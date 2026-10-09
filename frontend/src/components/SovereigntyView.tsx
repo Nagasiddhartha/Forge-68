@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from "react";
 import {
   HealthResponse,
+  ModelRouteInfo,
   SecurityBoundaryReport,
   SovereigntyStatusResponse,
   fetchHealth,
+  fetchModelRoutes,
   fetchSecurityReport,
   fetchSovereigntyStatus,
 } from "@/lib/api";
@@ -15,14 +17,15 @@ import {
   BrassLabel,
   Divider,
 } from "@/components/primitives";
-import { Locale, TRANSLATIONS } from "@/lib/i18n";
+import { useTranslation } from "@/lib/i18n";
 
-export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
-  const t = TRANSLATIONS[locale] || TRANSLATIONS.en;
+export function SovereigntyView() {
+  const { t } = useTranslation();
   const runtime = useRuntimeCapabilities();
   const [sovereignty, setSovereignty] = useState<SovereigntyStatusResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [securityReport, setSecurityReport] = useState<SecurityBoundaryReport | null>(null);
+  const [modelRoutes, setModelRoutes] = useState<ModelRouteInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,14 +35,16 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
     setIsLoading(true);
     setError(null);
     try {
-      const [sov, h, sec] = await Promise.all([
+      const [sov, h, sec, routes] = await Promise.all([
         fetchSovereigntyStatus(),
         fetchHealth(),
         fetchSecurityReport(),
+        fetchModelRoutes().catch(() => []),
       ]);
       setSovereignty(sov);
       setHealth(h);
       setSecurityReport(sec);
+      setModelRoutes(routes);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -49,12 +54,18 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchSovereigntyStatus(), fetchHealth(), fetchSecurityReport()])
-      .then(([sov, h, sec]) => {
+    Promise.all([
+      fetchSovereigntyStatus(),
+      fetchHealth(),
+      fetchSecurityReport(),
+      fetchModelRoutes().catch(() => []),
+    ])
+      .then(([sov, h, sec, routes]) => {
         if (active) {
           setSovereignty(sov);
           setHealth(h);
           setSecurityReport(sec);
+          setModelRoutes(routes);
           setIsLoading(false);
         }
       })
@@ -74,40 +85,34 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
 
   const fiveCards = [
     {
-      title: t.sovPillarAiTitle,
-      badge: isModelLive ? "Live Sovereign Model" : t.sovPillarAiBadge,
-      description: t.sovPillarAiDesc,
-      icon: "[AI]",
+      technicalLabel: "01 LOCAL INFERENCE",
+      title: t("sovCardLocalAITitle"),
+      badge: isModelLive ? "Live Sovereign Model" : "On-Premise Ready",
+      description: `Runs on-premise (${sovereignty?.model_provider.default_model || "qwen3:8b"} via ${sovereignty?.model_provider.type.toUpperCase() || "OLLAMA"}). No cloud AI, zero external API calls, zero cloud SDK dependencies.`,
     },
     {
-      title: t.sovPillarKnowledgeTitle,
-      badge: t.sovPillarKnowledgeBadge,
-      description: t.sovPillarKnowledgeDesc,
-      icon: "[DOC]",
+      technicalLabel: "02 KNOWLEDGE FABRIC",
+      title: t("sovCardLocalKnowledgeTitle"),
+      badge: "On-Premise Vector Enclave",
+      description: `Private plant documents indexed locally (${runtime.embeddingModel || sovereignty?.embedding_provider.model || "Local Embeddings"}). Zero cloud vector databases. Access strictly bounded by role clearance.`,
     },
     {
-      title: t.sovPillarToolsTitle,
-      badge: t.sovPillarToolsBadge,
-      description: t.sovPillarToolsDesc,
-      icon: "[TOOL]",
+      technicalLabel: "03 CONTROLLED TOOLS",
+      title: t("sovCardLocalToolsTitle"),
+      badge: "Bounded Execution",
+      description: "Industrial actuation, SCADA telemetry queries, and file operations execute inside local sandboxes. Policy gateway intercepts every call before execution.",
     },
     {
-      title: t.sovPillarVerifTitle,
-      badge: t.sovPillarVerifBadge,
-      description: t.sovPillarVerifDesc,
-      icon: "[VERIF]",
+      technicalLabel: "04 INDEPENDENT VERIFICATION",
+      title: t("sovCardVerificationTitle"),
+      badge: "Deterministic Code Checks",
+      description: "7 discrete verification checks evaluate facts, unit bounds, and calculations using pure Python code. The AI model is never allowed to grade its own work.",
     },
     {
-      title: t.sovPillarAuditTitle,
-      badge: t.sovPillarAuditBadge,
-      description: t.sovPillarAuditDesc,
-      icon: "[AUDIT]",
-    },
-    {
-      title: t.sovPillarEgressTitle,
-      badge: t.sovPillarEgressBadge,
-      description: t.sovPillarEgressDesc,
-      icon: "[EGRESS]",
+      technicalLabel: "05 LOCAL AUDIT",
+      title: t("sovCardAuditTitle"),
+      badge: "Append-Only Local Sink",
+      description: "Every question, reasoning trace, tool execution, and verification check is logged to an immutable local file sink. Data never leaves your facility.",
     },
   ];
 
@@ -130,7 +135,7 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
                   border: "1px solid var(--sage)",
                 }}
               >
-                {t.sovHeroBadge}
+                ON-PREMISE SOVEREIGN RUNTIME
               </span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
                 ENCLAVE ID: FORGE-SOV-01
@@ -138,11 +143,11 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
             </div>
 
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
-              {t.sovHeroTitle}
+              {t("sovTitle")}
             </h1>
 
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink-2)", marginTop: 6, lineHeight: 1.6 }}>
-              {t.sovHeroDesc}
+              {t("sovSubtitle")}
             </p>
           </div>
 
@@ -153,7 +158,7 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
               className="btn-brass-primary"
               style={{ fontSize: "13px", padding: "10px 18px" }}
             >
-              {isLoading ? t.sovVerifyingBtn : t.sovVerifyBtn}
+              {isLoading ? "Verifying..." : "Verify Runtime State ↻"}
             </button>
           </div>
         </div>
@@ -174,37 +179,37 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
         >
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.sovExtAiTitle}
+              EXTERNAL AI PROVIDERS
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
-              {t.sovExtAiVal}
+              None configured
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.sovExtAiSub}
+              Zero cloud LLM API calls or SDKs
             </span>
           </div>
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.sovCloudFallbackTitle}
+              CLOUD FALLBACK
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
-              {t.sovCloudFallbackVal}
+              Disabled (Fail-Closed)
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.sovCloudFallbackSub}
+              Never fails over to public services
             </span>
           </div>
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.sovAdversarialTitle}
+              ADVERSARIAL BOUNDARY PROOFS
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
               {securityReport ? `${securityReport.passed} / ${securityReport.total_tests} passed` : "10 / 10 passed"}
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              {t.sovAdversarialSub}
+              Security tests verified
             </span>
           </div>
         </div>
@@ -232,10 +237,10 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              {t.sovPillarsTitle}
+              FIVE SOVEREIGN PILLARS
             </span>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: "4px 0" }}>
-              {t.sovPillarsSubtitle}
+              How FORGE Guarantees Complete Isolation
             </h2>
           </div>
           <button
@@ -243,7 +248,7 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
             className="btn-brass-secondary"
             style={{ fontSize: "12px", padding: "8px 16px" }}
           >
-            {showTechnicalDetails ? t.sovHideDetailsBtn : t.sovViewDetailsBtn}
+            {showTechnicalDetails ? "Hide Technical Details ▲" : "View Technical Runtime Details ▼"}
           </button>
         </div>
 
@@ -269,7 +274,9 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", fontWeight: 600 }}>{card.icon}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.08em", fontWeight: 600 }}>
+                  {card.technicalLabel}
+                </span>
                 <span
                   style={{
                     fontFamily: "var(--font-mono)",
@@ -296,6 +303,108 @@ export function SovereigntyView({ locale = "en" }: { locale?: Locale }) {
           ))}
         </div>
       </div>
+
+      {/* Task Model Routing & Hardware Awareness Table (Phase 5) */}
+      <EnamelSurface variant="base" padding="spacious">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <BrassLabel variant="solid">TASK MODEL ROUTER</BrassLabel>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "22px", color: "var(--ink)", fontWeight: 500, margin: 0 }}>
+              {t("sovModelRouterTitle")}
+            </h2>
+          </div>
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              color: "var(--sage)",
+              background: "rgba(156, 195, 168, 0.08)",
+              padding: "3px 10px",
+              borderRadius: "var(--radius-pill)",
+              border: "1px solid var(--sage)",
+            }}
+          >
+            RTX 4060 LAPTOP GPU (8GB VRAM BOUNDARY)
+          </span>
+        </div>
+
+        <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", margin: "0 0 16px 0", maxWidth: "80ch" }}>
+          Task routing dynamically binds specialized local engines according to VRAM capacity constraints. Reasoning executes on Qwen3 8B (5.2GB VRAM), while vision and OCR leverage sequential memory allocation and host computer vision to prevent out-of-memory GPU crash.
+        </p>
+
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontFamily: "var(--font-mono)",
+              fontSize: "12px",
+              textAlign: "left",
+            }}
+          >
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--line)", background: "var(--bg-0)" }}>
+                <th style={{ padding: "10px 12px", color: "var(--brass)" }}>{t("sovRouterColTask")}</th>
+                <th style={{ padding: "10px 12px", color: "var(--ink)" }}>{t("sovRouterColModel")}</th>
+                <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>PROVIDER</th>
+                <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>STATUS</th>
+                <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>{t("sovRouterColVram")}</th>
+                <th style={{ padding: "10px 12px", color: "var(--ink-2)" }}>{t("sovRouterColRationale")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {modelRoutes && modelRoutes.length > 0 ? (
+                modelRoutes.map((rt, idx) => (
+                  <tr
+                    key={idx}
+                    style={{
+                      borderBottom: "1px solid var(--line)",
+                      background: idx % 2 === 0 ? "var(--bg-1)" : "var(--bg-0)",
+                    }}
+                  >
+                    <td style={{ padding: "10px 12px", color: "var(--brass)", fontWeight: 600 }}>
+                      {rt.task}
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--ink)", fontWeight: 500 }}>
+                      {rt.target_model}
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--ink-2)" }}>
+                      {rt.provider}
+                    </td>
+                    <td style={{ padding: "10px 12px" }}>
+                      <span
+                        style={{
+                          fontSize: "10.5px",
+                          padding: "2px 8px",
+                          borderRadius: "var(--radius-pill)",
+                          color: rt.status.includes("ACTIVE") ? "var(--sage)" : "var(--brass)",
+                          border: `1px solid ${rt.status.includes("ACTIVE") ? "var(--sage)" : "var(--brass)"}`,
+                          background: rt.status.includes("ACTIVE") ? "rgba(156, 195, 168, 0.08)" : "rgba(200, 161, 90, 0.08)",
+                        }}
+                      >
+                        {rt.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--ink)" }}>
+                      {rt.vram_profile}
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--ink-3)", fontSize: "11px", maxWidth: "340px" }}>
+                      <div>{rt.reason}</div>
+                      <div style={{ color: "var(--pewter)", marginTop: 2 }}>{rt.notes}</div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} style={{ padding: "20px", textAlign: "center", color: "var(--ink-3)" }}>
+                    Loading sovereign model routing table...
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </EnamelSurface>
 
       {/* Collapsible Technical Details (6 Deep Technical Pillars) */}
       {showTechnicalDetails && (

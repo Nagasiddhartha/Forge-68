@@ -107,6 +107,24 @@ class AgentReasoningService:
 
     async def process_query(self, request: AgentQueryRequest) -> AgentQueryResponse:
         """Execute the unified, sovereign, evidence-grounded and verified agent workflow."""
+        import uuid
+        run_id = request.run_id or f"run-{uuid.uuid4().hex[:12]}"
+        scenario_id = request.scenario_id
+
+        def record_agent_trace(event_type: AgentEventType, details: Dict[str, Any]) -> AgentTraceEvent:
+            trace_details = dict(details)
+            trace_details["run_id"] = run_id
+            if scenario_id:
+                trace_details["scenario_id"] = scenario_id
+            return audit_event_sink.record_agent_event(
+                AgentTraceEvent(
+                    event_type=event_type,
+                    requester=request.requester,
+                    role=request.role,
+                    details=trace_details,
+                )
+            )
+
         t_start = time.perf_counter()
         planning_duration_ms = 0.0
         knowledge_retrieval_duration_ms = 0.0
@@ -117,41 +135,115 @@ class AgentReasoningService:
 
         # 1. Structured trace & log: AGENT_REQUEST
         logger.info(
-            "[AGENT_REQUEST] Query: '%s' | Requester: '%s' | Role: '%s' | Clearance: '%s'",
+            "[AGENT_REQUEST] Query: '%s' | Requester: '%s' | Role: '%s' | Clearance: '%s' | Run: '%s' | Lang: '%s'",
             request.query,
             request.requester,
             request.role.value,
             request.classification.value,
+            run_id,
+            request.language or request.locale or "en",
         )
-        audit_event_sink.record_agent_event(
-            AgentTraceEvent(
-                event_type=AgentEventType.AGENT_REQUEST,
-                requester=request.requester,
-                role=request.role,
-                details={
-                    "query": request.query,
-                    "classification": request.classification.value,
-                    "has_approval": request.has_approval,
-                },
-            )
+        record_agent_trace(
+            AgentEventType.AGENT_REQUEST,
+            {
+                "query": request.query,
+                "classification": request.classification.value,
+                "has_approval": request.has_approval,
+                "language": request.language or request.locale or "en",
+            },
         )
 
-        # 1b. Prompt-Security Boundary: Scan for adversarial injection patterns
+        from app.models.router import TaskType, task_model_router
+        reasoning_route = task_model_router.route(TaskType.REASONING)
+        route_dict = reasoning_route.model_dump()
+        target_lang = request.language or request.locale or "en"
+
+        # 1b. Check for conversational greeting or general capability inquiry
+        clean_q = request.query.strip().lower()
+        greeting_patterns = [
+            r"^(hi|hello|hey|namaste|namaskara|greetings)\b",
+            r"^(नमस्ते|ನಮಸ್ಕಾರ)",
+            r"^who are you\??$",
+            r"^what can you do\??$",
+            r"^what is forge\??$",
+            r"^help\??$",
+        ]
+        is_greeting = any(re.search(pat, clean_q) for pat in greeting_patterns)
+
+        if is_greeting and not any(tag in clean_q for tag in ["r-204", "r204", "pi-204", "p-201", "pressure", "vibration", "actuator", "sop", "sensor", "reactor", "work", "operate", "operating", "inspection", "maintenance"]):
+            if target_lang == "hi":
+                greeting_text = (
+                    "नमस्ते। मैं FORGE हूँ — संप्रभु औद्योगिक AI नियंत्रण तल (Sovereign Industrial AI Control Plane)। "
+                    "मैं पूरी तरह स्थानीय, एयर-गैप्ड और ऑन-प्रिमाइसेस मॉडल द्वारा संचालित हूँ। "
+                    "मैं रिएक्टर R-204, ट्रांसमीटर PI-204, और पंप P-201 जैसे प्लांट संपत्तियों के लिए "
+                    "SOP अनुपालन, रखरखाव इतिहास, दबाव विचरण और सुरक्षा नीतियों की निष्पक्ष जांच कर सकता हूँ। "
+                    "मैं आपकी क्या सहायता कर सकता हूँ?"
+                )
+            elif target_lang == "kn":
+                greeting_text = (
+                    "ನಮಸ್ಕಾರ. ನಾನು FORGE — ಸಾರ್ವಭೌಮ ಕೈಗಾರಿಕಾ AI ನಿಯಂತ್ರಣ ತಾಣ (Sovereign Industrial AI Control Plane). "
+                    "ಸಂಪೂರ್ಣವಾಗಿ ಸ್ಥಳೀಯ ಮತ್ತು ಆನ್‌-ಪ್ರೆಮಿಸಸ್ ತಂತ್ರಜ್ಞಾನದಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತೇನೆ. "
+                    "R-204 ರಿಯಾಕ್ಟರ್, PI-204 ಪ್ರೆಶರ್ ಟ್ರಾನ್ಸ್‌ಮಿಟರ್, ಮತ್ತು P-201 ಪಂಪ್‌ಗಳ ಟೆಲಿಮೆಟ್ರಿ, "
+                    "SOP ಮಿತಿಗಳು ಮತ್ತು ನಿರ್ವಹಣಾ ಇತಿಹಾಸವನ್ನು ಪರಿಶೀಲಿಸಲು ನಾನು ಸಿದ್ಧನಾಗಿದ್ದೇನೆ. "
+                    "ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?"
+                )
+            else:
+                greeting_text = (
+                    "Hello. I am FORGE — Sovereign Industrial AI Control Plane, operating entirely on-premise "
+                    "under sovereign air-gapped governance. I monitor industrial plant telemetry, verify SOP compliance, "
+                    "analyze equipment history (e.g., R-204, PI-204, P-201), and execute deterministic safety checks "
+                    "with zero external cloud data egress. How may I assist your engineering operations today?"
+                )
+            greeting_plan = AgentPlan(
+                action=AgentActionType.DIRECT,
+                direct_answer=greeting_text,
+                reasoning="Direct sovereign agent introduction and operational capability overview.",
+            )
+            record_agent_trace(
+                AgentEventType.AGENT_FINAL_RESPONSE,
+                {"action": "direct", "type": "conversational_greeting", "language": target_lang},
+            )
+            elapsed_greeting_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
+            return AgentQueryResponse(
+                query=request.query,
+                final_answer=greeting_text,
+                status=AgentQueryStatus.DIRECT_ANSWER,
+                language=target_lang,
+                plan=greeting_plan,
+                agent_plan=greeting_plan,
+                verification=VerificationResult(
+                    status=VerificationStatus.VERIFIED,
+                    summary="Direct sovereign conversational query processed with zero external calls.",
+                    checks=[],
+                ),
+                scenario_id=scenario_id,
+                run_id=run_id,
+                execution_state="COMPLETED",
+                model_route=route_dict,
+                latency_ms=elapsed_greeting_ms,
+                timing={
+                    "total_duration_ms": elapsed_greeting_ms,
+                    "planning_duration_ms": 0.0,
+                    "knowledge_retrieval_duration_ms": 0.0,
+                    "tool_execution_duration_ms": 0.0,
+                    "vision_duration_ms": 0.0,
+                    "verification_duration_ms": 0.0,
+                    "synthesis_duration_ms": 0.0,
+                },
+            )
+
+        # 1c. Prompt-Security Boundary: Scan for adversarial injection patterns
         from app.security import detect_prompt_injection
         detected_injection = detect_prompt_injection(request.query)
         if detected_injection:
             logger.warning("[PROMPT_INJECTION_DETECTED] Adversarial pattern detected in query: '%s'. Quarantining as untrusted data.", detected_injection)
-            audit_event_sink.record_agent_event(
-                AgentTraceEvent(
-                    event_type=AgentEventType.SECURITY_ALERT,
-                    requester=request.requester,
-                    role=request.role,
-                    details={
-                        "alert_type": "PROMPT_INJECTION_DETECTED",
-                        "detected_pattern": detected_injection,
-                        "action": "QUARANTINED_AS_UNTRUSTED_DATA",
-                    },
-                )
+            record_agent_trace(
+                AgentEventType.SECURITY_ALERT,
+                {
+                    "alert_type": "PROMPT_INJECTION_DETECTED",
+                    "detected_pattern": detected_injection,
+                    "action": "QUARANTINED_AS_UNTRUSTED_DATA",
+                },
             )
 
         # 2. Plan Generation: Model proposes an operational AgentPlan
@@ -207,14 +299,7 @@ class AgentReasoningService:
             len(plan.calculations),
             plan.reasoning or "None",
         )
-        audit_event_sink.record_agent_event(
-            AgentTraceEvent(
-                event_type=AgentEventType.AGENT_PLAN_CREATED,
-                requester=request.requester,
-                role=request.role,
-                details=plan.model_dump(),
-            )
-        )
+        record_agent_trace(AgentEventType.AGENT_PLAN_CREATED, plan.model_dump())
 
         # 4. Handle Direct Action
         if plan.action == AgentActionType.DIRECT:
@@ -251,14 +336,7 @@ class AgentReasoningService:
             verification_duration_ms = (time.perf_counter() - t_verif_start) * 1000.0
 
             logger.info("[AGENT_FINAL_RESPONSE] Emitted direct response.")
-            audit_event_sink.record_agent_event(
-                AgentTraceEvent(
-                    event_type=AgentEventType.AGENT_FINAL_RESPONSE,
-                    requester=request.requester,
-                    role=request.role,
-                    details={"action": "direct", "final_answer_length": len(final_answer)},
-                )
-            )
+            record_agent_trace(AgentEventType.AGENT_FINAL_RESPONSE, {"action": "direct", "final_answer_length": len(final_answer)})
             return AgentQueryResponse(
                 query=request.query,
                 final_answer=final_answer,
@@ -316,14 +394,7 @@ class AgentReasoningService:
                     kq.classification.value if kq.classification else "NONE",
                     request.classification.value,
                 )
-                audit_event_sink.record_agent_event(
-                    AgentTraceEvent(
-                        event_type=AgentEventType.KNOWLEDGE_RETRIEVAL_REQUESTED,
-                        requester=request.requester,
-                        role=request.role,
-                        details={"query": kq.query, "user_clearance": request.classification.value},
-                    )
-                )
+                record_agent_trace(AgentEventType.KNOWLEDGE_RETRIEVAL_REQUESTED, {"query": kq.query, "user_clearance": request.classification.value})
 
                 effective_filter = None
                 if kq.classification:
@@ -354,44 +425,23 @@ class AgentReasoningService:
                     kq.query,
                     len(results),
                 )
-                audit_event_sink.record_agent_event(
-                    AgentTraceEvent(
-                        event_type=AgentEventType.KNOWLEDGE_RETRIEVAL_COMPLETED,
-                        requester=request.requester,
-                        role=request.role,
-                        details={"query": kq.query, "retrieved_count": len(results)},
-                    )
-                )
+                record_agent_trace(AgentEventType.KNOWLEDGE_RETRIEVAL_COMPLETED, {"query": kq.query, "retrieved_count": len(results)})
 
                 for evd in results:
                     evidence_set.add_knowledge_evidence(evd)
                     logger.info("[EVIDENCE_CREATED] Knowledge Evidence ID: '%s' | Source: '%s'", evd.evidence_id, evd.source_reference)
-                    audit_event_sink.record_agent_event(
-                        AgentTraceEvent(
-                            event_type=AgentEventType.EVIDENCE_CREATED,
-                            requester=request.requester,
-                            role=request.role,
-                            details={"evidence_id": evd.evidence_id, "source_reference": evd.source_reference},
-                        )
-                    )
+                    record_agent_trace(AgentEventType.EVIDENCE_CREATED, {"evidence_id": evd.evidence_id, "source_reference": evd.source_reference})
 
                     # Prompt-security check on retrieved untrusted document text
                     doc_injection = detect_prompt_injection(str(evd.retrieved_data) + " " + (evd.retrieved_text or ""))
                     if doc_injection:
                         logger.warning("[PROMPT_INJECTION_IN_DOCUMENT] Quarantined adversarial injection pattern in '%s': '%s'", evd.source_reference, doc_injection)
-                        audit_event_sink.record_agent_event(
-                            AgentTraceEvent(
-                                event_type=AgentEventType.SECURITY_ALERT,
-                                requester=request.requester,
-                                role=request.role,
-                                details={
+                        record_agent_trace(AgentEventType.SECURITY_ALERT, {
                                     "alert_type": "PROMPT_INJECTION_IN_DOCUMENT",
                                     "source": evd.source_reference,
                                     "detected_pattern": doc_injection,
                                     "action": "QUARANTINED_AS_UNTRUSTED_DATA",
-                                },
-                            )
-                        )
+                                })
 
 
         # 7. Execute Industrial Tools (if action is 'tool' or 'combined')
@@ -403,14 +453,7 @@ class AgentReasoningService:
                     tc.tool_name,
                     json.dumps(tc.arguments),
                 )
-                audit_event_sink.record_agent_event(
-                    AgentTraceEvent(
-                        event_type=AgentEventType.TOOL_REQUESTED,
-                        requester=request.requester,
-                        role=request.role,
-                        details={"tool_name": tc.tool_name, "arguments": tc.arguments},
-                    )
-                )
+                record_agent_trace(AgentEventType.TOOL_REQUESTED, {"tool_name": tc.tool_name, "arguments": tc.arguments})
 
                 tool_invoc_req = ToolInvocationRequest(
                     requester=request.requester,
@@ -439,18 +482,11 @@ class AgentReasoningService:
                     exec_result.decision.policy_id or "NONE",
                     exec_result.decision.reason,
                 )
-                audit_event_sink.record_agent_event(
-                    AgentTraceEvent(
-                        event_type=AgentEventType.POLICY_EVALUATED,
-                        requester=request.requester,
-                        role=request.role,
-                        details={
+                record_agent_trace(AgentEventType.POLICY_EVALUATED, {
                             "tool_name": tc.tool_name,
                             "decision": exec_result.decision.decision.value,
                             "reason": exec_result.decision.reason,
-                        },
-                    )
-                )
+                        })
 
                 if exec_result.decision.decision == PolicyDecisionType.DENY:
                     logger.warning(
@@ -472,14 +508,7 @@ class AgentReasoningService:
                     continue
 
                 logger.info("[TOOL_EXECUTED] Tool '%s' executed successfully.", tc.tool_name)
-                audit_event_sink.record_agent_event(
-                    AgentTraceEvent(
-                        event_type=AgentEventType.TOOL_EXECUTED,
-                        requester=request.requester,
-                        role=request.role,
-                        details={"tool_name": tc.tool_name, "event_id": exec_result.event_id},
-                    )
-                )
+                record_agent_trace(AgentEventType.TOOL_EXECUTED, {"tool_name": tc.tool_name, "event_id": exec_result.event_id})
 
                 if first_tool_result_data is None:
                     first_tool_result_data = (
@@ -497,14 +526,7 @@ class AgentReasoningService:
                 evidence_set.add_tool_evidence(tool_evd)
 
                 logger.info("[EVIDENCE_CREATED] Tool Evidence ID: '%s' | Source: '%s'", tool_evd.evidence_id, tool_evd.source_reference)
-                audit_event_sink.record_agent_event(
-                    AgentTraceEvent(
-                        event_type=AgentEventType.EVIDENCE_CREATED,
-                        requester=request.requester,
-                        role=request.role,
-                        details={"evidence_id": tool_evd.evidence_id, "source_reference": tool_evd.source_reference},
-                    )
-                )
+                record_agent_trace(AgentEventType.EVIDENCE_CREATED, {"evidence_id": tool_evd.evidence_id, "source_reference": tool_evd.source_reference})
 
         # 8. Contradiction & Parameter Variance Detection
         conflicts = detect_evidence_conflicts(evidence_set.all_evidence)
@@ -515,17 +537,10 @@ class AgentReasoningService:
 
         # 10. Independent Verification Engine Execution
         logger.info("[VERIFICATION_STARTED] Commencing independent deterministic verification checks.")
-        audit_event_sink.record_agent_event(
-            AgentTraceEvent(
-                event_type=AgentEventType.VERIFICATION_STARTED,
-                requester=request.requester,
-                role=request.role,
-                details={
+        record_agent_trace(AgentEventType.VERIFICATION_STARTED, {
                     "evidence_count": len(evidence_set.all_evidence),
                     "calculations_count": len(calculations),
-                },
-            )
-        )
+                })
 
         t_vf_start = time.perf_counter()
         verification_result = self.verification_engine.verify(
@@ -546,35 +561,21 @@ class AgentReasoningService:
                 chk.status.value,
                 chk.description,
             )
-            audit_event_sink.record_agent_event(
-                AgentTraceEvent(
-                    event_type=AgentEventType.VERIFICATION_CHECK,
-                    requester=request.requester,
-                    role=request.role,
-                    details={
+            record_agent_trace(AgentEventType.VERIFICATION_CHECK, {
                         "check_type": chk.check_type,
                         "status": chk.status.value,
                         "description": chk.description,
-                    },
-                )
-            )
+                    })
 
         logger.info(
             "[VERIFICATION_COMPLETED] Status: '%s' | Summary: '%s'",
             verification_result.status.value,
             verification_result.summary,
         )
-        audit_event_sink.record_agent_event(
-            AgentTraceEvent(
-                event_type=AgentEventType.VERIFICATION_COMPLETED,
-                requester=request.requester,
-                role=request.role,
-                details={
+        record_agent_trace(AgentEventType.VERIFICATION_COMPLETED, {
                     "status": verification_result.status.value,
                     "summary": verification_result.summary,
-                },
-            )
-        )
+                })
 
         # 11. Handle Policy Denial Outcome
         if plan.tool_calls and all_tools_denied and not evidence_set.knowledge_evidence:
@@ -584,18 +585,12 @@ class AgentReasoningService:
                 else "Execution blocked by sovereign policy."
             )
             logger.info("[AGENT_FINAL_RESPONSE] Blocked by policy: %s", first_denial_reason)
-            audit_event_sink.record_agent_event(
-                AgentTraceEvent(
-                    event_type=AgentEventType.AGENT_FINAL_RESPONSE,
-                    requester=request.requester,
-                    role=request.role,
-                    details={"status": AgentQueryStatus.POLICY_DENIED.value, "reason": first_denial_reason},
-                )
-            )
+            record_agent_trace(AgentEventType.AGENT_FINAL_RESPONSE, {"status": AgentQueryStatus.POLICY_DENIED.value, "reason": first_denial_reason})
             return AgentQueryResponse(
                 query=request.query,
                 final_answer=f"Execution blocked by sovereign policy: {first_denial_reason}",
                 status=AgentQueryStatus.POLICY_DENIED,
+                language=target_lang,
                 plan=plan,
                 agent_plan=plan,
                 knowledge_queries=plan.knowledge_queries,
@@ -604,10 +599,15 @@ class AgentReasoningService:
                 evidence_set=evidence_set,
                 verification=verification_result,
                 execution_event_id=last_event_id,
+                scenario_id=scenario_id,
+                run_id=run_id,
+                execution_state="COMPLETED",
+                model_route=route_dict,
                 tool_call=plan.tool_calls[0].model_dump() if plan.tool_calls else None,
                 policy_decision=evidence_set.policy_decisions[0] if evidence_set.policy_decisions else None,
                 tool_result=None,
                 evidence=None,
+                latency_ms=round((time.perf_counter() - t_start) * 1000.0, 2),
                 timing={
                     "total_duration_ms": round((time.perf_counter() - t_start) * 1000.0, 2),
                     "planning_duration_ms": round(planning_duration_ms, 2),
@@ -778,18 +778,11 @@ class AgentReasoningService:
         final_response_status = AgentQueryStatus.OFFLINE_FALLBACK if is_offline_fallback else AgentQueryStatus.SUCCESS
 
         logger.info("[AGENT_FINAL_RESPONSE] Successfully synthesized grounded response with status: %s", final_response_status.value)
-        audit_event_sink.record_agent_event(
-            AgentTraceEvent(
-                event_type=AgentEventType.AGENT_FINAL_RESPONSE,
-                requester=request.requester,
-                role=request.role,
-                details={
+        record_agent_trace(AgentEventType.AGENT_FINAL_RESPONSE, {
                     "status": final_response_status.value,
                     "evidence_count": len(evidence_set.all_evidence),
                     "verification_status": verification_result.status.value,
-                },
-            )
-        )
+                })
 
         first_tool_evidence = evidence_set.tool_evidence[0] if evidence_set.tool_evidence else None
         first_knowledge_evidence = evidence_set.knowledge_evidence[0] if evidence_set.knowledge_evidence else None
@@ -801,6 +794,7 @@ class AgentReasoningService:
             query=request.query,
             final_answer=final_answer,
             status=final_response_status,
+            language=target_lang,
             plan=plan,
             agent_plan=plan,
             knowledge_queries=plan.knowledge_queries,
@@ -809,10 +803,15 @@ class AgentReasoningService:
             evidence_set=evidence_set,
             verification=verification_result,
             execution_event_id=last_event_id,
+            scenario_id=scenario_id,
+            run_id=run_id,
+            execution_state="COMPLETED",
+            model_route=route_dict,
             tool_call=plan.tool_calls[0].model_dump() if plan.tool_calls else None,
             policy_decision=evidence_set.policy_decisions[0] if evidence_set.policy_decisions else None,
             tool_result=first_tool_result_data,
             evidence=primary_evidence,
+            latency_ms=round(total_duration_ms, 2),
             timing={
                 "total_duration_ms": round(total_duration_ms, 2),
                 "planning_duration_ms": round(planning_duration_ms, 2),

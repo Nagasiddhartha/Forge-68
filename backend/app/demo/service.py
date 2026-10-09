@@ -272,6 +272,10 @@ class DemoOrchestrationService:
                 vision=self.vision_service,
             )
 
+        import uuid
+        run_id = request.run_id or f"run-{uuid.uuid4().hex[:12]}"
+        target_lang = loc if request.deterministic else (request.language or request.locale or "en")
+
         agent_req = AgentQueryRequest(
             query=meta.prompt,
             role=role,
@@ -279,7 +283,10 @@ class DemoOrchestrationService:
             classification=classification,
             has_approval=False,
             image_path=image_path,
-            locale=loc if request.deterministic else (request.locale or "en"),
+            scenario_id=scenario_id.value,
+            run_id=run_id,
+            language=target_lang,
+            locale=target_lang,
         )
 
         # 5. Execute full agent loop through real services with monotonic timing
@@ -330,10 +337,14 @@ class DemoOrchestrationService:
         # 8. Assemble Complete M8-Compatible Demo Response
         return DemoRunResponse(
             scenario=scenario_id,
+            scenario_id=scenario_id,
+            run_id=run_id,
+            execution_state="COMPLETED",
             scenario_title=meta.title,
             query=agent_resp.query,
             final_answer=agent_resp.final_answer,
             status=agent_resp.status,
+            language=agent_resp.language,
             plan=agent_resp.plan,
             agent_plan=agent_resp.agent_plan,
             knowledge_queries=agent_resp.knowledge_queries,
@@ -342,6 +353,7 @@ class DemoOrchestrationService:
             evidence_set=agent_resp.evidence_set,
             verification=agent_resp.verification,
             execution_event_id=agent_resp.execution_event_id,
+            model_route=agent_resp.model_route,
             tool_call=agent_resp.tool_call,
             policy_decision=agent_resp.policy_decision,
             tool_result=agent_resp.tool_result,

@@ -12,4 +12,3 @@ export * from "./TimelineStep";
 export * from "./Divider";
 export * from "./Metric";
 export * from "./CaseHeader";
-export * from "./AudioReadoutButton";

@@ -1,8 +1,9 @@
 """FORGE Sovereign Industrial AI Control Plane - Main Application."""
 
+import uuid
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List
-from fastapi import FastAPI, HTTPException, status
+from typing import Any, Dict, List, Optional
+from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -20,8 +21,10 @@ from app.knowledge import (
     UnsupportedFormatError,
     knowledge_service,
 )
-from app.models import EXTERNAL_REQUEST_COUNTER, get_model_provider
+from app.models import EXTERNAL_REQUEST_COUNTER, get_model_provider, task_model_router
+from app.reports import report_generator
 from app.security import (
+    DataClassification,
     PolicyDecision,
     PolicyDecisionType,
     PolicyEvaluationRequest,
@@ -48,9 +51,15 @@ from app.vision import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup validation
+    # Startup validation and offline knowledge base pre-population
+    try:
+        from app.demo import demo_orchestration_service
+        await demo_orchestration_service.ensure_demo_knowledge_ingested()
+    except Exception:
+        pass
     yield
     # Shutdown cleanup
+
 
 
 app = FastAPI(
@@ -294,13 +303,34 @@ async def search_knowledge(request: KnowledgeSearchRequest) -> KnowledgeSearchRe
             query=request.query,
             top_k=request.top_k,
             classification_filter=request.classification,
+            max_classification=request.classification,
         )
         evidence = [EvidenceRecord.from_retrieval_result(r) for r in results]
+
+        restricted = knowledge_service.find_restricted_matches(request.query, request.classification)
+        denied_records_count = len(restricted)
+        denied_record_names = [r["title"] for r in restricted]
+
+        synthesized_answer = None
+        cited_sources: List[str] = []
+        if request.synthesize:
+            synthesized_answer, cited_sources = await knowledge_service.synthesize_grounded_answer(
+                query=request.query,
+                results=results,
+                language=request.language or "en",
+                user_classification=request.classification,
+            )
+
         return KnowledgeSearchResponse(
             query=request.query,
             total_results=len(results),
             results=results,
             evidence=evidence,
+            synthesized_answer=synthesized_answer,
+            cited_sources=cited_sources,
+            language=request.language or "en",
+            denied_records_count=denied_records_count,
+            denied_record_names=denied_record_names,
         )
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Search failed: {exc}")
@@ -327,6 +357,62 @@ async def list_knowledge_documents() -> Dict[str, Any]:
         "total_ingested": len(ingested),
         "total_available": len(demo_files),
     }
+
+
+@app.get("/api/v1/knowledge/documents/{document_id}/content", tags=["Knowledge"])
+async def get_knowledge_document_content(document_id: str) -> Dict[str, Any]:
+    """Retrieve full extracted text preview, classification, and OCR status of a document."""
+    try:
+        return knowledge_service.get_document_content(document_id)
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(fnf))
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to load document content: {exc}")
+
+
+@app.post("/api/v1/knowledge/upload", response_model=KnowledgeIngestResponse, tags=["Knowledge"])
+async def upload_knowledge_document(
+    file: UploadFile = File(...),
+    classification: Optional[str] = Form(None),
+    document_type: Optional[str] = Form(None),
+    equipment_ids: Optional[str] = Form(None),
+) -> KnowledgeIngestResponse:
+    """Upload and ingest a local plant document (.pdf, .txt, .md) into Knowledge Fabric."""
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No filename provided.")
+
+    try:
+        content_bytes = await file.read()
+        class_enum = DataClassification(classification) if classification else None
+        equip_list = [e.strip() for e in equipment_ids.split(",") if e.strip()] if equipment_ids else None
+
+        doc, chunks_count = await knowledge_service.upload_and_ingest(
+            filename=file.filename,
+            content_bytes=content_bytes,
+            classification=class_enum,
+            document_type=document_type,
+            equipment_ids=equip_list,
+        )
+
+        return KnowledgeIngestResponse(
+            status="success",
+            document=doc,
+            chunks_created=chunks_count,
+            document_id=doc.document_id,
+            filename=doc.filename,
+            chunks_count=chunks_count,
+            content_hash=doc.content_hash,
+            classification=doc.classification,
+        )
+    except PathTraversalError as pte:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Path traversal rejected: {pte}")
+    except UnsupportedFormatError as ufe:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(ufe))
+    except ValueError as ve:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=str(ve))
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Upload failed: {exc}")
+
 
 
 # =========================================================================
@@ -507,6 +593,91 @@ async def get_network_egress_audit() -> Dict[str, Any]:
         "network_interfaces": "HOST_LOOPBACK_ONLY",
         "message": "Zero external data egress verified. All inference, verification, and audit traces remain strictly on-premise.",
     }
+
+
+# =========================================================================
+# Task Model Routing & Hardware Awareness APIs
+# =========================================================================
+
+@app.get("/api/v1/models/routes", tags=["System"])
+@app.get("/api/v1/system/models/routes", tags=["System"])
+async def get_model_routes() -> List[Dict[str, Any]]:
+    """Inspect active task-to-model routing table, provider bindings, and GPU VRAM profiles."""
+    routes = await task_model_router.get_all_routes()
+    return [r.model_dump() for r in routes]
+
+
+# =========================================================================
+# Mission Report Export API (.docx)
+# =========================================================================
+
+@app.post("/api/v1/reports/export", tags=["Reports"])
+async def export_mission_report(data: Dict[str, Any]) -> Response:
+    """Generate and stream a genuine Microsoft Word (.docx) mission audit report."""
+    try:
+        run_id = data.get("run_id") or f"run-{uuid.uuid4().hex[:8]}"
+        docx_bytes = report_generator.generate_mission_docx(data)
+        safe_filename = f"FORGE-Mission-Report-{run_id}.docx"
+        return Response(
+            content=docx_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f'attachment; filename="{safe_filename}"',
+                "X-Run-ID": str(run_id),
+            },
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate report: {exc}",
+        )
+
+
+# =========================================================================
+# Sovereign Local Voice Assistant APIs
+# =========================================================================
+
+from app.voice import (
+    VoiceEngineStatus,
+    VoiceSynthesizeRequest,
+    VoiceSynthesizeResponse,
+    VoiceTranscribeResponse,
+    voice_service,
+)
+
+
+@app.get("/api/v1/voice/status", response_model=VoiceEngineStatus, tags=["Voice"])
+async def get_voice_engine_status() -> VoiceEngineStatus:
+    """Inspect status of local, on-premise speech recognition and text-to-speech engines."""
+    return voice_service.get_status()
+
+
+@app.post("/api/v1/voice/transcribe", response_model=VoiceTranscribeResponse, tags=["Voice"])
+async def transcribe_voice(
+    file: UploadFile = File(...),
+    language: str = Form("en"),
+) -> VoiceTranscribeResponse:
+    """Transcribe uploaded audio strictly on-premise without cloud transmission."""
+    audio_content = await file.read()
+    if len(audio_content) > 25 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Audio payload exceeds maximum allowable 25MB boundary.",
+        )
+    return await voice_service.transcribe_audio(
+        audio_bytes=audio_content,
+        filename=file.filename or "recording.webm",
+        language=language,
+    )
+
+
+@app.post("/api/v1/voice/synthesize", response_model=VoiceSynthesizeResponse, tags=["Voice"])
+async def synthesize_voice(
+    request: VoiceSynthesizeRequest,
+) -> VoiceSynthesizeResponse:
+    """Synthesize text into speech audio strictly on-premise."""
+    return await voice_service.synthesize_speech(request)
+
 
 
 

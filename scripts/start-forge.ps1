@@ -88,7 +88,7 @@ $ollamaOnline = $false
 $installedModels = @()
 
 try {
-    $resp = Invoke-RestMethod -Uri "$OllamaUrl/api/tags" -Method Get -TimeoutSec 6 -ErrorAction Stop
+    $resp = Invoke-RestMethod -Uri "$OllamaUrl/api/tags" -Method Get -TimeoutSec 2 -ErrorAction Stop
     $ollamaOnline = $true
     if ($resp.models) {
         $installedModels = @($resp.models | ForEach-Object { $_.name })
@@ -112,14 +112,13 @@ if ($reasoningFound) {
 }
 
 # 6. Check Vision Model
-$targetVisionModel = "moondream"
-$visionFound = @($installedModels | Where-Object { $_ -like "*$targetVisionModel*" -or $_ -like "*vl*" -or $_ -like "*llava*" })
-if ($visionFound.Count -gt 0) {
-    $matchedVision = $visionFound[0]
-    Write-StatusRow "Vision Model" "READY" "$matchedVision (Live Local Multimodal)" Green
+$targetVisionModel = "qwen2.5-vl:7b"
+$visionFound = $installedModels | Where-Object { $_ -like "*$targetVisionModel*" -or $_ -like "*vl*" }
+if ($visionFound) {
+    Write-StatusRow "Vision Model" "READY" "$targetVisionModel (Live Local Multimodal)" Green
 } elseif ($ollamaOnline) {
-    Write-StatusRow "Vision Model" "MISSING" "Vision model not in local library" Yellow
-    Write-Host "  -> Manual install command: ollama pull moondream" -ForegroundColor DarkCyan
+    Write-StatusRow "Vision Model" "MISSING" "$targetVisionModel not in local library" Yellow
+    Write-Host "  -> Manual install command: ollama pull $targetVisionModel" -ForegroundColor DarkCyan
     Write-Host "  -> Note: Deterministic demo vision will run automatically without live model" -ForegroundColor DarkGray
 } else {
     Write-StatusRow "Vision Model" "STANDBY" "Deterministic Demo Vision Active" Yellow
@@ -143,7 +142,7 @@ if ($PreflightOnly) {
 Write-Header "STARTING FORGE CONTROL PLANE PROCESSES"
 
 Write-Host "Starting sovereign FastAPI backend on http://localhost:8000..." -ForegroundColor Green
-$backendProc = Start-Process -FilePath $PythonCmd -ArgumentList "-m uvicorn app.main:app --port 8000" -WorkingDirectory $BackendDir -PassThru
+$backendProc = Start-Process -FilePath $PythonCmd -ArgumentList "-m uvicorn app.main:app --port 8000 --reload" -WorkingDirectory $BackendDir -PassThru
 
 Write-Host "Starting Next.js operational frontend on http://localhost:3000..." -ForegroundColor Green
 $frontendProc = Start-Process -FilePath "npm" -ArgumentList "run dev" -WorkingDirectory $FrontendDir -PassThru

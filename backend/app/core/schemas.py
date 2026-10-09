@@ -192,7 +192,16 @@ class AgentQueryRequest(BaseModel):
     has_approval: bool = Field(default=False, description="Whether human/supervisor approval is present")
     image_path: Optional[str] = Field(default=None, description="Optional path to local engineering image for multimodal reasoning")
     image_base64: Optional[str] = Field(default=None, description="Optional base64 encoded image for multimodal reasoning")
-    locale: Optional[str] = Field(default="en", description="Target language locale: en, hi, kn")
+    scenario_id: Optional[str] = Field(default=None, description="Explicit scenario identifier for traceability")
+    run_id: Optional[str] = Field(default=None, description="Unique execution run identifier")
+    language: Optional[str] = Field(default="en", description="Target interaction language: 'en', 'hi', or 'kn'")
+    locale: Optional[str] = Field(default="en", description="Target language locale alias")
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.locale and self.locale != "en" and self.language == "en":
+            object.__setattr__(self, "language", self.locale)
+        elif self.language and self.language != "en" and self.locale == "en":
+            object.__setattr__(self, "locale", self.language)
 
 
 class AgentQueryResponse(BaseModel):
@@ -200,6 +209,7 @@ class AgentQueryResponse(BaseModel):
     query: str
     final_answer: str
     status: AgentQueryStatus
+    language: str = Field(default="en", description="Interaction language")
     plan: Optional[AgentPlan] = None
     agent_plan: Optional[AgentPlan] = None
     knowledge_queries: List[KnowledgeQueryPlan] = Field(default_factory=list)
@@ -208,7 +218,10 @@ class AgentQueryResponse(BaseModel):
     evidence_set: Optional[EvidenceSet] = None
     verification: Optional[VerificationResult] = None
     execution_event_id: Optional[str] = None
-
+    scenario_id: Optional[str] = Field(default=None, description="Explicit scenario identifier")
+    run_id: Optional[str] = Field(default=None, description="Unique execution run identifier")
+    execution_state: str = Field(default="COMPLETED", description="Current execution state")
+    model_route: Optional[Dict[str, Any]] = Field(default=None, description="Task model routing decision")
 
     # Milestone 3 backward compatibility fields
     tool_call: Optional[Dict[str, Any]] = None
@@ -216,4 +229,6 @@ class AgentQueryResponse(BaseModel):
     tool_result: Optional[Dict[str, Any]] = None
     evidence: Optional[EvidenceRecord] = None
     timing: Optional[Any] = None
+    latency_ms: Optional[float] = Field(default=None, description="End-to-end execution latency in milliseconds")
+
 

@@ -73,10 +73,10 @@
   --coral-text: #E58A70;  /* Coral for text meeting 4.5:1 contrast */
   --mist: #9FB1A9;        /* Insufficient evidence, not applicable */
 
-  /* Typography Families with Native Indic Fallbacks (Kannada & Devanagari) */
-  --font-display: 'Cormorant Garamond', 'Nirmala UI', 'Tunga', 'Mangal', Georgia, serif;
-  --font-ui: 'Hanken Grotesk', 'Nirmala UI', system-ui, -apple-system, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'Nirmala UI', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* Typography Families */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Restrained Radii */
   --radius-hero: 20px;
@@ -508,17 +508,5 @@ nextjs-portal,
   display: none !important;
   visibility: hidden !important;
   pointer-events: none !important;
-}
-
-/* Sovereign Audio Readout Wave Animation */
-@keyframes audioWave {
-  0% {
-    height: 4px;
-    opacity: 0.6;
-  }
-  100% {
-    height: 14px;
-    opacity: 1;
-  }
 }
 
