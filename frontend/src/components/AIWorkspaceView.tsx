@@ -296,17 +296,31 @@ export function AIWorkspaceView({
     (response?.evidence_set?.visual_evidence?.length || 0);
 
   const isPolicyDenied = response?.status === "POLICY_DENIED";
-  const hasSecurityAlert =
-    demoResponse?.security_events && demoResponse.security_events.length > 0;
+  const isCase03 =
+    activeScenarioId === "policy_denial" || (!activeScenarioId && isPolicyDenied);
+
+  const isCase04 =
+    activeScenarioId === "prompt_injection" ||
+    (!activeScenarioId &&
+      ((response?.status as string) === "QUARANTINED" ||
+        (response?.final_answer &&
+          (response.final_answer.includes("SECURITY ADVISORY: Untrusted prompt injection") ||
+            response.final_answer.includes("QUARANTINED") ||
+            response.final_answer.includes("ಅನ್‌ಟ್ರಸ್ಟೆಡ್ ಡೇಟಾ ಎಂದು ಕ್ವಾರಂಟೈನ್") ||
+            response.final_answer.includes("अविश्वासित डेटा के रूप में अलग (quarantine)"))) ||
+        (demoResponse?.security_events &&
+          demoResponse.security_events.some(
+            (e) => e.type === "SECURITY_ALERT" || e.type === "PROMPT_INJECTION_DETECTED"
+          ))));
 
   // Determine current verdict
-  const currentVerdict = isPolicyDenied
+  const currentVerdict = isCase03
     ? "ACTION_BLOCKED"
-    : hasSecurityAlert
+    : isCase04
     ? "QUARANTINED"
-    : response?.verification?.status === "NEEDS_REVIEW"
+    : response?.verification?.status === "NEEDS_REVIEW" || activeScenarioId === "r204_pressure_variance"
     ? "REVIEW_REQUIRED"
-    : response?.verification?.status === "VERIFIED"
+    : response?.verification?.status === "VERIFIED" || activeScenarioId === "r204_investigation"
     ? "VERIFIED"
     : response?.verification?.status === "FAILED"
     ? "FAILED"
@@ -631,7 +645,7 @@ export function AIWorkspaceView({
       {(response || activeScenarioId) && (
         <EnamelSurface variant="base" padding="spacious" style={{ position: "relative" }}>
           {/* CASE 03: UNAUTHORIZED ACTUATION (POLICY DENIAL) */}
-          {(activeScenarioId === "policy_denial" || isPolicyDenied) ? (
+          {isCase03 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {/* Header */}
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
@@ -736,7 +750,7 @@ export function AIWorkspaceView({
                 </div>
               </div>
             </div>
-          ) : (activeScenarioId === "prompt_injection" || hasSecurityAlert) ? (
+          ) : isCase04 ? (
             /* CASE 04: PROMPT INJECTION / DATA QUARANTINE */
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {/* Header */}
@@ -846,12 +860,20 @@ export function AIWorkspaceView({
                       {activeScenarioId ? "MISSION · REACTOR R-204" : `INVESTIGATION · ASSET ${response?.query?.match(/\b([A-Z]-\d{3})\b/i)?.[1]?.toUpperCase() || "R-204"}`}
                     </span>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                      {activeScenarioId ? "PRESSURE VARIANCE INVESTIGATION" : "CUSTOM SOVEREIGN AUDIT"}
+                      {activeScenarioId === "r204_investigation"
+                        ? "STANDARD SOVEREIGN INVESTIGATION"
+                        : activeScenarioId === "r204_pressure_variance"
+                        ? "PRESSURE VARIANCE INVESTIGATION"
+                        : "CUSTOM SOVEREIGN AUDIT"}
                     </span>
                   </div>
 
                   <h2 style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.15 }}>
-                    {activeScenarioId ? t.questionR204Review : (response?.query || query)}
+                    {activeScenarioId === "r204_investigation"
+                      ? t.sc1Title
+                      : activeScenarioId === "r204_pressure_variance"
+                      ? t.questionR204Review
+                      : (response?.query || query)}
                   </h2>
                 </div>
 
@@ -860,7 +882,9 @@ export function AIWorkspaceView({
                     id="case-dossier-main"
                     text={
                       response?.final_answer ||
-                      (activeScenarioId
+                      (activeScenarioId === "r204_investigation"
+                        ? "Operating conditions nominal and within design envelope. SOP-R204-REV4 specifies normal pressure of 31.2 bar gauge. Ultrasonic wall inspection confirms 72.8 mm thickness. No immediate engineering review required."
+                        : activeScenarioId === "r204_pressure_variance"
                         ? `${t.findingPressureHigh}. ${t.recommendationReview}. ${t.metricCurrentCondition}: 33.0 bar, ${t.metricNormalBaseline}: 31.2 bar, ${t.metricDeviation}: plus 1.8 bar.`
                         : (response?.query || query))
                     }
@@ -916,8 +940,8 @@ export function AIWorkspaceView({
 
               <Divider style={{ margin: "4px 0" }} />
 
-              {/* Technical Report Box for Custom Queries & Offline Router */}
-              {(!activeScenarioId || response?.status === "OFFLINE_FALLBACK") && response?.final_answer && (
+              {/* Technical Report Box for Autonomous Missions & Custom Queries */}
+              {response?.final_answer && (
                 <div style={{ background: "var(--bg-0)", border: "1px solid var(--line)", borderRadius: "var(--radius-panel)", padding: "18px 22px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.08em" }}>
@@ -948,16 +972,44 @@ export function AIWorkspaceView({
               )}
 
               {/* Human-First Finding Banner (Judges Understand in 5 Seconds) */}
-              <div style={{ background: "rgba(200, 161, 90, 0.08)", border: "1px solid var(--brass)", borderRadius: "var(--radius-panel)", padding: "18px 22px" }}>
+              <div
+                style={{
+                  background: activeScenarioId === "r204_investigation" ? "rgba(156, 195, 168, 0.08)" : "rgba(200, 161, 90, 0.08)",
+                  border: activeScenarioId === "r204_investigation" ? "1px solid var(--sage)" : "1px solid var(--brass)",
+                  borderRadius: "var(--radius-panel)",
+                  padding: "18px 22px",
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, gap: 12 }}>
-                  <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", color: "var(--brass)", fontWeight: 500 }}>
-                    {response?.status === "OFFLINE_FALLBACK"
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "22px",
+                      color: activeScenarioId === "r204_investigation" ? "var(--sage)" : "var(--brass)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {activeScenarioId === "r204_investigation"
+                      ? (locale === "kn"
+                          ? "ಫಲಿತಾಂಶ: ಕಾರ್ಯಾಚರಣೆಯ ಪರಿಸ್ಥಿತಿಗಳು ಸಾಮಾನ್ಯವಾಗಿದ್ದು ವಿನ್ಯಾಸ ಮಿತಿಯೊಳಗೆ ಇವೆ (31.2 bar)."
+                          : locale === "hi"
+                          ? "निष्कर्ष: परिचालन स्थितियां सामान्य हैं और डिज़ाइन सीमा के भीतर हैं (31.2 bar)।"
+                          : "Finding: Operating conditions nominal & within design envelope (31.2 bar).")
+                      : response?.status === "OFFLINE_FALLBACK"
                       ? t.offlineResolvedTitle
                       : t.findingPressureHigh}
                   </div>
                   <AudioReadoutButton
                     id="finding-banner"
-                    text={`${response?.status === "OFFLINE_FALLBACK" ? t.offlineResolvedTitle : t.findingPressureHigh}. ${response?.status === "OFFLINE_FALLBACK" ? t.offlineResolvedDesc : t.recommendationReview}`}
+                    text={
+                      activeScenarioId === "r204_investigation"
+                        ? (locale === "kn"
+                            ? "ಕಾರ್ಯಾಚರಣೆಯ ಪರಿಸ್ಥಿತಿಗಳು ಸಾಮಾನ್ಯವಾಗಿದ್ದು ವಿನ್ಯಾಸ ಮಿತಿಯೊಳಗೆ ಇವೆ. ತಕ್ಷಣದ ಪರಿಶೀಲನೆ ಅಗತ್ಯವಿಲ್ಲ."
+                            : locale === "hi"
+                            ? "परिचालन स्थितियां सामान्य हैं और डिज़ाइन सीमा के भीतर हैं। तत्काल समीक्षा की आवश्यकता नहीं।"
+                            : "Operating conditions nominal and within design envelope. No immediate review required.")
+                        : `${response?.status === "OFFLINE_FALLBACK" ? t.offlineResolvedTitle : t.findingPressureHigh}. ${response?.status === "OFFLINE_FALLBACK" ? t.offlineResolvedDesc : t.recommendationReview}`
+                    }
                     locale={locale}
                     variant="compact"
                     label={t.listenToFinding}
@@ -967,7 +1019,13 @@ export function AIWorkspaceView({
                   />
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink)", fontWeight: 500 }}>
-                  {response?.status === "OFFLINE_FALLBACK"
+                  {activeScenarioId === "r204_investigation"
+                    ? (locale === "kn"
+                        ? "SOP-R204-REV4 ಮತ್ತು ಅಲ್ಟ್ರಾಸಾನಿಕ್ ತಪಾಸಣೆ IR-2025-088 ವಿರುದ್ಧ ಪರಿಶೀಲಿಸಲಾಗಿದೆ. ತಕ್ಷಣದ ಎಂಜಿನಿಯರಿಂಗ್ ಪರಿಶೀಲನೆ ಅಗತ್ಯವಿಲ್ಲ."
+                        : locale === "hi"
+                        ? "SOP-R204-REV4 और अल्ट्रासोनिक निरीक्षण IR-2025-088 के विरुद्ध सत्यापित। तत्काल इंजीनियरिंग समीक्षा की आवश्यकता नहीं।"
+                        : "Verified against SOP-R204-REV4 & Ultrasonic Inspection IR-2025-088. No immediate engineering review required.")
+                    : response?.status === "OFFLINE_FALLBACK"
                     ? t.offlineResolvedDesc
                     : t.recommendationReview}
                 </div>
@@ -985,34 +1043,69 @@ export function AIWorkspaceView({
                   padding: "16px 20px",
                 }}
               >
-                <div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricCurrentCondition}</span>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--brass)", fontWeight: 600, marginTop: 4 }}>
-                    33.0 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
-                  </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>PI-204 {t.observedSuffix}</span>
-                </div>
-                <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricNormalBaseline}</span>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--ink)", fontWeight: 600, marginTop: 4 }}>
-                    31.2 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
-                  </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>SOP §3.2 limit</span>
-                </div>
-                <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricDeviation}</span>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--brass)", fontWeight: 600, marginTop: 4 }}>
-                    +1.8 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
-                  </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricAboveNormal}</span>
-                </div>
-                <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricHighAlarm}</span>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--coral-text)", fontWeight: 600, marginTop: 4 }}>
-                    33.5 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
-                  </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricMarginLeft}</span>
-                </div>
+                {activeScenarioId === "r204_investigation" ? (
+                  <>
+                    <div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricCurrentCondition}</span>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
+                        31.2 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>PI-204 Nominal</span>
+                    </div>
+                    <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricNormalBaseline}</span>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--ink)", fontWeight: 600, marginTop: 4 }}>
+                        31.2 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>SOP §3.2 limit</span>
+                    </div>
+                    <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>WALL THICKNESS</span>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
+                        72.8 <span style={{ fontSize: "14px", fontWeight: 400 }}>mm</span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>&gt; 68.2 mm min (IR-2025-088)</span>
+                    </div>
+                    <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>MAWP LIMIT</span>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--ink)", fontWeight: 600, marginTop: 4 }}>
+                        35.0 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>+3.8 bar design margin</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricCurrentCondition}</span>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--brass)", fontWeight: 600, marginTop: 4 }}>
+                        33.0 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>PI-204 {t.observedSuffix}</span>
+                    </div>
+                    <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricNormalBaseline}</span>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--ink)", fontWeight: 600, marginTop: 4 }}>
+                        31.2 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>SOP §3.2 limit</span>
+                    </div>
+                    <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricDeviation}</span>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--brass)", fontWeight: 600, marginTop: 4 }}>
+                        +1.8 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricAboveNormal}</span>
+                    </div>
+                    <div style={{ borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricHighAlarm}</span>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--coral-text)", fontWeight: 600, marginTop: 4 }}>
+                        33.5 <span style={{ fontSize: "14px", fontWeight: 400 }}>bar</span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>{t.metricMarginLeft}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* PRESSURE INSTRUMENT TRACK */}
@@ -1024,12 +1117,16 @@ export function AIWorkspaceView({
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <AudioReadoutButton
                       id="pressure-instrument-track-audio"
-                      text={`${t.pressureInstrumentLabel}. ${t.metricCurrentCondition}: 33.0 bar ${t.observedSuffix}. ${t.metricNormalBaseline}: 31.2 bar. ${t.metricDeviation}: +1.8 bar ${t.metricAboveNormal}. ${t.metricHighAlarm}: 33.5 bar ${t.metricMarginLeft}.`}
+                      text={
+                        activeScenarioId === "r204_investigation"
+                          ? `${t.pressureInstrumentLabel}. 31.2 bar nominal baseline operating point. MAWP trip limit: 35.0 bar. Design margin: plus 3.8 bar.`
+                          : `${t.pressureInstrumentLabel}. ${t.metricCurrentCondition}: 33.0 bar ${t.observedSuffix}. ${t.metricNormalBaseline}: 31.2 bar. ${t.metricDeviation}: +1.8 bar ${t.metricAboveNormal}. ${t.metricHighAlarm}: 33.5 bar ${t.metricMarginLeft}.`
+                      }
                       locale={locale}
                       variant="compact"
                     />
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 600, color: "var(--brass)" }}>
-                      33.0 bar {t.observedSuffix}
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 600, color: activeScenarioId === "r204_investigation" ? "var(--sage)" : "var(--brass)" }}>
+                      {activeScenarioId === "r204_investigation" ? `31.2 bar ${t.normalSuffix}` : `33.0 bar ${t.observedSuffix}`}
                     </span>
                   </div>
                 </div>
@@ -1081,12 +1178,12 @@ export function AIWorkspaceView({
                     }}
                   />
 
-                  {/* Marker for 33.0 bar */}
+                  {/* Marker on the scale */}
                   <div
                     style={{
                       position: "absolute",
                       top: 0,
-                      left: "60%",
+                      left: activeScenarioId === "r204_investigation" ? "24%" : "60%",
                       transform: "translateX(-50%)",
                       display: "flex",
                       flexDirection: "column",
@@ -1098,12 +1195,12 @@ export function AIWorkspaceView({
                         width: 14,
                         height: 14,
                         borderRadius: "50%",
-                        background: "var(--brass)",
+                        background: activeScenarioId === "r204_investigation" ? "var(--sage)" : "var(--brass)",
                         border: "2px solid var(--bg-0)",
-                        boxShadow: "0 0 6px rgba(200, 161, 90, 0.5)",
+                        boxShadow: activeScenarioId === "r204_investigation" ? "0 0 6px rgba(156, 195, 168, 0.5)" : "0 0 6px rgba(200, 161, 90, 0.5)",
                       }}
                     />
-                    <div style={{ width: 2, height: 12, background: "var(--brass)" }} />
+                    <div style={{ width: 2, height: 12, background: activeScenarioId === "r204_investigation" ? "var(--sage)" : "var(--brass)" }} />
                   </div>
                 </div>
 
@@ -1150,12 +1247,16 @@ export function AIWorkspaceView({
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <AudioReadoutButton
                         id="summary-evidence-rail-audio"
-                        text={`${t.whatSupportsTitle}. ${t.verifiedSourcesCount}. Record 1: ${t.sourceSopLabel}, ${t.sourceSopVal}. Record 2: ${t.sourceGaugeLabel}, ${t.sourceGaugeVal}. Record 3: ${t.sourceCalcLabel}, ${t.sourceCalcVal}.`}
+                        text={
+                          activeScenarioId === "r204_investigation"
+                            ? `${t.whatSupportsTitle}. 3 verified records. Record 1: ${t.sourceSopLabel}, ${t.sourceSopVal}. Record 2: Ultrasonic Scan IR-2025-088, minimum shell thickness 72.8 mm against design 75 mm, above 68.2 mm retirement limit. Record 3: Equipment History, verified OPERATIONAL status.`
+                            : `${t.whatSupportsTitle}. ${t.verifiedSourcesCount}. Record 1: ${t.sourceSopLabel}, ${t.sourceSopVal}. Record 2: ${t.sourceGaugeLabel}, ${t.sourceGaugeVal}. Record 3: ${t.sourceCalcLabel}, ${t.sourceCalcVal}.`
+                        }
                         locale={locale}
                         variant="compact"
                       />
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                        {t.verifiedSourcesCount}
+                        {activeScenarioId === "r204_investigation" ? "3 VERIFIED SOURCES" : t.verifiedSourcesCount}
                       </span>
                     </div>
                   </div>
@@ -1165,14 +1266,29 @@ export function AIWorkspaceView({
                       <span><strong style={{ color: "var(--brass)", fontFamily: "var(--font-mono)" }}>[01]</strong> {t.sourceSopLabel}</span>
                       <span style={{ color: "var(--ink-2)", fontFamily: "var(--font-mono)" }}>{t.sourceSopVal}</span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12.5px", fontFamily: "var(--font-ui)" }}>
-                      <span><strong style={{ color: "var(--brass)", fontFamily: "var(--font-mono)" }}>[02]</strong> {t.sourceGaugeLabel}</span>
-                      <span style={{ color: "var(--ink-2)", fontFamily: "var(--font-mono)" }}>{t.sourceGaugeVal}</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12.5px", fontFamily: "var(--font-ui)" }}>
-                      <span><strong style={{ color: "var(--brass)", fontFamily: "var(--font-mono)" }}>[03]</strong> {t.sourceCalcLabel}</span>
-                      <span style={{ color: "var(--ink-2)", fontFamily: "var(--font-mono)" }}>{t.sourceCalcVal}</span>
-                    </div>
+                    {activeScenarioId === "r204_investigation" ? (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12.5px", fontFamily: "var(--font-ui)" }}>
+                          <span><strong style={{ color: "var(--brass)", fontFamily: "var(--font-mono)" }}>[02]</strong> Ultrasonic Wall Scan IR-2025-088</span>
+                          <span style={{ color: "var(--ink-2)", fontFamily: "var(--font-mono)" }}>72.8 mm thickness (&gt; 68.2 mm min)</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12.5px", fontFamily: "var(--font-ui)" }}>
+                          <span><strong style={{ color: "var(--brass)", fontFamily: "var(--font-mono)" }}>[03]</strong> Equipment Records</span>
+                          <span style={{ color: "var(--ink-2)", fontFamily: "var(--font-mono)" }}>Status: OPERATIONAL</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12.5px", fontFamily: "var(--font-ui)" }}>
+                          <span><strong style={{ color: "var(--brass)", fontFamily: "var(--font-mono)" }}>[02]</strong> {t.sourceGaugeLabel}</span>
+                          <span style={{ color: "var(--ink-2)", fontFamily: "var(--font-mono)" }}>{t.sourceGaugeVal}</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12.5px", fontFamily: "var(--font-ui)" }}>
+                          <span><strong style={{ color: "var(--brass)", fontFamily: "var(--font-mono)" }}>[03]</strong> {t.sourceCalcLabel}</span>
+                          <span style={{ color: "var(--ink-2)", fontFamily: "var(--font-mono)" }}>{t.sourceCalcVal}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 

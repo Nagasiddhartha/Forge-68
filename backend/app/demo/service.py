@@ -283,6 +283,7 @@ class DemoOrchestrationService:
         )
 
         # 5. Execute full agent loop through real services with monotonic timing
+        num_agent_events_before = len(audit_event_sink._agent_events)
         t_scenario_start = time.perf_counter()
         agent_resp = await service.process_query(agent_req)
         scenario_duration_ms = (time.perf_counter() - t_scenario_start) * 1000.0
@@ -296,17 +297,20 @@ class DemoOrchestrationService:
         elif isinstance(agent_resp.timing, DemoExecutionTiming):
             timing_model = agent_resp.timing
 
-        # 6. Extract trace audit events for this run
-        all_agent_events = audit_event_sink.get_agent_events(limit=50)
-        all_tool_events = audit_event_sink.get_events(limit=50)
+        # 6. Extract trace audit events for this specific run
+        run_agent_events = audit_event_sink._agent_events[num_agent_events_before:]
+        if not run_agent_events:
+            all_agent_events = audit_event_sink.get_agent_events(limit=20)
+            run_agent_events = list(reversed(all_agent_events))
 
         recent_audit_events: List[Dict[str, Any]] = [
             {"event_id": e.event_id, "type": e.event_type.value, "details": e.details, "timestamp": e.timestamp}
-            for e in reversed(all_agent_events[:20])
+            for e in run_agent_events
         ]
         security_events: List[Dict[str, Any]] = [
             e for e in recent_audit_events
-            if e["type"] in ("SECURITY_ALERT", "POLICY_EVALUATED") or "DENY" in str(e["details"])
+            if e["type"] in ("SECURITY_ALERT", "PROMPT_INJECTION_DETECTED")
+            or (e["type"] == "POLICY_EVALUATED" and "DENY" in str(e.get("details", "")))
         ]
 
         # 7. Extract visual findings and calculations
