@@ -7,6 +7,7 @@ import {
   EnamelSurface,
   BrassLabel,
   Divider,
+  AudioReadoutButton,
 } from "@/components/primitives";
 
 interface EvidencePanelProps {
@@ -143,36 +144,45 @@ export function EvidencePanel({
           </p>
         </div>
 
-        {/* Filter Pills */}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {[
-            { id: "ALL", label: t.filterAllEvidence },
-            { id: "DOCUMENT", label: t.filterProcedures },
-            { id: "TOOL", label: t.filterSensors },
-            { id: "VISUAL", label: t.filterGauges },
-            { id: "CALCULATION", label: t.filterMath },
-          ].map((tab) => {
-            const isSelected = filter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setFilter(tab.id as typeof filter)}
-                style={{
-                  background: isSelected ? "var(--bg-3)" : "var(--bg-0)",
-                  border: isSelected ? "1px solid var(--brass)" : "1px solid var(--line)",
-                  borderRadius: "var(--radius-pill)",
-                  color: isSelected ? "var(--ink)" : "var(--ink-3)",
-                  fontFamily: "var(--font-ui)",
-                  fontSize: "12px",
-                  padding: "5px 12px",
-                  cursor: "pointer",
-                  transition: "all var(--dur-fast) var(--ease-out)",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+        {/* Filter Pills & Audio Button */}
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <AudioReadoutButton
+            id="evidence-dossier-header-audio"
+            text={`${title === "Execution Evidence Records" ? t.evidenceHeaderTitle : (title || t.whatSupportsTitle)}. ${t.evidenceDossierSubtitle}. Total records: ${displayRecords.length}. Calculations: ${activeCalculations.length}.`}
+            locale={locale}
+            variant="compact"
+            label={t.readOutLoud}
+          />
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {[
+              { id: "ALL", label: t.filterAllEvidence },
+              { id: "DOCUMENT", label: t.filterProcedures },
+              { id: "TOOL", label: t.filterSensors },
+              { id: "VISUAL", label: t.filterGauges },
+              { id: "CALCULATION", label: t.filterMath },
+            ].map((tab) => {
+              const isSelected = filter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilter(tab.id as typeof filter)}
+                  style={{
+                    background: isSelected ? "var(--bg-3)" : "var(--bg-0)",
+                    border: isSelected ? "1px solid var(--brass)" : "1px solid var(--line)",
+                    borderRadius: "var(--radius-pill)",
+                    color: isSelected ? "var(--ink)" : "var(--ink-3)",
+                    fontFamily: "var(--font-ui)",
+                    fontSize: "12px",
+                    padding: "5px 12px",
+                    cursor: "pointer",
+                    transition: "all var(--dur-fast) var(--ease-out)",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -203,9 +213,17 @@ export function EvidencePanel({
                   </span>
                 </div>
 
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                  ID: {calc.calculation_id}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <AudioReadoutButton
+                    id={`calc-audio-${calc.calculation_id}`}
+                    text={`Deterministic Calculation: ${calc.calculation_type}. Result: ${calc.result} ${calc.units}. Inputs: ${Object.entries(calc.inputs).map(([k, v]) => `${k} is ${v}`).join(", ")}. Description: ${calc.description}`}
+                    locale={locale}
+                    variant="compact"
+                  />
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                    ID: {calc.calculation_id}
+                  </span>
+                </div>
               </div>
 
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, margin: "6px 0 10px" }}>
@@ -303,6 +321,12 @@ export function EvidencePanel({
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <AudioReadoutButton
+                    id={`evidence-audio-${record.evidence_id}`}
+                    text={`Evidence Record ${footnoteNumber}. ${typeLabel} from ${record.source_reference}. Text: ${record.retrieved_text}`}
+                    locale={locale}
+                    variant="compact"
+                  />
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
                     ID: {record.evidence_id}
                   </span>

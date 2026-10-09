@@ -1021,9 +1021,17 @@ export function AIWorkspaceView({
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", letterSpacing: "0.06em" }}>
                     {t.pressureInstrumentLabel}
                   </span>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 600, color: "var(--brass)" }}>
-                    33.0 bar {t.observedSuffix}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <AudioReadoutButton
+                      id="pressure-instrument-track-audio"
+                      text={`${t.pressureInstrumentLabel}. ${t.metricCurrentCondition}: 33.0 bar ${t.observedSuffix}. ${t.metricNormalBaseline}: 31.2 bar. ${t.metricDeviation}: +1.8 bar ${t.metricAboveNormal}. ${t.metricHighAlarm}: 33.5 bar ${t.metricMarginLeft}.`}
+                      locale={locale}
+                      variant="compact"
+                    />
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 600, color: "var(--brass)" }}>
+                      33.0 bar {t.observedSuffix}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Linear Instrument Scale */}
@@ -1139,9 +1147,17 @@ export function AIWorkspaceView({
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
                       {t.whatSupportsTitle}
                     </span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                      {t.verifiedSourcesCount}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <AudioReadoutButton
+                        id="summary-evidence-rail-audio"
+                        text={`${t.whatSupportsTitle}. ${t.verifiedSourcesCount}. Record 1: ${t.sourceSopLabel}, ${t.sourceSopVal}. Record 2: ${t.sourceGaugeLabel}, ${t.sourceGaugeVal}. Record 3: ${t.sourceCalcLabel}, ${t.sourceCalcVal}.`}
+                        locale={locale}
+                        variant="compact"
+                      />
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                        {t.verifiedSourcesCount}
+                      </span>
+                    </div>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1173,9 +1189,17 @@ export function AIWorkspaceView({
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", letterSpacing: "0.06em" }}>
                       {t.whyTrustTitle}
                     </span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
-                      {t.checksPassedCount}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <AudioReadoutButton
+                        id="summary-checks-rail-audio"
+                        text={`${t.whyTrustTitle}. ${t.checksPassedCount}. Checks include: ${t.checkTraceable}, ${t.checkEvidenceComplete}, ${t.checkWithinPolicy}, ${t.checkWithinAccess}, ${t.checkValuesAgree}, and ${t.checkMath}. All passed deterministically. ${t.checkedByPythonNotice}.`}
+                        locale={locale}
+                        variant="compact"
+                      />
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
+                        {t.checksPassedCount}
+                      </span>
+                    </div>
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 14px", fontSize: "12px", fontFamily: "var(--font-ui)" }}>
@@ -1265,6 +1289,19 @@ export function AIWorkspaceView({
 
           {activeSubTab === "VISION" && visionDirectResult && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
+                  SOVEREIGN COMPUTER VISION INSPECTION FINDINGS
+                </span>
+                <AudioReadoutButton
+                  id="vision-tab-audio"
+                  text={`Vision Inspection Results for ${visionDirectResult.image_provenance.filename}. Found ${visionDirectResult.findings.length} findings. ${visionDirectResult.findings.map((f) => `${f.finding_type}: ${f.description}. ${f.observed_value !== undefined ? `Observed value: ${f.observed_value} ${f.unit || ""}.` : ""} Severity: ${f.severity}.`).join(" ")}`}
+                  locale={locale}
+                  variant="compact"
+                  label={t.readOutLoud}
+                />
+              </div>
+
               <div
                 style={{
                   display: "grid",
@@ -1307,13 +1344,21 @@ export function AIWorkspaceView({
                       borderRadius: "var(--radius-sm)",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)" }}>
                         {f.finding_type}
                       </span>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                        {t.visionConfidence}: {(f.confidence * 100).toFixed(0)}%
-                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <AudioReadoutButton
+                          id={`vision-finding-audio-${f.finding_id}`}
+                          text={`Vision finding: ${f.finding_type}. ${f.description}. ${f.observed_value !== undefined ? `Observed: ${f.observed_value} ${f.unit || ""}.` : ""} Severity: ${f.severity}.`}
+                          locale={locale}
+                          variant="compact"
+                        />
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                          {t.visionConfidence}: {(f.confidence * 100).toFixed(0)}%
+                        </span>
+                      </div>
                     </div>
 
                     <p style={{ fontSize: "13px", color: "var(--ink)", marginBottom: 6 }}>

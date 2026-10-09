@@ -4,6 +4,7 @@ import { Locale, TRANSLATIONS } from "@/lib/i18n";
 import {
   EnamelSurface,
   VerdictBadge,
+  AudioReadoutButton,
 } from "@/components/primitives";
 
 interface ExecutionTraceProps {
@@ -62,17 +63,26 @@ export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps)
           </span>
         </div>
 
-        {response.execution_event_id && (
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "11px",
-              color: "var(--ink-3)",
-            }}
-          >
-            {t.traceEventId}: <strong style={{ color: "var(--ink-2)" }}>{response.execution_event_id}</strong>
-          </span>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <AudioReadoutButton
+            id="trace-header-audio"
+            text={`Forensic Execution Trace. Operational Query: ${response.query}. ${plan?.reasoning ? `Plan reasoning: ${plan.reasoning}.` : ""} ${verification?.summary ? `Deterministic verification: ${verification.summary}.` : ""} Verified brief: ${response.final_answer}`}
+            locale={locale}
+            variant="compact"
+            label={t.readOutLoud}
+          />
+          {response.execution_event_id && (
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--ink-3)",
+              }}
+            >
+              {t.traceEventId}: <strong style={{ color: "var(--ink-2)" }}>{response.execution_event_id}</strong>
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Sequential Forensic Spine */}
@@ -104,19 +114,27 @@ export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps)
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
                   Operational Query Ingestion
                 </span>
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "11px",
-                    color: "var(--sage)",
-                    background: "rgba(156, 195, 168, 0.08)",
-                    padding: "2px 8px",
-                    borderRadius: "var(--radius-pill)",
-                    border: "1px solid var(--sage)",
-                  }}
-                >
-                  INGESTED
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <AudioReadoutButton
+                    id="trace-phase-1-audio"
+                    text={`Phase 1: Operational Query Ingestion. ${response.query}`}
+                    locale={locale}
+                    variant="compact"
+                  />
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--sage)",
+                      background: "rgba(156, 195, 168, 0.08)",
+                      padding: "2px 8px",
+                      borderRadius: "var(--radius-pill)",
+                      border: "1px solid var(--sage)",
+                    }}
+                  >
+                    INGESTED
+                  </span>
+                </div>
               </div>
               <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink)", lineHeight: 1.5 }}>
                 {response.query}
@@ -152,21 +170,29 @@ export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps)
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
                   Reasoning Plan Formulation
                 </span>
-                {plan && (
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--brass)",
-                      background: "rgba(200, 161, 90, 0.08)",
-                      padding: "2px 8px",
-                      borderRadius: "var(--radius-pill)",
-                      border: "1px solid var(--brass)",
-                    }}
-                  >
-                    {t.traceActionLabel}: {plan.action.toUpperCase()}
-                  </span>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <AudioReadoutButton
+                    id="trace-phase-2-audio"
+                    text={`Phase 2: Reasoning Plan Formulation. Action: ${plan?.action || "Execute"}. ${plan?.reasoning || ""}`}
+                    locale={locale}
+                    variant="compact"
+                  />
+                  {plan && (
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        color: "var(--brass)",
+                        background: "rgba(200, 161, 90, 0.08)",
+                        padding: "2px 8px",
+                        borderRadius: "var(--radius-pill)",
+                        border: "1px solid var(--brass)",
+                      }}
+                    >
+                      {t.traceActionLabel}: {plan.action.toUpperCase()}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {plan?.reasoning && (
@@ -227,15 +253,23 @@ export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps)
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
                     Sovereign Knowledge Retrieval
                   </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--ink-2)",
-                    }}
-                  >
-                    {knowledgeEvidence.length} {t.traceChunksRetrieved}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <AudioReadoutButton
+                      id="trace-phase-3-audio"
+                      text={`Phase 3: Sovereign Knowledge Retrieval. Retrieved ${knowledgeEvidence.length} chunks. ${knowledgeEvidence.map((k) => `${k.source_reference} from ${k.filename}`).join(". ")}`}
+                      locale={locale}
+                      variant="compact"
+                    />
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        color: "var(--ink-2)",
+                      }}
+                    >
+                      {knowledgeEvidence.length} {t.traceChunksRetrieved}
+                    </span>
+                  </div>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
@@ -301,15 +335,23 @@ export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps)
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
                     Policy Gateway Mediation & Sandbox
                   </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--ink-2)",
-                    }}
-                  >
-                    {policyDecisions.length} {t.traceEvaluations}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <AudioReadoutButton
+                      id="trace-phase-4-audio"
+                      text={`Phase 4: Policy Gateway Mediation and Sandbox. ${policyDecisions.map((pd) => `${pd.tool}: ${pd.decision}. ${pd.reason}`).join(" ")}`}
+                      locale={locale}
+                      variant="compact"
+                    />
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        color: "var(--ink-2)",
+                      }}
+                    >
+                      {policyDecisions.length} {t.traceEvaluations}
+                    </span>
+                  </div>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
@@ -414,15 +456,23 @@ export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps)
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
                     Engineering Vision Observation
                   </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--ink-2)",
-                    }}
-                  >
-                    {visualEvidence.length} {t.traceVisualRecords}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <AudioReadoutButton
+                      id="trace-phase-5-audio"
+                      text={`Phase 5: Engineering Vision Observation. ${visualEvidence.length} visual records. ${visualEvidence.map((v) => `${v.finding_type || "Observation"}: ${v.retrieved_text}`).join(" ")}`}
+                      locale={locale}
+                      variant="compact"
+                    />
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        color: "var(--ink-2)",
+                      }}
+                    >
+                      {visualEvidence.length} {t.traceVisualRecords}
+                    </span>
+                  </div>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
@@ -484,7 +534,15 @@ export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps)
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
                     Independent Deterministic Verification
                   </span>
-                  <VerdictBadge verdict={verification.status} locale={locale} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <AudioReadoutButton
+                      id="trace-phase-6-audio"
+                      text={`Phase 6: Independent Deterministic Verification. Status: ${verification.status}. ${verification.summary}`}
+                      locale={locale}
+                      variant="compact"
+                    />
+                    <VerdictBadge verdict={verification.status} locale={locale} />
+                  </div>
                 </div>
 
                 <p style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.5 }}>
@@ -522,15 +580,24 @@ export function ExecutionTrace({ response, locale = "en" }: ExecutionTraceProps)
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--brass)" }}>
                   Verified Case Briefing Delivered
                 </span>
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "11px",
-                    color: "var(--sage)",
-                  }}
-                >
-                  OPERATOR PRESENTATION
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <AudioReadoutButton
+                    id="trace-phase-7-audio"
+                    text={response.final_answer}
+                    locale={locale}
+                    variant="compact"
+                    label={t.listenToAudit}
+                  />
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--sage)",
+                    }}
+                  >
+                    OPERATOR PRESENTATION
+                  </span>
+                </div>
               </div>
 
               <div

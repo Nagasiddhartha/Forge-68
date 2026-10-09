@@ -37,8 +37,9 @@ STYLES_XML = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <w:docDefaults>
     <w:rPrDefault>
       <w:rPr>
-        <w:rFonts w:ascii="Segoe UI" w:hAnsi="Segoe UI" w:cs="Segoe UI"/>
+        <w:rFonts w:ascii="Nirmala UI" w:hAnsi="Nirmala UI" w:cs="Nirmala UI"/>
         <w:sz w:val="22"/>
+        <w:szCs w:val="22"/>
         <w:color w:val="1A202C"/>
       </w:rPr>
     </w:rPrDefault>
@@ -50,6 +51,11 @@ STYLES_XML = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   </w:docDefaults>
   <w:style w:type="paragraph" w:styleId="Normal" w:default="1">
     <w:name w:val="Normal"/>
+    <w:rPr>
+      <w:rFonts w:ascii="Nirmala UI" w:hAnsi="Nirmala UI" w:cs="Nirmala UI"/>
+      <w:sz w:val="22"/>
+      <w:szCs w:val="22"/>
+    </w:rPr>
   </w:style>
   <w:style w:type="paragraph" w:styleId="Heading1">
     <w:name w:val="heading 1"/>
@@ -57,9 +63,12 @@ STYLES_XML = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
       <w:spacing w:before="240" w:after="100"/>
     </w:pPr>
     <w:rPr>
+      <w:rFonts w:ascii="Nirmala UI" w:hAnsi="Nirmala UI" w:cs="Nirmala UI"/>
       <w:b/>
+      <w:bCs/>
       <w:color w:val="1B365D"/>
       <w:sz w:val="28"/>
+      <w:szCs w:val="28"/>
     </w:rPr>
   </w:style>
   <w:style w:type="paragraph" w:styleId="Heading2">
@@ -68,9 +77,12 @@ STYLES_XML = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
       <w:spacing w:before="160" w:after="60"/>
     </w:pPr>
     <w:rPr>
+      <w:rFonts w:ascii="Nirmala UI" w:hAnsi="Nirmala UI" w:cs="Nirmala UI"/>
       <w:b/>
+      <w:bCs/>
       <w:color w:val="2B6CB0"/>
       <w:sz w:val="24"/>
+      <w:szCs w:val="24"/>
     </w:rPr>
   </w:style>
 </w:styles>"""
@@ -85,7 +97,7 @@ def escape_xml(s: Any) -> str:
 
 
 def p(text: str = "", bold: bool = False, italic: bool = False, color: Optional[str] = None, size: Optional[int] = None, align: Optional[str] = None, space_after: int = 120, space_before: int = 0) -> str:
-    """Helper to generate a Word paragraph XML element."""
+    """Helper to generate a Word paragraph XML element with full Indic complex script support."""
     pPr = [f'<w:spacing w:before="{space_before}" w:after="{space_after}" w:line="240" w:lineRule="auto"/>']
     if align:
         pPr.append(f'<w:jc w:val="{align}"/>')
@@ -94,29 +106,35 @@ def p(text: str = "", bold: bool = False, italic: bool = False, color: Optional[
     if not text:
         return f'<w:p>{pPr_str}</w:p>'
 
-    rPr = []
+    rPr = ['<w:rFonts w:ascii="Nirmala UI" w:hAnsi="Nirmala UI" w:cs="Nirmala UI"/>']
     if bold:
         rPr.append('<w:b/>')
+        rPr.append('<w:bCs/>')
     if italic:
         rPr.append('<w:i/>')
+        rPr.append('<w:iCs/>')
     if color:
         rPr.append(f'<w:color w:val="{color}"/>')
     if size:
         rPr.append(f'<w:sz w:val="{size}"/>')
-    rPr_str = f'<w:rPr>{" ".join(rPr)}</w:rPr>' if rPr else ''
+        rPr.append(f'<w:szCs w:val="{size}"/>')
+    rPr_str = f'<w:rPr>{" ".join(rPr)}</w:rPr>'
 
-    return f'<w:p>{pPr_str}<w:r>{rPr_str}<w:t xml:space="preserve">{escape_xml(text)}</w:t></w:r></w:p>'
+    # Handle intra-paragraph line breaks cleanly
+    escaped = escape_xml(text).replace("\n", "<w:br/>")
+    return f'<w:p>{pPr_str}<w:r>{rPr_str}<w:t xml:space="preserve">{escaped}</w:t></w:r></w:p>'
 
 
 def heading(text: str, level: int = 1) -> str:
-    """Generate a styled heading paragraph."""
+    """Generate a styled heading paragraph with universal Indic complex script font."""
+    fonts = '<w:rFonts w:ascii="Nirmala UI" w:hAnsi="Nirmala UI" w:cs="Nirmala UI"/>'
     if level == 1:
-        return f'<w:p><w:pPr><w:spacing w:before="240" w:after="100"/><w:pBdr><w:bottom w:val="single" w:sz="12" w:space="4" w:color="1B365D"/></w:pBdr></w:pPr><w:r><w:rPr><w:b/><w:color w:val="1B365D"/><w:sz w:val="28"/></w:rPr><w:t>{escape_xml(text)}</w:t></w:r></w:p>'
-    return f'<w:p><w:pPr><w:spacing w:before="160" w:after="60"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="2B6CB0"/><w:sz w:val="24"/></w:rPr><w:t>{escape_xml(text)}</w:t></w:r></w:p>'
+        return f'<w:p><w:pPr><w:spacing w:before="240" w:after="100"/><w:pBdr><w:bottom w:val="single" w:sz="12" w:space="4" w:color="1B365D"/></w:pBdr></w:pPr><w:r><w:rPr>{fonts}<w:b/><w:bCs/><w:color w:val="1B365D"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>{escape_xml(text)}</w:t></w:r></w:p>'
+    return f'<w:p><w:pPr><w:spacing w:before="160" w:after="60"/></w:pPr><w:r><w:rPr>{fonts}<w:b/><w:bCs/><w:color w:val="2B6CB0"/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t>{escape_xml(text)}</w:t></w:r></w:p>'
 
 
 def table(rows: List[List[str]], col_widths: Optional[List[int]] = None, header_bg: str = "1B365D", zebra: bool = True) -> str:
-    """Generate a cleanly formatted OpenXML table."""
+    """Generate a cleanly formatted OpenXML table with full Indic typography and multi-line cell support."""
     if not rows:
         return ""
 
@@ -159,8 +177,17 @@ def table(rows: List[List[str]], col_widths: Optional[List[int]] = None, header_
         for c_idx, cell_text in enumerate(row):
             w = col_widths[c_idx] if c_idx < len(col_widths) else 1500
             tcPr = f'<w:tcPr><w:tcW w:w="{w}" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="{bg}"/></w:tcPr>'
-            cell_p = f'<w:p><w:pPr><w:spacing w:before="40" w:after="40"/></w:pPr><w:r><w:rPr><w:color w:val="{text_color}"/>{"<w:b/>" if font_weight else ""}<w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">{escape_xml(cell_text)}</w:t></w:r></w:p>'
-            cell_xmls.append(f'<w:tc>{tcPr}{cell_p}</w:tc>')
+            lines = str(cell_text).split("\n")
+
+            cell_paragraphs = []
+            for line in lines:
+                r_fonts = '<w:rFonts w:ascii="Nirmala UI" w:hAnsi="Nirmala UI" w:cs="Nirmala UI"/>'
+                b_tags = "<w:b/><w:bCs/>" if font_weight else ""
+                rPr = f'<w:rPr>{r_fonts}<w:color w:val="{text_color}"/>{b_tags}<w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr>'
+                cell_p = f'<w:p><w:pPr><w:spacing w:before="30" w:after="30"/></w:pPr><w:r>{rPr}<w:t xml:space="preserve">{escape_xml(line)}</w:t></w:r></w:p>'
+                cell_paragraphs.append(cell_p)
+
+            cell_xmls.append(f'<w:tc>{tcPr}{"".join(cell_paragraphs)}</w:tc>')
 
         trPr = '<w:trPr><w:tblHeader/></w:trPr>' if is_head else '<w:trPr/>'
         row_xmls.append(f'<w:tr>{trPr}{"".join(cell_xmls)}</w:tr>')
@@ -340,8 +367,10 @@ def generate_mrpl_approval_docx(
     body_elements.append(heading(sec2_title, level=1))
     obs_rows = [obs_header]
     if telemetry_data:
+        nominal_str = "ನಾಮಮಾತ್ರ ಶ್ರೇಣಿ (Nominal Range)" if loc == "kn" else ("सांकेतिक सीमा (Nominal Range)" if loc == "hi" else "Nominal Range")
+        verified_str = "ಪರಿಶೀಲಿಸಲಾಗಿದೆ (Verified)" if loc == "kn" else ("सत्यापित (Verified)" if loc == "hi" else "Verified")
         for k, v in telemetry_data.items():
-            obs_rows.append([str(k).replace("_", " ").title(), str(v), "Nominal Range", "Verified"])
+            obs_rows.append([str(k).replace("_", " ").title(), str(v), nominal_str, verified_str])
     else:
         obs_rows.extend(default_obs)
     body_elements.append(table(obs_rows, col_widths=[2800, 2400, 2000, 1800], header_bg="1E3A8A"))
@@ -350,13 +379,14 @@ def generate_mrpl_approval_docx(
     body_elements.append(heading(sec3_title, level=1))
     calc_rows = [calc_header]
     if calculations:
+        passed_str = "ಉತ್ತೀರ್ಣ (ಡಿಟರ್ಮಿನಿಸ್ಟಿಕ್ ಪೈಥಾನ್)" if loc == "kn" else ("उत्तीर्ण (डिटर्मिनिस्टिक पायथन)" if loc == "hi" else "PASSED (Deterministic Python)")
         for c in calculations:
             calc_rows.append([
                 str(c.get("calculation_id", "CALC")),
                 str(c.get("calculation_type", "Arithmetic")),
                 str(c.get("result", "N/A")),
                 str(c.get("units", "")),
-                "PASSED (Deterministic Python)",
+                passed_str,
             ])
     else:
         if loc == "kn":
@@ -383,10 +413,14 @@ def generate_mrpl_approval_docx(
     body_elements.append(heading(sec4_title, level=1))
     chk_rows = [chk_header]
     if checks:
+        pass_lbl = "PASS (ಉತ್ತೀರ್ಣ)" if loc == "kn" else ("PASS (उत्तीर्ण)" if loc == "hi" else "PASS")
+        fail_lbl = "FAIL (ವಿಫಲ)" if loc == "kn" else ("FAIL (विफल)" if loc == "hi" else "FAIL")
         for chk in checks:
+            st = str(chk.get("status", "PASS")).upper()
+            status_text = pass_lbl if st == "PASS" else (fail_lbl if st == "FAIL" else st)
             chk_rows.append([
                 str(chk.get("check_type", "CHECK")),
-                str(chk.get("status", "PASS")),
+                status_text,
                 str(chk.get("description", "Verified deterministically")),
             ])
     else:
@@ -426,12 +460,13 @@ def generate_mrpl_approval_docx(
     body_elements.append(heading(sec5_title, level=1))
     ev_rows = [ev_header]
     if evidence_records:
+        egress_lbl = "0 B ನಿರ್ಗಮನ (ಏರ್-ಗ್ಯಾಪ್ಡ್)" if loc == "kn" else ("0 B निकास (एयर-गैप्ड)" if loc == "hi" else "0 B Egressed (Air-Gapped)")
         for ev in evidence_records:
             ev_rows.append([
                 str(ev.get("evidence_id", "EVD")),
                 str(ev.get("source_reference", "Local Tool")),
                 str(hashlib.sha256(str(ev).encode()).hexdigest()[:24]) + "...",
-                "0 B Egressed",
+                egress_lbl,
             ])
     else:
         ev_rows.extend([

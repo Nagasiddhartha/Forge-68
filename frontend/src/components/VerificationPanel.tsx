@@ -187,9 +187,17 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
 
         {verification?.conflicts && verification.conflicts.length > 0 && (
           <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 600 }}>
-              Flagged Parameter Discrepancy:
-            </span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 600 }}>
+                Flagged Parameter Discrepancy:
+              </span>
+              <AudioReadoutButton
+                id="verification-conflicts-audio"
+                text={`Flagged parameter discrepancy: ${verification.conflicts.map((c) => `${c.metric_or_topic}: ${c.source_a} ${c.value_a} compared to ${c.source_b} ${c.value_b}. ${c.description}`).join(". ")}`}
+                locale={locale}
+                variant="compact"
+              />
+            </div>
             {verification.conflicts.map((c, i) => (
               <p key={i} style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)", marginTop: 2 }}>
                 • {c.metric_or_topic}: {c.source_a} ({c.value_a}) vs {c.source_b} ({c.value_b}) — {c.description}
@@ -271,6 +279,12 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <AudioReadoutButton
+                      id={`chk-audio-${chk.check_name}`}
+                      text={`Check ${idx + 1}: ${chk.plainTitle}. ${chk.title}. Status: ${chk.status === "VERIFIED" ? "Passed" : chk.status}. ${chk.description}. Verification trace: ${chk.details}`}
+                      locale={locale}
+                      variant="compact"
+                    />
                     <span
                       style={{
                         fontFamily: "var(--font-mono)",
@@ -342,7 +356,15 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
           </h3>
         </div>
 
-        <VerdictBadge verdict={currentStatus} locale={locale} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <AudioReadoutButton
+            id="verification-terminal-status-audio"
+            text={`Final Deterministic Pipeline Status: Trust Boundary Assured. Human Operator Review Retained. Final verdict: ${currentStatus}.`}
+            locale={locale}
+            variant="compact"
+          />
+          <VerdictBadge verdict={currentStatus} locale={locale} />
+        </div>
       </div>
     </EnamelSurface>
   );
