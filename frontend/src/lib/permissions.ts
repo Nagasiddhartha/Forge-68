@@ -138,3 +138,47 @@ export const ROLE_PERMISSIONS: Record<Role, RolePermissionConfig> = {
     actuationExplanation: "Auditors possess read-only inspection clearance without execution authority.",
   },
 };
+
+export function getLocalizedRolePermission(role: Role, t: (k: any) => string): RolePermissionConfig {
+  const base = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.ENGINEER;
+
+  switch (role) {
+    case "ENGINEER":
+      return {
+        ...base,
+        label: t("roleEngineerName") || base.label,
+        summary: t("roleEngineerSummary") || base.summary,
+        actuationExplanation: t("roleEngineerActuation") || base.actuationExplanation,
+      };
+    case "INSPECTOR":
+      return {
+        ...base,
+        label: t("roleInspectorName") || base.label,
+        summary: t("roleInspectorSummary") || base.summary,
+        actuationExplanation: t("roleInspectorActuation") || base.actuationExplanation,
+      };
+    case "AI_OPERATOR":
+      return {
+        ...base,
+        label: t("roleAiOperatorName") || base.label,
+        summary: t("roleAiOperatorSummary") || base.summary,
+        actuationExplanation: t("roleAiOperatorActuation") || base.actuationExplanation,
+      };
+    case "ADMIN":
+      return {
+        ...base,
+        label: t("roleAdminName") || base.label,
+        summary: t("roleAdminSummary") || base.summary,
+        actuationExplanation: t("roleAdminActuation") || base.actuationExplanation,
+      };
+    case "SECURITY_OFFICER":
+      return {
+        ...base,
+        label: t("roleSecurityOfficerName") || base.label,
+        summary: t("roleSecurityOfficerSummary") || base.summary,
+        actuationExplanation: t("roleSecurityOfficerActuation") || base.actuationExplanation,
+      };
+    default:
+      return base;
+  }
+}

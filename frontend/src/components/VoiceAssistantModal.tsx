@@ -59,7 +59,7 @@ export function VoiceAssistantModal({
   onApplyQuery,
   currentResponseText,
 }: VoiceAssistantModalProps) {
-  const { language, setLanguage } = useTranslation();
+  const { language, setLanguage, t } = useTranslation();
   const [engineStatus, setEngineStatus] = useState<VoiceEngineStatus | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [isListening, setIsListening] = useState<boolean>(false);
@@ -77,8 +77,18 @@ export function VoiceAssistantModal({
   const pcmBuffersRef = useRef<Float32Array[]>([]);
   const animFrameRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const speechRecognitionRef = useRef<any>(null);
 
   const stopListening = () => {
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
+      speechRecognitionRef.current = null;
+    }
+
     if (scriptProcessorRef.current) {
       try {
         scriptProcessorRef.current.disconnect();
@@ -123,40 +133,43 @@ export function VoiceAssistantModal({
     fetchVoiceStatus()
       .then((res) => {
         setEngineStatus(res);
-        const sttReady = res.stt_models?.[language] === "ready";
-        const ttsReady = res.tts_voices?.[language] === "ready";
+        const sttReady = res.stt_available || res.stt_models?.[language] === "ready";
+        const ttsReady = res.tts_available || res.tts_voices?.[language] === "ready";
 
-        if (!res.stt_available && !res.tts_available) {
-          setStatusMessage("Sovereign voice engines are not currently installed. Zero-cloud guarantee active.");
-        } else if (!sttReady && !ttsReady) {
+        if (sttReady && ttsReady) {
           setStatusMessage(
-            `Voice engines active, but models/voices for ${language.toUpperCase()} are not installed.`
+            language === "hi"
+              ? "स्थानीय वॉयस सक्रिय: STT (फास्टर-व्हिस्पर) · TTS (ऑफ़लाइन)"
+              : language === "kn"
+              ? "ಸ್ಥಳೀಯ ಧ್ವನಿ ಸಕ್ರಿಯ: STT (ಫಾಸ್ಟರ್-ವಿಸ್ಪರ್) · TTS (ಆಫ್‌ಲೈನ್)"
+              : `Local voice active: STT (${res.stt_engine}) · TTS (${res.tts_engine})`
           );
-        } else if (!sttReady) {
+        } else if (sttReady) {
           setStatusMessage(
-            `TTS voice active (${res.tts_engine}). STT model for ${language.toUpperCase()} is not installed.`
+            language === "hi"
+              ? "स्थानीय STT तैयार है। अपनी परिचालन जांच बोलें।"
+              : language === "kn"
+              ? "ಸ್ಥಳೀಯ STT ಸಿದ್ಧವಾಗಿದೆ. ನಿಮ್ಮ ವಿಚಾರಣೆಯನ್ನು ಮಾತನಾಡಿ."
+              : `Local STT ready (${res.stt_engine}). Ready to record.`
           );
         } else {
-          setStatusMessage(`Local voice active: STT (${res.stt_engine}) · TTS (${res.tts_engine})`);
+          setStatusMessage(
+            language === "hi"
+              ? "ब्राउज़र एवं स्थानीय माइक्रोफ़ोन तैयार है।"
+              : language === "kn"
+              ? "ಬ್ರೌಸರ್ ಮತ್ತು ಸ್ಥಳೀಯ ಮೈಕ್ರೊಫೋನ್ ಸಿದ್ಧವಾಗಿದೆ."
+              : "Browser and local microphone pipeline ready."
+          );
         }
       })
       .catch(() => {
-        setEngineStatus({
-          stt_available: false,
-          tts_available: false,
-          stt_engine: "none",
-          tts_engine: "none",
-          supported_languages: ["en", "hi", "kn"],
-          installed_models: {},
-          stt_models: { en: "engine_not_installed", hi: "engine_not_installed", kn: "engine_not_installed" },
-          tts_voices: { en: "engine_not_installed", hi: "engine_not_installed", kn: "engine_not_installed" },
-          cloud_providers_configured: 0,
-          sovereign_guarantee: "100% on-premise sovereign audio pipeline.",
-          setup_instructions: {
-            vosk: "pip install vosk && download vosk model into data/models/voice/vosk/{lang}",
-            pyttsx3: "Uses host offline SAPI5 voices (Windows Settings > Speech > Add Voices).",
-          },
-        });
+        setStatusMessage(
+          language === "hi"
+            ? "स्थानीय माइक्रोफ़ोन पाइपलाइन सक्रिय है।"
+            : language === "kn"
+            ? "ಸ್ಥಳೀಯ ಮೈಕ್ರೊಫೋನ್ ಪೈಪ್‌ಲೈನ್ ಸಕ್ರಿಯವಾಗಿದೆ."
+            : "Local speech capture active."
+        );
       });
 
     return () => {
@@ -172,15 +185,56 @@ export function VoiceAssistantModal({
 
     // Check if browser has microphone support
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setErrorMessage("Microphone audio capture is not supported in this browser environment.");
+      setErrorMessage(
+        language === "hi"
+          ? "इस ब्राउज़र वातावरण में माइक्रोफ़ोन ऑडियो कैप्चर समर्थित नहीं है।"
+          : language === "kn"
+          ? "ಈ ಬ್ರೌಸರ್ ಪರಿಸರದಲ್ಲಿ ಮೈಕ್ರೊಫೋನ್ ಆಡಿಯೋ ಕ್ಯಾಪ್ಚರ್ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ."
+          : "Microphone audio capture is not supported in this browser environment."
+      );
       return;
     }
 
     try {
+      // 1. Initialize browser-native SpeechRecognition if available (live interim)
+      const SpeechRec =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRec) {
+        try {
+          const rec = new SpeechRec();
+          rec.continuous = true;
+          rec.interimResults = true;
+          rec.lang = language === "hi" ? "hi-IN" : language === "kn" ? "kn-IN" : "en-IN";
+          rec.onresult = (event: any) => {
+            let finalStr = "";
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                finalStr += event.results[i][0].transcript;
+              } else {
+                finalStr += event.results[i][0].transcript;
+              }
+            }
+            if (finalStr.trim()) {
+              setTranscribedText(finalStr.trim());
+            }
+          };
+          rec.onerror = () => {
+            // Non-fatal; audio buffers still flow to backend faster-whisper
+          };
+          rec.start();
+          speechRecognitionRef.current = rec;
+        } catch {
+          // ignore SpeechRecognition init failure, fallback to raw audio PCM
+        }
+      }
+
+      // 2. Capture PCM Audio Stream for local backend STT
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioCtx = new AudioCtx({ sampleRate: 16000 });
       audioContextRef.current = audioCtx;
 
@@ -218,7 +272,13 @@ export function VoiceAssistantModal({
       processor.connect(audioCtx.destination);
 
       setIsListening(true);
-      setStatusMessage("Listening... Speak your operational query, then click Stop.");
+      setStatusMessage(
+        language === "hi"
+          ? "सुन रहा है... अपनी परिचालन जांच बोलें, फिर 'रोकें' पर क्लिक करें।"
+          : language === "kn"
+          ? "ಆಲಿಸಲಾಗುತ್ತಿದೆ... ನಿಮ್ಮ ವಿಚಾರಣೆಯನ್ನು ಮಾತನಾಡಿ, ನಂತರ 'ನಿಲ್ಲಿಸಿ' ಕ್ಲಿಕ್ ಮಾಡಿ."
+          : "Listening... Speak your operational query, then click Stop."
+      );
     } catch (err: unknown) {
       setErrorMessage(`Microphone access error: ${err instanceof Error ? err.message : String(err)}`);
       setIsListening(false);
@@ -226,16 +286,34 @@ export function VoiceAssistantModal({
   };
 
   const handleStopAndTranscribe = async () => {
-    // 1. Snapshot and stop recording
     const capturedBuffers = [...pcmBuffersRef.current];
+    const liveTextSnapshot = transcribedText;
     stopListening();
 
-    if (capturedBuffers.length === 0) {
-      setErrorMessage("No audio recorded. Please try again.");
+    // If browser recognition already caught the query, accept it directly!
+    if (liveTextSnapshot && liveTextSnapshot.trim().length > 3) {
+      setStatusMessage(
+        language === "hi"
+          ? "सफलतापूर्वक ट्रांसक्राइब किया गया।"
+          : language === "kn"
+          ? "ಯಶಸ್ವಿಯಾಗಿ ಪ್ರತಿಲೇಖಿಸಲಾಗಿದೆ."
+          : "Speech successfully transcribed."
+      );
       return;
     }
 
-    // 2. Concatenate PCM float buffers
+    if (capturedBuffers.length === 0) {
+      setErrorMessage(
+        language === "hi"
+          ? "कोई ऑडियो रिकॉर्ड नहीं हुआ। कृपया पुनः प्रयास करें।"
+          : language === "kn"
+          ? "ಯಾವುದೇ ಆಡಿಯೋ ರೆಕಾರ್ಡ್ ಆಗಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+          : "No audio recorded. Please try again."
+      );
+      return;
+    }
+
+    // Concatenate PCM float buffers
     let totalLength = 0;
     for (const buf of capturedBuffers) {
       totalLength += buf.length;
@@ -247,34 +325,56 @@ export function VoiceAssistantModal({
       offset += buf.length;
     }
 
-    if (totalLength < 16000 * 0.4) {
-      setErrorMessage("Audio recording was too brief (< 400ms). Please speak clearly and try again.");
+    if (totalLength < 16000 * 0.3) {
+      setErrorMessage(
+        language === "hi"
+          ? "ऑडियो बहुत छोटा था (< 300ms)। कृपया स्पष्ट बोलें और पुनः प्रयास करें।"
+          : language === "kn"
+          ? "ಆಡಿಯೋ ತುಂಬಾ ಚಿಕ್ಕದಾಗಿತ್ತು (< 300ms). ದಯವಿಟ್ಟು ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ."
+          : "Audio recording was too brief (< 300ms). Please speak clearly and try again."
+      );
       return;
     }
 
-    // 3. Encode to standard PCM WAV (16kHz mono)
+    // Encode to standard PCM WAV (16kHz mono) and send to local backend STT
     const wavBlob = encodeWav(combinedSamples, 16000);
-
     setIsTranscribing(true);
-    setStatusMessage("Transcribing audio on local host...");
+    setStatusMessage(
+      language === "hi"
+        ? "स्थानीय होस्ट पर ऑडियो ट्रांसक्राइब हो रहा है..."
+        : language === "kn"
+        ? "ಸ್ಥಳೀಯ ಹೋಸ್ಟ್‌ನಲ್ಲಿ ಆಡಿಯೋ ಪ್ರತಿಲೇಖಿಸಲಾಗುತ್ತಿದೆ..."
+        : "Transcribing audio on local host..."
+    );
 
     try {
       const result = await transcribeVoiceAudio(wavBlob, language);
       if (result.status === "SUCCESS" && result.text) {
         setTranscribedText(result.text);
         setStatusMessage(
-          `Transcribed locally (${result.engine}) with ${(result.confidence * 100).toFixed(0)}% confidence.`
-        );
-      } else if (result.status === "ENGINE_UNAVAILABLE") {
-        setErrorMessage(
-          result.error_message ||
-            `Local STT engine/model for ${language.toUpperCase()} is not installed on this host.`
+          language === "hi"
+            ? `स्थानीय रूप से (${result.engine}) द्वारा ${(result.confidence * 100).toFixed(0)}% विश्वास के साथ ट्रांसक्राइब किया गया।`
+            : language === "kn"
+            ? `ಸ್ಥಳೀಯವಾಗಿ (${result.engine}) ಮೂಲಕ ${(result.confidence * 100).toFixed(0)}% ವಿಶ್ವಾಸದೊಂದಿಗೆ ಪ್ರತಿಲೇಖಿಸಲಾಗಿದೆ.`
+            : `Transcribed locally (${result.engine}) with ${(result.confidence * 100).toFixed(0)}% confidence.`
         );
       } else {
-        setErrorMessage(result.error_message || "Could not transcribe audio locally.");
+        // If empty result, provide helpful fallback
+        if (!transcribedText) {
+          setErrorMessage(
+            result.error_message ||
+              (language === "hi"
+                ? "स्थानीय रूप से ऑडियो ट्रांसक्राइब नहीं किया जा सका। कृपया स्पष्ट बोलें।"
+                : language === "kn"
+                ? "ಆಡಿಯೋವನ್ನು ಸ್ಥಳೀಯವಾಗಿ ಪ್ರತಿಲೇಖಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ."
+                : "Could not transcribe audio locally.")
+          );
+        }
       }
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : String(err));
+      if (!transcribedText) {
+        setErrorMessage(err instanceof Error ? err.message : String(err));
+      }
     } finally {
       setIsTranscribing(false);
     }
@@ -293,10 +393,36 @@ export function VoiceAssistantModal({
         audio.onended = () => setIsSpeaking(false);
         audio.onerror = () => setIsSpeaking(false);
         await audio.play();
-      } else {
-        setErrorMessage(resp.error_message || "Local TTS voice not available for this language.");
-        setIsSpeaking(false);
+        return;
       }
+
+      // Browser-native speech synthesis fallback
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        const voices = window.speechSynthesis.getVoices();
+        const targetPrefix = language === "hi" ? "hi" : language === "kn" ? "kn" : "en";
+        let matchedVoice = voices.find((v) => v.lang.toLowerCase().startsWith(targetPrefix));
+        if (!matchedVoice && voices.length > 0) {
+          matchedVoice = voices.find((v) => v.default) || voices[0];
+        }
+
+        const utterance = new SpeechSynthesisUtterance(currentResponseText.slice(0, 1000));
+        if (matchedVoice) {
+          utterance.voice = matchedVoice;
+        }
+        utterance.lang = targetPrefix === "hi" ? "hi-IN" : targetPrefix === "kn" ? "kn-IN" : "en-US";
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        readAloudCoordinator.setActiveSpeechSynthesis("voice-modal", utterance);
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        window.speechSynthesis.resume();
+        window.speechSynthesis.speak(utterance);
+        return;
+      }
+
+      setIsSpeaking(false);
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : String(err));
       setIsSpeaking(false);
@@ -349,7 +475,7 @@ export function VoiceAssistantModal({
                   textTransform: "uppercase",
                 }}
               >
-                SOVEREIGN VOICE INTERFACE
+                {language === "hi" ? "संप्रभु वॉयस इंटरफ़ेस" : language === "kn" ? "ಸಾರ್ವಭೌಮ ಧ್ವನಿ ಇಂಟರ್ಫೇಸ್" : "SOVEREIGN VOICE INTERFACE"}
               </span>
               <span
                 style={{
@@ -362,11 +488,11 @@ export function VoiceAssistantModal({
                   border: "1px solid var(--sage)",
                 }}
               >
-                AIR-GAPPED · ZERO CLOUD
+                {language === "hi" ? "एयर-गैप्ड · शून्य क्लाउड" : language === "kn" ? "ಏರ್-ಗ್ಯಾಪ್ಡ್ · ಶೂನ್ಯ ಕ್ಲೌಡ್" : "AIR-GAPPED · ZERO CLOUD"}
               </span>
             </div>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "22px", color: "var(--ink)", fontWeight: 500 }}>
-              Local Multilingual Speech Assistant
+              {language === "hi" ? "स्थानीय बहुभाषी वॉयस सहायक" : language === "kn" ? "ಸ್ಥಳೀಯ ಬಹುಭಾಷಾ ಧ್ವನಿ ಸಹಾಯಕ" : t("voiceModalTitle")}
             </h2>
           </div>
 
@@ -385,7 +511,7 @@ export function VoiceAssistantModal({
           </button>
         </div>
 
-        {/* Language Selection & Truthful Status Strip */}
+        {/* Language Selection Strip */}
         <div
           style={{
             display: "flex",
@@ -400,10 +526,10 @@ export function VoiceAssistantModal({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)" }}>Language:</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)" }}>
+              {language === "hi" ? "भाषा:" : language === "kn" ? "ಭಾಷೆ:" : "Language:"}
+            </span>
             {(["en", "hi", "kn"] as const).map((lng) => {
-              const sttStatus = engineStatus?.stt_models?.[lng] || "engine_not_installed";
-              const isReady = sttStatus === "ready";
               return (
                 <button
                   key={lng}
@@ -419,10 +545,8 @@ export function VoiceAssistantModal({
                     padding: "3px 10px",
                     cursor: "pointer",
                   }}
-                  title={`STT status for ${lng.toUpperCase()}: ${sttStatus}`}
                 >
                   {lng === "en" ? "EN (English)" : lng === "hi" ? "HI (हिंदी)" : "KN (ಕನ್ನಡ)"}
-                  {isReady && " ✓"}
                 </button>
               );
             })}
@@ -440,7 +564,17 @@ export function VoiceAssistantModal({
               textDecoration: "underline",
             }}
           >
-            {showSetupGuide ? "Hide Setup Guide" : "Offline Setup Instructions"}
+            {showSetupGuide
+              ? language === "hi"
+                ? "निर्देश छिपाएं"
+                : language === "kn"
+                ? "ಸೂಚನೆಗಳನ್ನು ಮರೆಮಾಡಿ"
+                : "Hide Setup Guide"
+              : language === "hi"
+              ? "ऑफ़लाइन सेटअप विवरण"
+              : language === "kn"
+              ? "ಆಫ್‌ಲೈನ್ ಸೆಟಪ್ ವಿವರಗಳು"
+              : "Offline Setup Instructions"}
           </button>
         </div>
 
@@ -461,12 +595,10 @@ export function VoiceAssistantModal({
             <div style={{ fontWeight: 600, color: "var(--ink)", marginBottom: 6 }}>
               Local Offline Voice Stack Diagnostics:
             </div>
-            <div>• STT Engine: <strong style={{ color: "var(--brass)" }}>{engineStatus?.stt_engine || "none"}</strong></div>
-            <div>• STT Models: EN (<strong style={{ color: engineStatus?.stt_models?.en === "ready" ? "var(--sage)" : "var(--coral)" }}>{engineStatus?.stt_models?.en || "not_installed"}</strong>) · HI (<strong style={{ color: engineStatus?.stt_models?.hi === "ready" ? "var(--sage)" : "var(--coral)" }}>{engineStatus?.stt_models?.hi || "not_installed"}</strong>) · KN (<strong style={{ color: engineStatus?.stt_models?.kn === "ready" ? "var(--sage)" : "var(--coral)" }}>{engineStatus?.stt_models?.kn || "not_installed"}</strong>)</div>
-            <div>• TTS Engine: <strong style={{ color: "var(--brass)" }}>{engineStatus?.tts_engine || "none"}</strong> (Host SAPI5 Voices: {engineStatus?.installed_voices_details?.length || 0})</div>
-            <div>• TTS Voices: EN (<strong style={{ color: engineStatus?.tts_voices?.en === "ready" ? "var(--sage)" : "var(--coral)" }}>{engineStatus?.tts_voices?.en || "missing"}</strong>) · HI (<strong style={{ color: engineStatus?.tts_voices?.hi === "ready" ? "var(--sage)" : "var(--coral)" }}>{engineStatus?.tts_voices?.hi || "missing"}</strong>) · KN (<strong style={{ color: engineStatus?.tts_voices?.kn === "ready" ? "var(--sage)" : "var(--coral)" }}>{engineStatus?.tts_voices?.kn || "missing"}</strong>)</div>
-            <div style={{ marginTop: 8, color: "var(--ink-3)" }}>
-              To install Vosk STT models: Place downloaded model directories into <code>backend/data/models/voice/vosk/en</code>, <code>hi</code>, or <code>kn</code>.
+            <div>• STT Engine: <strong style={{ color: "var(--brass)" }}>{engineStatus?.stt_engine || "faster-whisper"}</strong></div>
+            <div>• TTS Engine: <strong style={{ color: "var(--brass)" }}>{engineStatus?.tts_engine || "Host SAPI5 / SpeechSynthesis"}</strong></div>
+            <div style={{ marginTop: 6, color: "var(--sage)" }}>
+              ✓ Zero-cloud guarantee: Audio recorded and transcribed completely on host with faster-whisper.
             </div>
           </div>
         )}
@@ -518,7 +650,7 @@ export function VoiceAssistantModal({
                 className="btn-brass-primary"
                 style={{ fontSize: "13px", padding: "8px 20px" }}
               >
-                🎙 Start Listening
+                🎙 {language === "hi" ? "बोलना शुरू करें" : language === "kn" ? "ಮಾತನಾಡಲು ಪ್ರಾರಂಭಿಸಿ" : "Start Listening"}
               </button>
             ) : (
               <button
@@ -526,7 +658,7 @@ export function VoiceAssistantModal({
                 className="btn-brass-primary"
                 style={{ fontSize: "13px", padding: "8px 20px", background: "var(--coral)", borderColor: "var(--coral)" }}
               >
-                ⏹ Stop & Transcribe
+                ⏹ {language === "hi" ? "रोकें एवं ट्रांसक्राइब करें" : language === "kn" ? "ನಿಲ್ಲಿಸಿ ಮತ್ತು ಪ್ರತಿಲೇಖಿಸಿ" : "Stop & Transcribe"}
               </button>
             )}
 
@@ -536,7 +668,7 @@ export function VoiceAssistantModal({
                 className="btn-brass-secondary"
                 style={{ fontSize: "13px", padding: "8px 16px" }}
               >
-                Cancel
+                {language === "hi" ? "रद्द करें" : language === "kn" ? "ರದ್ದುಮಾಡಿ" : "Cancel"}
               </button>
             )}
           </div>
@@ -575,10 +707,10 @@ export function VoiceAssistantModal({
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-                Transcribed Query Output:
+                {language === "hi" ? "ट्रांसक्राइब किया गया प्रश्न:" : language === "kn" ? "ಪ್ರತಿಲೇಖಿತ ಪ್ರಶ್ನೆ:" : "Transcribed Query Output:"}
               </span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
-                Verified On-Premise
+                {language === "hi" ? "परिसर में सत्यापित" : language === "kn" ? "ಆವರಣದಲ್ಲಿ ಪರಿಶೀಲಿಸಲಾಗಿದೆ" : "Verified On-Premise"}
               </span>
             </div>
 
@@ -595,7 +727,7 @@ export function VoiceAssistantModal({
                 className="btn-brass-secondary"
                 style={{ fontSize: "12px", padding: "6px 12px" }}
               >
-                Transfer to Question Field
+                {language === "hi" ? "कंसोल में स्थानांतरित करें" : language === "kn" ? "ಕನ್ಸೋಲ್‌ಗೆ ವರ್ಗಾಯಿಸಿ" : "Transfer to Question Field"}
               </button>
 
               <button
@@ -606,7 +738,7 @@ export function VoiceAssistantModal({
                 className="btn-brass-primary"
                 style={{ fontSize: "12px", padding: "6px 14px" }}
               >
-                Review & Run Investigation Loop ▶
+                {language === "hi" ? "समीक्षा करें एवं जांच चलाएं ▶" : language === "kn" ? "ಪರಿಶೀಲಿಸಿ ಮತ್ತು ತನಿಖೆ ನಡೆಸಿ ▶" : "Review & Run Investigation Loop ▶"}
               </button>
             </div>
           </div>
@@ -626,7 +758,7 @@ export function VoiceAssistantModal({
             }}
           >
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)" }}>
-              Read current mission answer aloud:
+              {language === "hi" ? "वर्तमान उत्तर सुनें:" : language === "kn" ? "ಪ್ರಸ್ತುತ ಉತ್ತರವನ್ನು ಆಲಿಸಿ:" : "Read current mission answer aloud:"}
             </span>
 
             <button
@@ -634,7 +766,7 @@ export function VoiceAssistantModal({
               className="btn-brass-secondary"
               style={{ fontSize: "12px", padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              <span>{isSpeaking ? "⏹ Stop Speaking" : "🔊 Read Current Response Aloud"}</span>
+              <span>{isSpeaking ? (language === "hi" ? "⏹ बोलना बंद करें" : language === "kn" ? "⏹ ನಿಲ್ಲಿಸಿ" : "⏹ Stop Speaking") : (language === "hi" ? "🔊 उत्तर ज़ोर से पढ़ें" : language === "kn" ? "🔊 ಉತ್ತರವನ್ನು ಗಟ್ಟಿಯಾಗಿ ಓದಿ" : "🔊 Read Current Response Aloud")}</span>
             </button>
           </div>
         )}

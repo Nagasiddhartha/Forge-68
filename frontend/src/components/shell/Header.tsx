@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { DataClassification, Role } from "@/lib/api";
 import { ComputedRuntimeState } from "@/lib/runtime";
-import { ROLE_PERMISSIONS } from "@/lib/permissions";
+import { ROLE_PERMISSIONS, getLocalizedRolePermission } from "@/lib/permissions";
 import { useTranslation } from "@/lib/i18n";
 
 export type ShellDestination = "missions" | "library" | "governance" | "audit" | "boundary";
@@ -352,7 +352,7 @@ export function Header({
               {/* 1-Click Role Selection Cards */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
                 {(["ENGINEER", "INSPECTOR", "AI_OPERATOR", "ADMIN", "SECURITY_OFFICER"] as Role[]).map((r) => {
-                  const cfg = ROLE_PERMISSIONS[r];
+                  const cfg = getLocalizedRolePermission(r, t);
                   const isCurrent = role === r;
                   return (
                     <div

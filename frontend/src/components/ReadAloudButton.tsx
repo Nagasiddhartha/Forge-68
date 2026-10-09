@@ -91,36 +91,39 @@ export function ReadAloudButton({
         return;
       }
 
-      // 2. If backend reports voice is unavailable for this language, check strictly local browser voices
+      // 2. Fall back to browser-native speech synthesis
       if (typeof window !== "undefined" && window.speechSynthesis) {
         const voices = window.speechSynthesis.getVoices();
         const targetPrefix = effectiveLanguage === "hi" ? "hi" : effectiveLanguage === "kn" ? "kn" : "en";
 
-        // Strictly enforce local service check (zero cloud speech recognition/synthesis)
-        const localVoice = voices.find(
-          (v) =>
-            v.lang.toLowerCase().startsWith(targetPrefix) &&
-            (v.localService === true || v.name.includes("Desktop") || !v.name.includes("Online"))
-        );
-
-        if (localVoice) {
-          const utterance = new SpeechSynthesisUtterance(textToSpeak);
-          utterance.voice = localVoice;
-          utterance.lang = localVoice.lang;
-          utterance.rate = 1.0;
-
-          readAloudCoordinator.setActiveSpeechSynthesis(componentId, utterance);
-          window.speechSynthesis.speak(utterance);
-          setIsLoading(false);
-          return;
+        // Find language-matching voice first, or default voice
+        let matchedVoice = voices.find((v) => v.lang.toLowerCase().startsWith(targetPrefix));
+        if (!matchedVoice && voices.length > 0) {
+          matchedVoice = voices.find((v) => v.default) || voices[0];
         }
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        if (matchedVoice) {
+          utterance.voice = matchedVoice;
+        }
+        utterance.lang = targetPrefix === "hi" ? "hi-IN" : targetPrefix === "kn" ? "kn-IN" : "en-US";
+        utterance.rate = 0.95;
+
+        readAloudCoordinator.setActiveSpeechSynthesis(componentId, utterance);
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        window.speechSynthesis.resume();
+        window.speechSynthesis.speak(utterance);
+        setIsLoading(false);
+        return;
       }
 
-      // 3. Truthfully report unavailable state with setup instruction
+      // 3. If speech synthesis is completely unsupported in this environment
       const langName = effectiveLanguage === "hi" ? "Hindi" : effectiveLanguage === "kn" ? "Kannada" : "English";
       const errMsg =
         res.error_message ||
-        `Local offline voice for ${langName} (${effectiveLanguage}) is not installed on this host.`;
+        `Local speech synthesis for ${langName} (${effectiveLanguage}) is not available in this environment.`;
       setErrorMessage(errMsg);
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : String(err));

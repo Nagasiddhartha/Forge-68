@@ -20,6 +20,7 @@ import {
   Divider,
 } from "@/components/primitives";
 import { useTranslation } from "@/lib/i18n";
+import { ReadAloudButton } from "@/components/ReadAloudButton";
 
 interface OverviewViewProps {
   onNavigateToWorkspace: () => void;
@@ -84,19 +85,22 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
               </span>
             </div>
 
-            <h1
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 500,
-                fontSize: "clamp(28px, 3.2vw, 42px)",
-                lineHeight: 1.1,
-                color: "var(--ink)",
-                letterSpacing: "-0.01em",
-                marginBottom: 10,
-              }}
-            >
-              {t("overviewHeading")}
-            </h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 500,
+                  fontSize: "clamp(28px, 3.2vw, 42px)",
+                  lineHeight: 1.1,
+                  color: "var(--ink)",
+                  letterSpacing: "-0.01em",
+                  margin: 0,
+                }}
+              >
+                {t("overviewHeading")}
+              </h1>
+              <ReadAloudButton text={`${t("overviewHeading")}. ${t("overviewSubheading")}`} compact />
+            </div>
 
             <p
               style={{
@@ -244,17 +248,20 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             </span>
           </div>
 
-          <h3
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "20px",
-              color: "var(--ink)",
-              marginBottom: 8,
-              fontWeight: 500,
-            }}
-          >
-            {t("overviewLayer1Heading")}
-          </h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <h3
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "20px",
+                color: "var(--ink)",
+                margin: 0,
+                fontWeight: 500,
+              }}
+            >
+              {t("overviewLayer1Heading")}
+            </h3>
+            <ReadAloudButton text={`${t("overviewLayer1Heading")}. ${t("overviewLayer1Desc")}`} compact />
+          </div>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
             {t("overviewLayer1Desc")}
@@ -262,10 +269,10 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
-              { id: "01", type: "DOCUMENT", title: "SOP-R204 Rev C", note: "31.2 bar normal operating limit" },
-              { id: "02", type: "GAUGE", title: "Analog Dial PI-204", note: "33.0 bar visual & telemetry reading" },
-              { id: "03", type: "CALCULATION", title: "Variance Engine", note: "+1.8 bar delta, 0.5 bar to alarm" },
-              { id: "04", type: "INSPECTION", title: "Ultrasonic Wall Scan", note: "2.2 mm shell thickness (nominal 2.5 mm)" },
+              { id: "01", type: "DOCUMENT", title: "SOP-R204 Rev C", note: t("overviewSopNote") },
+              { id: "02", type: "GAUGE", title: "Analog Dial PI-204", note: t("overviewDialNote") },
+              { id: "03", type: "CALCULATION", title: "Variance Engine", note: t("overviewDeltaNote") },
+              { id: "04", type: "INSPECTION", title: "Ultrasonic Wall Scan", note: t("overviewScanNote") },
             ].map((ev) => (
               <div
                 key={ev.id}
@@ -319,17 +326,20 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             </span>
           </div>
 
-          <h3
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "20px",
-              color: "var(--ink)",
-              marginBottom: 8,
-              fontWeight: 500,
-            }}
-          >
-            {t("overviewLayer2Heading")}
-          </h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <h3
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "20px",
+                color: "var(--ink)",
+                margin: 0,
+                fontWeight: 500,
+              }}
+            >
+              {t("overviewLayer2Heading")}
+            </h3>
+            <ReadAloudButton text={`${t("overviewLayer2Heading")}. ${t("overviewLayer2Desc")}`} compact />
+          </div>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
             {t("overviewLayer2Desc")}
@@ -337,14 +347,14 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             {[
-              { name: "Provenance", state: "PASS" },
-              { name: "Completeness", state: "PASS" },
-              { name: "Policy Gateway", state: "PASS" },
-              { name: "Classification", state: "PASS" },
-              { name: "Consistency", state: "PASS" },
-              { name: "Calculation", state: "PASS" },
-              { name: "Grounding", state: "PASS" },
-              { name: "Self-Verification", state: "PROHIBITED" },
+              { name: t("verificationCheckProvTitle"), state: "PASS" },
+              { name: t("verificationCheckCompTitle"), state: "PASS" },
+              { name: t("verificationCheckPolicyTitle"), state: "PASS" },
+              { name: t("verificationCheckClassTitle"), state: "PASS" },
+              { name: t("verificationCheckParamTitle"), state: "PASS" },
+              { name: t("verificationCheckCalcTitle"), state: "PASS" },
+              { name: t("verificationCheckGroundTitle"), state: "PASS" },
+              { name: t("verificationModelDoesNotVerify"), state: "PROHIBITED" },
             ].map((chk, i) => (
               <div
                 key={i}
@@ -368,7 +378,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
                     color: chk.state === "PASS" ? "var(--sage)" : "var(--coral-text)",
                   }}
                 >
-                  {chk.state}
+                  {chk.state === "PASS" ? t("verificationPassBadge") : t("verificationProhibitedBadge")}
                 </span>
               </div>
             ))}
@@ -389,20 +399,23 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             >
               {t("overviewLayer3Title")}
             </span>
-            <StatusIndicator status="verified" label="Enforced" />
+            <StatusIndicator status="verified" label={t("overviewEnforcedBadge")} />
           </div>
 
-          <h3
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "20px",
-              color: "var(--ink)",
-              marginBottom: 8,
-              fontWeight: 500,
-            }}
-          >
-            {t("overviewLayer3Heading")}
-          </h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <h3
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "20px",
+                color: "var(--ink)",
+                margin: 0,
+                fontWeight: 500,
+              }}
+            >
+              {t("overviewLayer3Heading")}
+            </h3>
+            <ReadAloudButton text={`${t("overviewLayer3Heading")}. ${t("overviewLayer3Desc")}`} compact />
+          </div>
 
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>
             {t("overviewLayer3Desc")}
@@ -416,7 +429,7 @@ export function OverviewView({ onNavigateToWorkspace }: OverviewViewProps) {
             <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 8px", background: "var(--bg-0)", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>
               <span style={{ color: "var(--ink-3)" }}>{t("overviewReasoningRuntime")}</span>
               <span style={{ color: "var(--ink)" }}>
-                {sovereignty?.model_provider?.default_model || "qwen3:8b (Ollama Loopback)"} ({health?.model_provider_online ? "Ready" : "Offline"})
+                {sovereignty?.model_provider?.default_model || "qwen3:8b (Ollama Loopback)"} ({health?.model_provider_online ? t("overviewStatusReady") : t("overviewStatusOffline")})
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 8px", background: "var(--bg-0)", borderRadius: "var(--radius-sm)", border: "1px solid var(--line)" }}>

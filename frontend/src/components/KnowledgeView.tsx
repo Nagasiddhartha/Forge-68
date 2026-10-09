@@ -200,37 +200,37 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
   const getDocumentMeta = (filename: string) => {
     if (filename.includes("operating_sop")) {
       return {
-        title: "Operating SOP",
-        subtext: "Operating limits, normal baselines, and safety thresholds.",
-        category: "STANDARD PROCEDURE",
+        title: t("knowledgeDocSop"),
+        subtext: t("knowledgeDocSopSub"),
+        category: t("knowledgeDocSopCat"),
       };
     }
     if (filename.includes("inspection_report")) {
       return {
-        title: "Inspection Report",
-        subtext: "Ultrasonic shell thickness survey and weld joint data.",
-        category: "NDT SURVEY",
+        title: t("knowledgeDocInspection"),
+        subtext: t("knowledgeDocInspectionSub"),
+        category: t("knowledgeDocInspectionCat"),
       };
     }
     if (filename.includes("equipment_specification")) {
       return {
-        title: "Equipment Specification",
-        subtext: "Pressure vessel R-204 design envelope and metallurgy.",
-        category: "VESSEL SPEC",
+        title: t("knowledgeDocEquip"),
+        subtext: t("knowledgeDocEquipSub"),
+        category: t("knowledgeDocEquipCat"),
       };
     }
     if (filename.includes("maintenance_history")) {
       return {
-        title: "Maintenance History",
-        subtext: "Overhaul logs and relief valve calibration records.",
-        category: "PLANT HISTORY",
+        title: t("knowledgeDocMaint"),
+        subtext: t("knowledgeDocMaintSub"),
+        category: t("knowledgeDocMaintCat"),
       };
     }
     if (filename.includes("adversarial")) {
       return {
-        title: "Restricted Advisory Bulletin",
-        subtext: "Quarantine sample containing untrusted prompt injection.",
-        category: "SECURITY TEST FIXTURE",
+        title: t("knowledgeDocAdversarial"),
+        subtext: t("knowledgeDocAdversarialSub"),
+        category: t("knowledgeDocAdversarialCat"),
       };
     }
     return {
@@ -264,9 +264,9 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-              <BrassLabel variant="outline">PLANT KNOWLEDGE FABRIC</BrassLabel>
+              <BrassLabel variant="outline">{t("knowledgeHeaderBadge")}</BrassLabel>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                PLANT UNIT 4 · HYDROCRACKER ASSET R-204
+                {t("knowledgeSubAsset")}
               </span>
               <span
                 style={{
@@ -279,7 +279,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                   border: "1px solid var(--sage)",
                 }}
               >
-                ON-PREMISE LOCAL VECTOR ARCHIVE
+                {t("knowledgeSubEnclave")}
               </span>
             </div>
 
@@ -306,7 +306,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               className="btn-brass-secondary"
               style={{ fontSize: "12px", padding: "8px 14px" }}
             >
-              {isLoadingDocs ? "Refreshing..." : "↻ Refresh Records"}
+              {isLoadingDocs ? (language === "hi" ? "ताज़ा हो रहा है..." : language === "kn" ? "ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ..." : "Refreshing...") : t("knowledgeRefreshRecords")}
             </button>
           </div>
         </div>
@@ -317,10 +317,10 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
         <form onSubmit={handleSearch} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              SEARCH PLANT ARCHIVE WITH SEMANTIC GROUNDING
+              {t("knowledgeSearchLabel")}
             </span>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Clearance Enforced: {clearance}
+              {t("knowledgeClearanceLabel")} {clearance}
             </span>
           </div>
 
@@ -329,7 +329,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Ask a question, e.g. 'What is the trip limit for Reactor R-204?'..."
+              placeholder={t("knowledgePlaceholderPrompt")}
               style={{
                 flex: 1,
                 minWidth: 280,
@@ -352,14 +352,14 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               className="btn-brass-primary"
               style={{ padding: "12px 24px", fontSize: "13px" }}
             >
-              {isSearching ? "Searching..." : t("knowledgeSearchButton")}
+              {isSearching ? (language === "hi" ? "खोज रहा है..." : language === "kn" ? "ಹುಡುಕಲಾಗುತ್ತಿದೆ..." : "Searching...") : t("knowledgeSearchButton")}
             </button>
           </div>
 
           {/* Quick Query Suggestions */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Suggested Queries:
+              {language === "hi" ? "सुझाए गए प्रश्न:" : language === "kn" ? "ಸೂಚಿಸಲಾದ ಪ್ರಶ್ನೆಗಳು:" : "Suggested Queries:"}
             </span>
             {[
               "Reactor R-204 normal operating pressure",
@@ -541,7 +541,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                             cursor: accessible ? "pointer" : "not-allowed",
                           }}
                         >
-                          🔍 Open Reader
+                          🔍 {language === "hi" ? "रीडर खोलें" : language === "kn" ? "ರೀಡರ್ ತೆರೆಯಿರಿ" : "Open Reader"}
                         </button>
                         <button
                           onClick={() => handleQuickIngest(doc.file_path, doc.classification as DataClassification)}
@@ -557,7 +557,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                             cursor: accessible ? "pointer" : "not-allowed",
                           }}
                         >
-                          {isIngesting ? "..." : "Re-Index ↺"}
+                          {isIngesting ? "..." : (language === "hi" ? "पुनः इंडेक्स करें ↺" : language === "kn" ? "ಮರು-ಇಂಡೆಕ್ಸ್ ಮಾಡಿ ↺" : "Re-Index ↺")}
                         </button>
                       </div>
                     </div>
@@ -624,7 +624,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                           className="btn-brass-primary"
                           style={{ fontSize: "11px", padding: "4px 10px" }}
                         >
-                          🔍 Open Reader
+                          🔍 {language === "hi" ? "रीडर खोलें" : language === "kn" ? "ರೀಡರ್ ತೆರೆಯಿರಿ" : "Open Reader"}
                         </button>
                         <button
                           onClick={() => handleQuickIngest(doc.file_path, doc.classification as DataClassification)}
@@ -639,7 +639,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                             padding: "4px 8px",
                           }}
                         >
-                          Index Now ↺
+                          {language === "hi" ? "इंडेक्स करें ↺" : language === "kn" ? "ಈಗ ಇಂಡೆಕ್ಸ್ ಮಾಡಿ ↺" : "Index Now ↺"}
                         </button>
                       </div>
                     </div>
@@ -944,7 +944,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <BrassLabel variant="solid">DOCUMENT READER</BrassLabel>
+                <BrassLabel variant="solid">{language === "hi" ? "दस्तावेज़ रीडर" : language === "kn" ? "ದಾಖಲೆ ಓದುಗ" : "DOCUMENT READER"}</BrassLabel>
                 <h2 style={{ fontFamily: "var(--font-ui)", fontSize: "16px", fontWeight: 600, color: "var(--ink)", margin: 0 }}>
                   {readerDoc?.filename || "Loading Document..."}
                 </h2>
@@ -1128,7 +1128,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                 className="btn-brass-secondary"
                 style={{ fontSize: "12px", padding: "6px 14px" }}
               >
-                Close Reader
+                {language === "hi" ? "रीडर बंद करें" : language === "kn" ? "ರೀಡರ್ ಮುಚ್ಚಿ" : "Close Reader"}
               </button>
             </div>
           </div>
@@ -1177,9 +1177,9 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <BrassLabel variant="solid">LOCAL INGESTION</BrassLabel>
+                <BrassLabel variant="solid">{language === "hi" ? "स्थानीय इनजेशन" : language === "kn" ? "ಸ್ಥಳೀಯ ಸೇವನೆ" : "LOCAL INGESTION"}</BrassLabel>
                 <h2 style={{ fontFamily: "var(--font-ui)", fontSize: "16px", fontWeight: 600, color: "var(--ink)", margin: 0 }}>
-                  Upload Plant Document
+                  {language === "hi" ? "संयंत्र दस्तावेज़ अपलोड करें" : language === "kn" ? "ಪ್ಲಾಂಟ್ ದಾಖಲೆಯನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ" : "Upload Plant Document"}
                 </h2>
               </div>
               <button
@@ -1200,7 +1200,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
             <form onSubmit={handleUploadSubmit} style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", marginBottom: 6 }}>
-                  DOCUMENT FILE (.PDF, .TXT, .MD — MAX 25MB)
+                  {language === "hi" ? "दस्तावेज़ फ़ाइल (.PDF, .TXT, .MD — अधिकतम 25MB)" : language === "kn" ? "ದಾಖಲೆ ಫೈಲ್ (.PDF, .TXT, .MD — ಗರಿಷ್ಠ 25MB)" : "DOCUMENT FILE (.PDF, .TXT, .MD — MAX 25MB)"}
                 </label>
                 <input
                   type="file"
@@ -1223,7 +1223,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
                   <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", marginBottom: 6 }}>
-                    CLASSIFICATION LEVEL
+                    {language === "hi" ? "वर्गीकरण स्तर" : language === "kn" ? "ವರ್ಗೀಕರಣ ಮಟ್ಟ" : "CLASSIFICATION LEVEL"}
                   </label>
                   <select
                     value={uploadClassification}
@@ -1248,7 +1248,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
 
                 <div>
                   <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", marginBottom: 6 }}>
-                    DOCUMENT TYPE
+                    {language === "hi" ? "दस्तावेज़ का प्रकार" : language === "kn" ? "ದಾಖಲೆಯ ಪ್ರಕಾರ" : "DOCUMENT TYPE"}
                   </label>
                   <select
                     value={uploadDocType}
@@ -1274,7 +1274,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
 
               <div>
                 <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", marginBottom: 6 }}>
-                  EQUIPMENT ASSET TAGS (COMMA SEPARATED)
+                  {language === "hi" ? "उपकरण परिसंपत्ति टैग (अल्पविराम द्वारा अलग)" : language === "kn" ? "ಉಪಕರಣ ಆಸ್ತಿ ಟ್ಯಾಗ್‌ಗಳು (ವಿರಾಮಚಿಹ್ನೆಯಿಂದ ಬೇರ್ಪಡಿಸಲಾಗಿದೆ)" : "EQUIPMENT ASSET TAGS (COMMA SEPARATED)"}
                 </label>
                 <input
                   type="text"
@@ -1333,7 +1333,7 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                   className="btn-brass-secondary"
                   style={{ fontSize: "12px", padding: "8px 16px" }}
                 >
-                  Cancel
+                  {language === "hi" ? "रद्द करें" : language === "kn" ? "ರದ್ದುಮಾಡಿ" : "Cancel"}
                 </button>
                 <button
                   type="submit"
@@ -1341,7 +1341,9 @@ export function KnowledgeView({ clearance }: KnowledgeViewProps) {
                   className="btn-brass-primary"
                   style={{ fontSize: "12px", padding: "8px 20px" }}
                 >
-                  {isUploading ? "Ingesting & Indexing..." : "Ingest Document ▶"}
+                  {isUploading
+                    ? (language === "hi" ? "इनजेस्ट एवं इंडेक्स हो रहा है..." : language === "kn" ? "ಸೇವನೆ ಮತ್ತು ಇಂಡೆಕ್ಸ್ ಮಾಡಲಾಗುತ್ತಿದೆ..." : "Ingesting & Indexing...")
+                    : (language === "hi" ? "दस्तावेज़ अनुक्रमित करें ▶" : language === "kn" ? "ದಾಖಲೆಯನ್ನು ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಿ ▶" : "Ingest Document ▶")}
                 </button>
               </div>
             </form>

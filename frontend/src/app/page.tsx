@@ -19,6 +19,7 @@ import { AuditView } from "@/components/AuditView";
 import { SovereigntyView } from "@/components/SovereigntyView";
 import { GovernanceView } from "@/components/GovernanceView";
 import { VoiceAssistantModal } from "@/components/VoiceAssistantModal";
+import { ReadAloudButton } from "@/components/ReadAloudButton";
 import { useTranslation } from "@/lib/i18n";
 
 type MissionSubView = "overview" | "workspace" | "evidence" | "verification";
@@ -82,8 +83,9 @@ export default function Home() {
             >
               {/* Left: Product Thesis & Case Findings */}
               <div>
-                <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <VerdictBadge verdict="REVIEW_REQUIRED" />
+                  <ReadAloudButton text={`${t("heroHeading")}. ${t("heroSubheading")}`} />
                 </div>
 
                 <h1
@@ -243,9 +245,12 @@ export default function Home() {
                 <EnamelSurface variant="base" padding="normal">
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                     <div>
-                      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)" }}>
-                        {t("viewEvidence")}
-                      </h2>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: 0 }}>
+                          {t("viewEvidence")}
+                        </h2>
+                        <ReadAloudButton text={`${t("viewEvidence")}. ${t("evidenceDossierDesc")}`} compact />
+                      </div>
                       <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", marginTop: 2 }}>
                         {t("evidenceDossierDesc")}
                       </p>
@@ -275,9 +280,12 @@ export default function Home() {
                 <EnamelSurface variant="base" padding="normal">
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                     <div>
-                      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)" }}>
-                        {t("viewVerification")}
-                      </h2>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: 0 }}>
+                          {t("viewVerification")}
+                        </h2>
+                        <ReadAloudButton text={`${t("viewVerification")}. ${t("verificationGatewayDesc")}`} compact />
+                      </div>
                       <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", marginTop: 2 }}>
                         {t("verificationGatewayDesc")}
                       </p>

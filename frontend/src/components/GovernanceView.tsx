@@ -9,7 +9,8 @@ import {
 } from "@/lib/api";
 import { EnamelSurface, SectionHeader, BrassLabel } from "./primitives";
 import { useTranslation } from "@/lib/i18n";
-import { ROLE_PERMISSIONS } from "@/lib/permissions";
+import { ROLE_PERMISSIONS, getLocalizedRolePermission } from "@/lib/permissions";
+import { ReadAloudButton } from "@/components/ReadAloudButton";
 
 interface GovernanceViewProps {
   role?: string;
@@ -42,25 +43,29 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
     };
   }, []);
 
-  const permissionMatrix = Object.values(ROLE_PERMISSIONS).map((p) => ({
-    role: p.role,
-    clearance: p.defaultClearance,
-    read: p.read === "ALLOWED" ? "✓ Allowed" : "✕ Blocked",
-    investigate: p.investigate === "ALLOWED" ? "✓ Allowed" : "✕ Blocked",
-    actuate: p.actuate === "ALLOWED" ? "✓ Allowed" : p.actuate === "NEEDS_APPROVAL" ? "⚠ Approval required" : "✕ Blocked",
-    admin: p.admin === "ALLOWED" ? "✓ Allowed" : p.admin === "NEEDS_APPROVAL" ? "⚠ Approval required" : "✕ Blocked",
-    summary: p.summary,
-  }));
+  const permissionMatrix = Object.values(ROLE_PERMISSIONS).map((p) => {
+    const loc = getLocalizedRolePermission(p.role, t);
+    return {
+      role: p.role,
+      roleLabel: loc.label,
+      clearance: p.defaultClearance,
+      read: p.read === "ALLOWED" ? "ALLOWED" : "BLOCKED",
+      investigate: p.investigate === "ALLOWED" ? "ALLOWED" : "BLOCKED",
+      actuate: p.actuate === "ALLOWED" ? "ALLOWED" : p.actuate === "NEEDS_APPROVAL" ? "NEEDS_APPROVAL" : "BLOCKED",
+      admin: p.admin === "ALLOWED" ? "ALLOWED" : p.admin === "NEEDS_APPROVAL" ? "NEEDS_APPROVAL" : "BLOCKED",
+      summary: loc.summary,
+    };
+  });
 
   const getStatusBadge = (status: string) => {
-    if (status.includes("✓ Allowed") || status.includes("Allowed") || status.includes("अनुमत") || status.includes("ಅನುಮತಿಸಲಾಗಿದೆ")) {
+    if (status === "ALLOWED") {
       return (
         <span style={{ color: "var(--sage)", background: "rgba(156, 195, 168, 0.1)", border: "1px solid var(--sage)", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "11px", fontWeight: 600 }}>
           {t("govStatusAllowed")}
         </span>
       );
     }
-    if (status.includes("⚠ Approval required") || status.includes("Approval") || status.includes("अनुमोदन") || status.includes("ಅನುಮೋದನೆ")) {
+    if (status === "NEEDS_APPROVAL") {
       return (
         <span style={{ color: "var(--brass)", background: "rgba(200, 161, 90, 0.1)", border: "1px solid var(--brass)", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "11px", fontWeight: 600 }}>
           {t("govStatusApproval")}
@@ -79,7 +84,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
       {/* Editorial Header */}
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-          <BrassLabel variant="outline">AUTHORITY LEDGER</BrassLabel>
+          <BrassLabel variant="outline">{t("govLedgerBadge")}</BrassLabel>
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -91,7 +96,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
               border: "1px solid var(--coral)",
             }}
           >
-            DEFAULT-DENY ENFORCED
+            {t("govDefaultDenyBadge")}
           </span>
           <span
             style={{
@@ -105,12 +110,12 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
               fontWeight: 600,
             }}
           >
-            SECURITY TESTS: 10 / 10 PASSED
+            {t("govSecurityPassedBadge")}
           </span>
         </div>
 
-        <h1
-          style={{
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <h1 style={{
             fontFamily: "var(--font-display)",
             fontWeight: 500,
             fontSize: "40px",
@@ -120,7 +125,9 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
           }}
         >
           {t("govTitle")}
-        </h1>
+          </h1>
+          <ReadAloudButton text={`${t("govTitle")}. ${t("govSubtitle")}`} />
+        </div>
 
         <p
           style={{
@@ -159,10 +166,10 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
               PERMISSION MATRIX
             </span>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: "4px 0" }}>
-              Role Permissions Matrix
+              {t("govPermissionMatrixTitle")}
             </h2>
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)" }}>
-              Current active persona: <strong style={{ color: "var(--brass)" }}>{role}</strong>. Switching personas in the header updates your execution boundaries instantly.
+              {t("govActivePersona")} <strong style={{ color: "var(--brass)" }}>{role}</strong>. Switching personas in the header updates your execution boundaries instantly.
             </p>
           </div>
 
@@ -180,8 +187,8 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
               color: "var(--sage)",
             }}
           >
-            <span>Policy Gateway:</span>
-            <strong>ACTIVE & ENFORCING</strong>
+            <span>{t("govPolicyGatewayLabel")}</span>
+            <strong>{t("govActiveEnforcing")}</strong>
           </div>
         </div>
 
@@ -211,7 +218,7 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
                   >
                     <td style={{ padding: "14px 14px", fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-mono)", fontSize: "13px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span>{p.role}</span>
+                        <span>{p.roleLabel}</span>
                         {isActive && (
                           <span
                             style={{

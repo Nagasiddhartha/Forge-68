@@ -2,7 +2,26 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
-client = TestClient(app, timeout=120.0)
+client = TestClient(app)
+
+from app.core import agent_reasoning_service
+from app.models.base import BaseModelProvider, ModelRequest, ModelResponse
+from app.models.ollama import OllamaUnavailableError
+
+
+class FailingModelProvider(BaseModelProvider):
+    async def generate(self, request: ModelRequest) -> ModelResponse:
+        raise OllamaUnavailableError("Simulated offline local Ollama.")
+
+    async def generate_stream(self, request: ModelRequest):
+        raise OllamaUnavailableError("Simulated offline local Ollama.")
+
+    async def health_check(self) -> bool:
+        return False
+
+    async def list_models(self):
+        return []
+
 
 def test_full_system_features():
     # 1. Preflight & Diagnostics
@@ -45,29 +64,34 @@ def test_full_system_features():
     assert len(r.content) == gen_res['file_size_bytes']
 
     # 5. Offline Fallback Custom Query (English)
-    r = client.post('/api/v1/agent/query', json={
-        'query': 'What is the maintenance history of Pump P-201?',
-        'role': 'ENGINEER',
-        'classification': 'INTERNAL',
-        'locale': 'en'
-    })
-    assert r.status_code == 200
-    q_data = r.json()
-    assert q_data['status'] in ('SUCCESS', 'OFFLINE_FALLBACK')
-    assert q_data['verification'] is not None
-    assert 'status' in q_data['verification']
+    orig_provider = agent_reasoning_service.model_provider
+    agent_reasoning_service.model_provider = FailingModelProvider()
+    try:
+        r = client.post('/api/v1/agent/query', json={
+            'query': 'What is the maintenance history of Pump P-201?',
+            'role': 'ENGINEER',
+            'classification': 'INTERNAL',
+            'locale': 'en'
+        })
+        assert r.status_code == 200
+        q_data = r.json()
+        assert q_data['status'] in ('SUCCESS', 'OFFLINE_FALLBACK')
+        assert q_data['verification'] is not None
+        assert 'status' in q_data['verification']
 
-    # 6. Offline Fallback Custom Query (Kannada)
-    r = client.post('/api/v1/agent/query', json={
-        'query': 'What is the operating pressure and vibration limit for R-204?',
-        'role': 'ENGINEER',
-        'classification': 'INTERNAL',
-        'locale': 'kn'
-    })
-    assert r.status_code == 200
-    q_kn = r.json()
-    assert q_kn['status'] in ('SUCCESS', 'OFFLINE_FALLBACK')
-    assert len(q_kn['final_answer']) > 50
+        # 6. Offline Fallback Custom Query (Kannada)
+        r = client.post('/api/v1/agent/query', json={
+            'query': 'What is the operating pressure and vibration limit for R-204?',
+            'role': 'ENGINEER',
+            'classification': 'INTERNAL',
+            'locale': 'kn'
+        })
+        assert r.status_code == 200
+        q_kn = r.json()
+        assert q_kn['status'] in ('SUCCESS', 'OFFLINE_FALLBACK')
+        assert len(q_kn['final_answer']) > 50
+    finally:
+        agent_reasoning_service.model_provider = orig_provider
 
     # 7. 4 Demo Flagship Scenarios
     scenarios = [

@@ -92,9 +92,9 @@ class OllamaModelProvider(BaseModelProvider):
                     usage=usage,
                     finish_reason="stop" if data.get("done") else None,
                 )
-        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+        except (httpx.ConnectError, httpx.ConnectTimeout, httpx.TimeoutException) as exc:
             raise OllamaUnavailableError(
-                f"Local Ollama service is unreachable at {self.base_url}. Ensure 'ollama serve' is running locally. "
+                f"Local Ollama service is unreachable or timed out at {self.base_url}. Ensure 'ollama serve' is running locally. "
                 f"External cloud AI fallback is strictly prohibited by FORGE sovereignty policies."
             ) from exc
 

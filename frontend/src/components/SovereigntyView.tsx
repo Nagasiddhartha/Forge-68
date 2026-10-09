@@ -18,9 +18,10 @@ import {
   Divider,
 } from "@/components/primitives";
 import { useTranslation } from "@/lib/i18n";
+import { ReadAloudButton } from "@/components/ReadAloudButton";
 
 export function SovereigntyView() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const runtime = useRuntimeCapabilities();
   const [sovereignty, setSovereignty] = useState<SovereigntyStatusResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -123,7 +124,7 @@ export function SovereigntyView() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
           <div style={{ maxWidth: 780 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-              <BrassLabel variant="outline">SOVEREIGNTY BOUNDARY</BrassLabel>
+              <BrassLabel variant="outline">{language === "hi" ? "संप्रभुता सीमा" : language === "kn" ? "ಸಾರ್ವಭೌಮತ್ವದ ಗಡಿ" : "SOVEREIGNTY BOUNDARY"}</BrassLabel>
               <span
                 style={{
                   fontFamily: "var(--font-mono)",
@@ -135,10 +136,10 @@ export function SovereigntyView() {
                   border: "1px solid var(--sage)",
                 }}
               >
-                ON-PREMISE SOVEREIGN RUNTIME
+                {language === "hi" ? "ऑन-प्रिमाइसेस संप्रभु रनटाइम" : language === "kn" ? "ಆವರಣದಲ್ಲಿ ಸಾರ್ವಭೌಮ ರನ್‌ಟೈಮ್" : "ON-PREMISE SOVEREIGN RUNTIME"}
               </span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                ENCLAVE ID: FORGE-SOV-01
+                {language === "hi" ? "एन्क्लेव आईडी: FORGE-SOV-01" : language === "kn" ? "ಎನ್‌ಕ್ಲೇವ್ ಐಡಿ: FORGE-SOV-01" : "ENCLAVE ID: FORGE-SOV-01"}
               </span>
             </div>
 
@@ -152,13 +153,14 @@ export function SovereigntyView() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <ReadAloudButton text={`${t("sovTitle")}. ${t("sovSubtitle")}`} />
             <button
               onClick={loadData}
               disabled={isLoading}
               className="btn-brass-primary"
               style={{ fontSize: "13px", padding: "10px 18px" }}
             >
-              {isLoading ? "Verifying..." : "Verify Runtime State ↻"}
+              {isLoading ? (language === "hi" ? "सत्यापित हो रहा है..." : language === "kn" ? "ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ..." : "Verifying...") : (language === "hi" ? "रनटाइम स्थिति सत्यापित करें ↻" : language === "kn" ? "ರನ್‌ಟೈಮ್ ಸ್ಥಿತಿಯನ್ನು ಪರಿಶೀಲಿಸಿ ↻" : "Verify Runtime State ↻")}
             </button>
           </div>
         </div>
@@ -179,31 +181,31 @@ export function SovereigntyView() {
         >
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              EXTERNAL AI PROVIDERS
+              {language === "hi" ? "बाहरी एआई प्रदाता" : language === "kn" ? "ಬಾಹ್ಯ AI ಒದಗಿಸುವವರು" : "EXTERNAL AI PROVIDERS"}
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
-              None configured
+              {language === "hi" ? "कोई कॉन्फ़िगर नहीं" : language === "kn" ? "ಯಾವುದನ್ನೂ ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿಲ್ಲ" : "None configured"}
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Zero cloud LLM API calls or SDKs
+              {language === "hi" ? "शून्य क्लाउड LLM एपीआई कॉल या एसडीके" : language === "kn" ? "ಶೂನ್ಯ ಕ್ಲೌಡ್ LLM API ಕರೆಗಳು ಅಥವಾ SDK ಗಳು" : "Zero cloud LLM API calls or SDKs"}
             </span>
           </div>
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              CLOUD FALLBACK
+              {language === "hi" ? "क्लाउड फ़ालबैक" : language === "kn" ? "ಕ್ಲೌಡ್ ಫಾಲ್‌ಬ್ಯಾಕ್" : "CLOUD FALLBACK"}
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
-              Disabled (Fail-Closed)
+              {language === "hi" ? "अक्षम (फ़ेल-क्लोज़्ड)" : language === "kn" ? "ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ (ಫೇಲ್-ಕ್ಲೋಸ್ಡ್)" : "Disabled (Fail-Closed)"}
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Never fails over to public services
+              {language === "hi" ? "सार्वजनिक सेवाओं पर कभी वापस नहीं जाता" : language === "kn" ? "ಸಾರ್ವಜನಿಕ ಸೇವೆಗಳಿಗೆ ಎಂದಿಗೂ ಹಿಂತಿರುಗುವುದಿಲ್ಲ" : "Never fails over to public services"}
             </span>
           </div>
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              ADVERSARIAL BOUNDARY PROOFS
+              {language === "hi" ? "प्रतिकूल सीमा प्रमाण" : language === "kn" ? "ಪ್ರತಿಕೂಲ ಗಡಿ ಪುರಾವೆಗಳು" : "ADVERSARIAL BOUNDARY PROOFS"}
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--sage)", fontWeight: 600, marginTop: 4 }}>
               {securityReport ? `${securityReport.passed} / ${securityReport.total_tests} passed` : "10 / 10 passed"}
@@ -237,10 +239,10 @@ export function SovereigntyView() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-              FIVE SOVEREIGN PILLARS
+              {language === "hi" ? "पाँच संप्रभु स्तंभ" : language === "kn" ? "ಐದು ಸಾರ್ವಭೌಮ ಸ್ತಂಭಗಳು" : "FIVE SOVEREIGN PILLARS"}
             </span>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: "4px 0" }}>
-              How FORGE Guarantees Complete Isolation
+              {language === "hi" ? "FORGE पूर्ण अलगाव की गारंटी कैसे देता है" : language === "kn" ? "FORGE ಸಂಪೂರ್ಣ ಪ್ರತ್ಯೇಕತೆಯನ್ನು ಹೇಗೆ ಖಾತರಿಪಡಿಸುತ್ತದೆ" : "How FORGE Guarantees Complete Isolation"}
             </h2>
           </div>
           <button

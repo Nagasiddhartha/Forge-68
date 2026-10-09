@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ComputedRuntimeState } from "@/lib/runtime";
+import { useTranslation } from "@/lib/i18n";
 
 export interface RuntimeFooterProps {
   runtime: ComputedRuntimeState;
@@ -9,6 +10,7 @@ export interface RuntimeFooterProps {
 }
 
 export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
+  const { t, language } = useTranslation();
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Honest copy formatters conforming to Section 3.2 and 7
@@ -22,8 +24,8 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
       ? `${runtime.visionModel} · Live`
       : "Demo fixture (advisory)";
 
-  const policyValue = "Default-deny";
-  const outsideServicesValue = "None configured";
+  const policyValue = t("overviewDefaultDenyVal") || "Default-deny";
+  const outsideServicesValue = t("overviewNoneConfigured") || "None configured";
 
   return (
     <>
@@ -62,7 +64,7 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
         >
           {/* Reasoning */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-            <span style={{ color: "var(--ink-3)" }}>Reasoning:</span>
+            <span style={{ color: "var(--ink-3)" }}>{t("footerReasoning")}</span>
             <span style={{ color: "var(--ink)", fontWeight: 500 }}>{reasoningValue}</span>
           </div>
 
@@ -70,7 +72,7 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
 
           {/* Vision */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-            <span style={{ color: "var(--ink-3)" }}>Vision:</span>
+            <span style={{ color: "var(--ink-3)" }}>{t("footerVision")}</span>
             <span style={{ color: "var(--ink)", fontWeight: 500 }}>{visionValue}</span>
           </div>
 
@@ -78,7 +80,7 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
 
           {/* Policy */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-            <span style={{ color: "var(--ink-3)" }}>Policy:</span>
+            <span style={{ color: "var(--ink-3)" }}>{t("footerPolicy")}</span>
             <span style={{ color: "var(--sage)", fontWeight: 500 }}>{policyValue}</span>
           </div>
 
@@ -86,7 +88,7 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
 
           {/* Outside AI */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-            <span style={{ color: "var(--ink-3)" }}>Outside AI services:</span>
+            <span style={{ color: "var(--ink-3)" }}>{t("footerOutsideAi")}</span>
             <span style={{ color: "var(--pewter)", fontWeight: 500 }}>{outsideServicesValue}</span>
           </div>
         </div>
@@ -108,7 +110,7 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
               gap: 4,
             }}
           >
-            Runtime details ↗
+            {t("footerRuntimeDetails")}
           </button>
         </div>
       </footer>
@@ -146,10 +148,10 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderBottom: "1px solid var(--line)", paddingBottom: 16 }}>
               <div>
                 <h3 style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 500, color: "var(--ink)" }}>
-                  Sovereign Runtime Details
+                  {t("footerDrawerTitle")}
                 </h3>
                 <p style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink-3)", marginTop: 2 }}>
-                  Substantiated runtime capabilities & preflight telemetry
+                  {t("footerDrawerSubtitle")}
                 </p>
               </div>
               <button
@@ -164,69 +166,69 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
                   cursor: "pointer",
                 }}
               >
-                Close
+                {language === "hi" ? "बंद करें" : language === "kn" ? "ಮುಚ್ಚಿ" : "Close"}
               </button>
             </div>
 
             {/* Diagnostic Rows */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ padding: "12px 14px", backgroundColor: "var(--bg-2)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>INFERENCE ENDPOINT</div>
+                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>{t("footerInferenceEndpoint")}</div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--ink)", marginTop: 4 }}>
-                  {runtime.capabilities?.inference_endpoint_is_loopback ? "http://localhost:11434 (Loopback Only)" : "Custom Sovereign Endpoint"}
+                  {runtime.capabilities?.inference_endpoint_is_loopback ? (language === "hi" ? "http://localhost:11434 (केवल लूपबैक)" : language === "kn" ? "http://localhost:11434 (ಲೂಪ್‌ಬ್ಯಾಕ್ ಮಾತ್ರ)" : "http://localhost:11434 (Loopback Only)") : (language === "hi" ? "कस्टम संप्रभु समापन बिंदु" : language === "kn" ? "ಕಸ್ಟಮ್ ಸಾರ್ವಭೌಮ ಅಂತಿಮ ಬಿಂದು" : "Custom Sovereign Endpoint")}
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--sage)", marginTop: 4 }}>
-                  ✓ Loopback verified — Zero external egress routes
+                  {t("footerLoopbackVerified")}
                 </div>
               </div>
 
               <div style={{ padding: "12px 14px", backgroundColor: "var(--bg-2)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>REASONING SUBSYSTEM</div>
+                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>{t("footerReasoningSubsystem")}</div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
                   {runtime.reasoningModel}
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: runtime.reasoningLive ? "var(--sage)" : "var(--brass)", marginTop: 2 }}>
-                  {runtime.reasoningLive ? "✓ Live local model responding" : "ℹ Deterministic demo harness (Scripted plan)"}
+                  {runtime.reasoningLive ? t("footerLiveLocalModel") : t("footerDemoHarness")}
                 </div>
               </div>
 
               <div style={{ padding: "12px 14px", backgroundColor: "var(--bg-2)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>VISION SUBSYSTEM</div>
+                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>{t("footerVisionSubsystem")}</div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
                   {runtime.visionModel}
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: runtime.visionLive ? "var(--sage)" : "var(--ink-2)", marginTop: 2 }}>
-                  {runtime.visionLive ? "✓ Multimodal vision live locally" : "Advisory demo fixture (Offline synthetic images)"}
+                  {runtime.visionLive ? t("footerVisionLive") : t("footerVisionDemo")}
                 </div>
               </div>
 
               <div style={{ padding: "12px 14px", backgroundColor: "var(--bg-2)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>EMBEDDINGS & VECTOR SEARCH</div>
+                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>{t("footerEmbeddingsVector")}</div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--ink)", marginTop: 4 }}>
                   {runtime.embeddingModel}
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)", marginTop: 2 }}>
-                  Kind: {runtime.embeddingKind} · On-premise only
+                  Kind: {runtime.embeddingKind} · {t("footerOnPremiseOnly")}
                 </div>
               </div>
 
               <div style={{ padding: "12px 14px", backgroundColor: "var(--bg-2)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>DEPENDENCY AUDIT</div>
+                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>{t("footerDependencyAudit")}</div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--sage)", marginTop: 4 }}>
-                  ✓ 0 cloud AI SDKs loaded
+                  {t("footerZeroSdks")}
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)", marginTop: 2 }}>
-                  Scan verified at startup: OpenAI, Anthropic, Google GenAI strictly forbidden
+                  {t("footerScanVerified")}
                 </div>
               </div>
 
               <div style={{ padding: "12px 14px", backgroundColor: "var(--bg-2)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>AUDIT TRAIL INTEGRITY</div>
+                <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink-3)" }}>{t("footerAuditIntegrity")}</div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink)", marginTop: 4 }}>
-                  {runtime.auditHashChained ? "Hash-Chained Event Store" : "Local Append-Only Event Bus"}
+                  {runtime.auditHashChained ? (language === "hi" ? "हैश-चेन्ड इवेंट स्टोर" : language === "kn" ? "ಹ್ಯಾಶ್-ಸರಪಳಿ ಈವೆಂಟ್ ಸ್ಟೋರ್" : "Hash-Chained Event Store") : (language === "hi" ? "स्थानीय अपेंड-ओनली इवेंट बस" : language === "kn" ? "ಸ್ಥಳೀಯ ಕೇವಲ-ಸೇರ್ಪಡೆ ಈವೆಂಟ್ ಬಸ್" : "Local Append-Only Event Bus")}
                 </div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-3)", marginTop: 2 }}>
-                  Total events recorded: {runtime.auditTotalEvents}
+                  {t("footerTotalEvents")} {runtime.auditTotalEvents}
                 </div>
               </div>
             </div>
@@ -240,7 +242,7 @@ export function RuntimeFooter({ runtime, onRefresh }: RuntimeFooterProps) {
                   className="btn-brass-secondary"
                   style={{ width: "100%", justifyContent: "center" }}
                 >
-                  Refresh Preflight Telemetry
+                  {t("footerRefreshPreflight")}
                 </button>
               </div>
             )}

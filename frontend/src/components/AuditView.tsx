@@ -14,15 +14,17 @@ import {
   Divider,
 } from "@/components/primitives";
 import { useTranslation } from "@/lib/i18n";
+import { ReadAloudButton } from "@/components/ReadAloudButton";
 
 type EventFilter = "ALL" | "AGENT" | "TOOL" | "POLICY" | "VERIFICATION" | "KNOWLEDGE";
 
-function formatISTTimestamp(isoString: string): string {
+function formatISTTimestamp(isoString: string, lang: string = "en"): string {
   try {
     const d = new Date(isoString);
     if (isNaN(d.getTime())) return isoString;
+    const locale = lang === "hi" ? "hi-IN" : lang === "kn" ? "kn-IN" : "en-IN";
     return (
-      d.toLocaleString("en-IN", {
+      d.toLocaleString(locale, {
         timeZone: "Asia/Kolkata",
         day: "2-digit",
         month: "short",
@@ -39,7 +41,7 @@ function formatISTTimestamp(isoString: string): string {
 }
 
 export function AuditView() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [auditData, setAuditData] = useState<AuditEventsResponse | null>(null);
   const [filter, setFilter] = useState<EventFilter>("ALL");
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
@@ -190,44 +192,44 @@ export function AuditView() {
 
     if (evt.type.includes("QUERY") || (evt.category === "AGENT" && evt.type.includes("START"))) {
       return {
-        humanTitle: "Question received from operator",
-        explanation: "Operator submitted an industrial telemetry or procedure inquiry to the sovereign control plane.",
+        humanTitle: t("auditEventQuestionReceived"),
+        explanation: t("auditEventQuestionDesc"),
       };
     }
     if (evt.category === "KNOWLEDGE") {
       return {
-        humanTitle: "Plant records consulted",
-        explanation: "Sovereign local vector search retrieved private operating procedures within clearance bounds.",
+        humanTitle: t("auditEventRecordsConsulted"),
+        explanation: t("auditEventRecordsDesc"),
       };
     }
     if (evt.category === "POLICY") {
       if (isDenied) {
         return {
-          humanTitle: "Permission checked → BLOCKED",
-          explanation: `FORGE verified ${evt.role} permissions and blocked the requested action before execution.`,
+          humanTitle: t("auditEventPolicyBlocked"),
+          explanation: t("auditEventPolicyBlockedDesc").replace("{role}", evt.role),
         };
       }
       return {
-        humanTitle: "Permission checked → Allowed",
-        explanation: `Action validated against policy rules for ${evt.role} role clearance.`,
+        humanTitle: t("auditEventPolicyAllowed"),
+        explanation: t("auditEventPolicyAllowedDesc").replace("{role}", evt.role),
       };
     }
     if (evt.category === "TOOL") {
       if (isDenied) {
         return {
-          humanTitle: "Tool execution blocked",
-          explanation: "Policy gateway prevented tool dispatch. Sandboxed code executed: 0 times.",
+          humanTitle: t("auditEventToolBlocked"),
+          explanation: t("auditEventToolBlockedDesc"),
         };
       }
       return {
-        humanTitle: "Tool allowed & executed",
-        explanation: "Industrial tool executed inside local sandboxed environment with verified arguments.",
+        humanTitle: t("auditEventToolExecuted"),
+        explanation: t("auditEventToolExecutedDesc"),
       };
     }
     if (evt.category === "VERIFICATION") {
       return {
-        humanTitle: "Answer verified independently",
-        explanation: "Deterministic Python checks evaluated calculations, consistency, and grounding.",
+        humanTitle: t("auditEventVerified"),
+        explanation: t("auditEventVerifiedDesc"),
       };
     }
     return {
@@ -243,9 +245,9 @@ export function AuditView() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-              <BrassLabel variant="outline">ACTIVITY TIMELINE</BrassLabel>
+              <BrassLabel variant="outline">{t("auditTimelineBadge")}</BrassLabel>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                FORENSIC LOG
+                {t("auditForensicLogBadge")}
               </span>
               <span
                 style={{
@@ -258,13 +260,16 @@ export function AuditView() {
                   border: "1px solid var(--sage)",
                 }}
               >
-                LOCAL APPEND-ONLY AUDIT
+                {language === "hi" ? "स्थानीय अपेंड-ओनली ऑडिट" : language === "kn" ? "ಸ್ಥಳೀಯ ಕೇವಲ-ಸೇರ್ಪಡೆ ಆಡಿಟ್" : "LOCAL APPEND-ONLY AUDIT"}
               </span>
             </div>
 
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
-              {t("auditTitle")}
-            </h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <h1 style={{ fontFamily: "var(--font-display)", fontSize: "38px", color: "var(--ink)", fontWeight: 500, lineHeight: 1.1 }}>
+                {t("auditTitle")}
+              </h1>
+              <ReadAloudButton text={`${t("auditTitle")}. ${t("auditSubtitle")}`} />
+            </div>
 
             <p style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink-2)", marginTop: 6, maxWidth: 680 }}>
               {t("auditSubtitle")}
@@ -286,7 +291,7 @@ export function AuditView() {
               className="btn-brass-secondary"
               style={{ fontSize: "12px", padding: "6px 14px" }}
             >
-              {isLoading ? "Refreshing..." : "↻ Refresh Activity"}
+              {isLoading ? (language === "hi" ? "ताज़ा हो रहा है..." : language === "kn" ? "ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ..." : "Refreshing...") : (language === "hi" ? "↻ गतिविधि ताज़ा करें" : language === "kn" ? "↻ ಚಟುವಟಿಕೆ ನವೀಕರಿಸಿ" : "↻ Refresh Activity")}
             </button>
           </div>
         </div>
@@ -331,7 +336,7 @@ export function AuditView() {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
               <span style={{ color: "var(--sage)", fontSize: "12px" }}>✓</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 600 }}>
-                NORMAL INVESTIGATION (ALLOWED)
+                {language === "hi" ? "सामान्य जांच (अनुमति प्राप्त)" : language === "kn" ? "ಸಾಮಾನ್ಯ ತನಿಖೆ (ಅನುಮತಿಸಲಾಗಿದೆ)" : "NORMAL INVESTIGATION (ALLOWED)"}
               </span>
             </div>
             <div
@@ -342,12 +347,12 @@ export function AuditView() {
                 lineHeight: 1.8,
               }}
             >
-              Question received<br />
-              <span style={{ color: "var(--ink-3)" }}>↓</span> Plant records consulted<br />
-              <span style={{ color: "var(--ink-3)" }}>↓</span> Permission checked<br />
-              <span style={{ color: "var(--ink-3)" }}>↓</span> Tool allowed<br />
-              <span style={{ color: "var(--ink-3)" }}>↓</span> Calculation performed<br />
-              <span style={{ color: "var(--sage)" }}>↓ Answer verified</span>
+              {language === "hi" ? "प्रश्न प्राप्त हुआ" : language === "kn" ? "ಪ್ರಶ್ನೆ ಸ್ವೀಕರಿಸಲಾಗಿದೆ" : "Question received"}<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> {language === "hi" ? "संयंत्र रिकॉर्ड से परामर्श किया" : language === "kn" ? "ಪ್ಲಾಂಟ್ ದಾಖಲೆಗಳನ್ನು ಸಂಪರ್ಕಿಸಲಾಗಿದೆ" : "Plant records consulted"}<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> {language === "hi" ? "अनुमति की जांच की गई" : language === "kn" ? "ಅನುಮತಿಯನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ" : "Permission checked"}<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> {language === "hi" ? "उपकरण की अनुमति दी गई" : language === "kn" ? "ಉಪಕರಣವನ್ನು ಅನುಮತಿಸಲಾಗಿದೆ" : "Tool allowed"}<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> {language === "hi" ? "गणना की गई" : language === "kn" ? "ಲೆಕ್ಕಾಚಾರ ಮಾಡಲಾಗಿದೆ" : "Calculation performed"}<br />
+              <span style={{ color: "var(--sage)" }}>↓ {language === "hi" ? "उत्तर सत्यापित हुआ" : language === "kn" ? "ಉತ್ತರವನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ" : "Answer verified"}</span>
             </div>
           </div>
 
@@ -362,7 +367,7 @@ export function AuditView() {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
               <span style={{ color: "var(--coral)", fontSize: "12px" }}>✕</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 600 }}>
-                UNAUTHORIZED ACTUATION (BLOCKED)
+                {language === "hi" ? "अनधिकृत सक्रियण (अवरुद्ध)" : language === "kn" ? "ಅನಧಿಕೃತ ಕಾರ್ಯಾಚರಣೆ (ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ)" : "UNAUTHORIZED ACTUATION (BLOCKED)"}
               </span>
             </div>
             <div
@@ -373,10 +378,10 @@ export function AuditView() {
                 lineHeight: 1.8,
               }}
             >
-              Question received<br />
-              <span style={{ color: "var(--ink-3)" }}>↓</span> Permission checked<br />
-              <span style={{ color: "var(--coral-text)", fontWeight: 600 }}>↓ BLOCKED</span><br />
-              <span style={{ color: "var(--ink-3)" }}>↓ Tool never executed</span>
+              {language === "hi" ? "प्रश्न प्राप्त हुआ" : language === "kn" ? "ಪ್ರಶ್ನೆ ಸ್ವೀಕರಿಸಲಾಗಿದೆ" : "Question received"}<br />
+              <span style={{ color: "var(--ink-3)" }}>↓</span> {language === "hi" ? "अनुमति की जांच की गई" : language === "kn" ? "ಅನುಮತಿಯನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ" : "Permission checked"}<br />
+              <span style={{ color: "var(--coral-text)", fontWeight: 600 }}>↓ {language === "hi" ? "अवरुद्ध" : language === "kn" ? "ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ" : "BLOCKED"}</span><br />
+              <span style={{ color: "var(--ink-3)" }}>↓ {language === "hi" ? "उपकरण कभी नहीं चला" : language === "kn" ? "ಉಪಕರಣವನ್ನು ಎಂದಿಗೂ ಚಲಾಯಿಸಲಿಲ್ಲ" : "Tool never executed"}</span>
             </div>
           </div>
         </div>
@@ -395,7 +400,7 @@ export function AuditView() {
         >
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              TOTAL RECORDED EVENTS
+              {language === "hi" ? "कुल रिकॉर्ड की गई घटनाएं" : language === "kn" ? "ಒಟ್ಟು ದಾಖಲಾದ ಘಟನೆಗಳು" : "TOTAL RECORDED EVENTS"}
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--brass)", fontWeight: 600, marginTop: 2 }}>
               {totalEventsCount}
@@ -407,7 +412,7 @@ export function AuditView() {
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              TOOL & POLICY EXECUTIONS
+              {language === "hi" ? "उपकरण एवं नीति निष्पादन" : language === "kn" ? "ಉಪಕರಣ ಮತ್ತು ನೀತಿ ಜಾರಿ" : "TOOL & POLICY EXECUTIONS"}
             </span>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--sage)", fontWeight: 600, marginTop: 2 }}>
               {auditData?.total_tool_events || 0}
@@ -419,10 +424,10 @@ export function AuditView() {
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              AUDIT STORAGE MODE
+              {language === "hi" ? "ऑडिट स्टोरेज मोड" : language === "kn" ? "ಆಡಿಟ್ ಸಂಗ್ರಹಣೆ ಮೋಡ್" : "AUDIT STORAGE MODE"}
             </span>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--ink)", fontWeight: 600, marginTop: 8 }}>
-              LOCAL APPEND-ONLY SINK
+              {language === "hi" ? "स्थानीय अपेंड-ओनली सिंक" : language === "kn" ? "ಸ್ಥಳೀಯ ಕೇವಲ-ಸೇರ್ಪಡೆ ಸಿಂಕ್" : "LOCAL APPEND-ONLY SINK"}
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
               Local memory & file store
@@ -431,10 +436,10 @@ export function AuditView() {
 
           <div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              OUTSIDE AI SERVICES
+              {language === "hi" ? "बाहरी एआई सेवाएं" : language === "kn" ? "ಬಾಹ್ಯ AI ಸೇವೆಗಳು" : "OUTSIDE AI SERVICES"}
             </span>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--sage)", fontWeight: 600, marginTop: 8 }}>
-              NONE CONFIGURED
+              {language === "hi" ? "कोई कॉन्फ़िगर नहीं" : language === "kn" ? "ಯಾವುದನ್ನೂ ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿಲ್ಲ" : "NONE CONFIGURED"}
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
               Loopback inference only
@@ -554,7 +559,7 @@ export function AuditView() {
                         title={evt.timestamp}
                         style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", cursor: "help" }}
                       >
-                        {formatISTTimestamp(evt.timestamp)}
+                        {formatISTTimestamp(evt.timestamp, language)}
                       </span>
                       <button
                         onClick={() => toggleExpand(evt.id)}

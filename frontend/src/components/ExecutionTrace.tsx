@@ -5,6 +5,7 @@ import {
   VerdictBadge,
 } from "@/components/primitives";
 import { useTranslation } from "@/lib/i18n";
+import { ReadAloudButton } from "@/components/ReadAloudButton";
 
 interface ExecutionTraceProps {
   response: AgentQueryResponse;
@@ -59,6 +60,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
           >
             {t("traceSubtitle")}
           </span>
+          <ReadAloudButton text={`${t("traceTitle")}. ${t("traceSubtitle")}`} compact />
         </div>
 
         {response.execution_event_id && (
@@ -101,7 +103,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
-                  Operational Query Ingestion
+                  {t("tracePhase1")}
                 </span>
                 <span
                   style={{
@@ -114,7 +116,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                     border: "1px solid var(--sage)",
                   }}
                 >
-                  INGESTED
+                  {t("traceIngestedBadge")}
                 </span>
               </div>
               <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink)", lineHeight: 1.5 }}>
@@ -149,7 +151,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
-                  Reasoning Plan Formulation
+                  {t("tracePhase2")}
                 </span>
                 {plan && (
                   <span
@@ -163,7 +165,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                       border: "1px solid var(--brass)",
                     }}
                   >
-                    ACTION: {plan.action.toUpperCase()}
+                    {t("traceActionLabel")} {plan.action.toUpperCase()}
                   </span>
                 )}
               </div>
@@ -189,9 +191,9 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                     border: "1px solid var(--line)",
                   }}
                 >
-                  <span>Knowledge Queries: <strong style={{ color: "var(--ink)" }}>{plan.knowledge_queries?.length || 0}</strong></span>
-                  <span>Tool Calls: <strong style={{ color: "var(--ink)" }}>{plan.tool_calls?.length || 0}</strong></span>
-                  <span>Calculations: <strong style={{ color: "var(--ink)" }}>{plan.calculations?.length || 0}</strong></span>
+                  <span>{t("traceKnowledgeQueriesCount")} <strong style={{ color: "var(--ink)" }}>{plan.knowledge_queries?.length || 0}</strong></span>
+                  <span>{t("traceToolCallsCount")} <strong style={{ color: "var(--ink)" }}>{plan.tool_calls?.length || 0}</strong></span>
+                  <span>{t("traceCalculationsCount")} <strong style={{ color: "var(--ink)" }}>{plan.calculations?.length || 0}</strong></span>
                 </div>
               )}
             </div>
@@ -224,7 +226,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
-                    Sovereign Knowledge Retrieval
+                    {t("tracePhase3")}
                   </span>
                   <span
                     style={{
@@ -233,7 +235,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                       color: "var(--ink-2)",
                     }}
                   >
-                    {knowledgeEvidence.length} chunks retrieved
+                    {knowledgeEvidence.length} {t("traceChunksRetrieved")}
                   </span>
                 </div>
 
@@ -298,7 +300,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
-                    Policy Gateway Mediation & Sandbox
+                    {t("tracePhase4")}
                   </span>
                   <span
                     style={{
@@ -307,7 +309,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                       color: "var(--ink-2)",
                     }}
                   >
-                    {policyDecisions.length} evaluations
+                    {policyDecisions.length} {t("traceEvaluationsCount")}
                   </span>
                 </div>
 
@@ -344,7 +346,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                             </span>
                           </div>
                           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                            RULE: {pd.policy_id || "GATEWAY_RULE"}
+                            {t("traceRuleLabel")} {pd.policy_id || "GATEWAY_RULE"}
                           </span>
                         </div>
 
@@ -357,7 +359,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                   {toolEvidence.length > 0 && (
                     <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-                        Executed Sandbox Tools ({toolEvidence.length}):
+                        {t("traceExecutedToolsLabel")} ({toolEvidence.length}):
                       </span>
                       {toolEvidence.map((te) => (
                         <div
@@ -411,7 +413,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
-                    Engineering Vision Observation
+                    {t("consoleAnalyzeImageBtn")}
                   </span>
                   <span
                     style={{
@@ -420,7 +422,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                       color: "var(--ink-2)",
                     }}
                   >
-                    {visualEvidence.length} visual records
+                    {visualEvidence.length} {t("traceVisualRecordsCount")}
                   </span>
                 </div>
 
@@ -481,7 +483,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)" }}>
-                    Independent Deterministic Verification
+                    {t("verificationGatewaySubtitle")}
                   </span>
                   <VerdictBadge verdict={verification.status} />
                 </div>
@@ -518,9 +520,12 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
 
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--brass)" }}>
-                  Verified Case Briefing Delivered
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--brass)" }}>
+                    {t("traceCaseBriefingDelivered")}
+                  </span>
+                  <ReadAloudButton text={response.final_answer} compact />
+                </div>
                 <span
                   style={{
                     fontFamily: "var(--font-mono)",
@@ -528,7 +533,7 @@ export function ExecutionTrace({ response }: ExecutionTraceProps) {
                     color: "var(--sage)",
                   }}
                 >
-                  OPERATOR PRESENTATION
+                  {t("traceOperatorPresentationBadge")}
                 </span>
               </div>
 

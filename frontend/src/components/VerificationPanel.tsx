@@ -137,7 +137,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <BrassLabel variant="outline">THE MODEL DOES NOT VERIFY ITSELF</BrassLabel>
+            <BrassLabel variant="outline">{t("verificationModelDoesNotVerify")}</BrassLabel>
             <span
               style={{
                 fontFamily: "var(--font-mono)",
@@ -149,7 +149,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                 border: "1px solid var(--sage)",
               }}
             >
-              7 INDEPENDENT CODE CHECKS
+              {t("verification7CodeChecks")}
             </span>
           </div>
 
@@ -164,7 +164,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
-            Deterministic Verdict
+            {t("verificationDeterministicVerdict")}
           </span>
           <VerdictBadge verdict={currentStatus} />
         </div>
@@ -185,11 +185,11 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-            VERIFICATION ASSESSMENT SUMMARY
+            {t("verificationAssessmentSummary")}
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-              Checks Evaluated: {activeChecks.length} / 7
+              {t("verificationChecksEvaluated")}: {activeChecks.length} / 7
             </span>
             <ReadAloudButton text={summaryText} compact />
           </div>
@@ -202,7 +202,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
         {verification?.conflicts && verification.conflicts.length > 0 && (
           <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 600 }}>
-              Flagged Parameter Discrepancy:
+              {t("verificationFlaggedDiscrepancy")}:
             </span>
             {verification.conflicts.map((c, i) => (
               <p key={i} style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)", marginTop: 2 }}>
@@ -274,7 +274,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
-                      CHECK {String(idx + 1).padStart(2, "0")}
+                      {t("verificationCheckPrefix")} {String(idx + 1).padStart(2, "0")}
                     </span>
                     <span style={{ fontFamily: "var(--font-ui)", fontSize: "15px", fontWeight: 600, color: "var(--ink)" }}>
                       {chk.plainTitle}
@@ -297,7 +297,7 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
                         border: `1px solid ${isPassed ? "var(--sage)" : "var(--brass)"}`,
                       }}
                     >
-                      {chk.status === "VERIFIED" ? "PASS" : chk.status}
+                      {chk.status === "VERIFIED" ? t("verificationPassBadge") : chk.status}
                     </span>
                     <span style={{ color: "var(--ink-3)", fontSize: "12px" }}>
                       {isExpanded ? "▲" : "▼"}
@@ -349,10 +349,10 @@ export function VerificationPanel({ verification }: VerificationPanelProps) {
       >
         <div>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", letterSpacing: "0.06em" }}>
-            FINAL DETERMINISTIC PIPELINE STATUS
+            {t("verificationFinalStatusTitle")}
           </span>
           <h3 style={{ fontFamily: "var(--font-display)", fontSize: "22px", color: "var(--ink)", fontWeight: 500, marginTop: 2 }}>
-            Trust Boundary Assured: Human Operator Review Retained
+            {t("verificationTrustBoundaryAssured")}
           </h3>
         </div>
 

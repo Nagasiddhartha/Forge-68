@@ -73,9 +73,12 @@ export function EvidencePanel({
             </span>
           </div>
 
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", color: "var(--ink)", fontWeight: 500 }}>
-            {title || t("evidenceDossierTitle")}
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", color: "var(--ink)", fontWeight: 500, margin: 0 }}>
+              {title || t("evidenceDossierTitle")}
+            </h2>
+            <ReadAloudButton text={`${title || t("evidenceDossierTitle")}. ${t("evidenceDossierDesc")}`} compact />
+          </div>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink-2)", marginTop: 2 }}>
             {t("evidenceDossierDesc")}
           </p>
@@ -134,7 +137,7 @@ export function EvidencePanel({
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 700, color: "var(--brass)" }}>
-                    [{String(idx + 1).padStart(2, "0")}] CALCULATION · EXACT
+                    [{String(idx + 1).padStart(2, "0")}] {t("evidenceCalcExact")}
                   </span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", border: "1px solid var(--line)", padding: "1px 6px", borderRadius: "var(--radius-pill)" }}>
                     {calc.calculation_type}
@@ -186,7 +189,7 @@ export function EvidencePanel({
                   border: "1px solid var(--line)",
                 }}
               >
-                <span>ENGINE: Pure Python Deterministic Sandbox</span>
+                <span>{t("evidenceEnginePurePython")}</span>
                 <span>INPUTS: {JSON.stringify(calc.inputs)}</span>
               </div>
             </div>
@@ -202,16 +205,16 @@ export function EvidencePanel({
             (showCalculations ? activeCalculations.length : 0) + idx + 1
           ).padStart(2, "0");
 
-          let typeLabel = "DOCUMENT";
+          let typeLabel = t("evidenceDocExcerpt");
           let borderAccent = "var(--sage)";
           if (isKnowledge) {
-            typeLabel = "DOCUMENT EXCERPT";
+            typeLabel = t("evidenceDocExcerpt");
             borderAccent = "var(--sage)";
           } else if (isTool) {
-            typeLabel = "TOOL EXECUTION RECORD";
+            typeLabel = t("evidenceToolExecRecord");
             borderAccent = "var(--pewter)";
           } else if (isVisual) {
-            typeLabel = "VISUAL GAUGING OBSERVATION";
+            typeLabel = t("evidenceVisualObservation");
             borderAccent = "var(--brass)";
           }
 
@@ -295,31 +298,31 @@ export function EvidencePanel({
                 }}
               >
                 <span>
-                  Source: <strong style={{ color: "var(--ink-2)" }}>{record.source_reference}</strong>
+                  {t("evidenceSourceLabel")}: <strong style={{ color: "var(--ink-2)" }}>{record.source_reference}</strong>
                 </span>
                 {record.filename && (
                   <span>
-                    File: <strong style={{ color: "var(--ink-2)" }}>{record.filename}</strong>
+                    {t("evidenceFileLabel")}: <strong style={{ color: "var(--ink-2)" }}>{record.filename}</strong>
                   </span>
                 )}
                 {record.source_image_hash && (
                   <span>
-                    Image Digest: <strong style={{ color: "var(--ink-2)" }}>{record.source_image_hash.slice(0, 16)}...</strong>
+                    {t("evidenceDigestLabel")}: <strong style={{ color: "var(--ink-2)" }}>{record.source_image_hash.slice(0, 16)}...</strong>
                   </span>
                 )}
                 {record.chunk_id && (
                   <span>
-                    Chunk: <strong style={{ color: "var(--ink-2)" }}>{record.chunk_id}</strong>
+                    {t("evidenceChunkLabel")}: <strong style={{ color: "var(--ink-2)" }}>{record.chunk_id}</strong>
                   </span>
                 )}
                 {record.tool_name && (
                   <span>
-                    Sandbox Tool: <strong style={{ color: "var(--ink-2)" }}>{record.tool_name}</strong>
+                    {t("evidenceSandboxToolLabel")}: <strong style={{ color: "var(--ink-2)" }}>{record.tool_name}</strong>
                   </span>
                 )}
                 {record.finding_type && (
                   <span>
-                    Modality: <strong style={{ color: "var(--brass)" }}>{record.finding_type}</strong>
+                    {t("evidenceModalityLabel")}: <strong style={{ color: "var(--brass)" }}>{record.finding_type}</strong>
                   </span>
                 )}
               </div>

@@ -316,14 +316,27 @@ class SovereignVoiceService:
             with self._whisper_lock:
                 if self._whisper_model is None:
                     from faster_whisper import WhisperModel
-                    logger.info("Loading faster-whisper small model from local cache...")
-                    self._whisper_model = WhisperModel(
-                        "small",
-                        device="cpu",
-                        compute_type="int8",
-                        download_root=str(WHISPER_DIR),
-                        local_files_only=True,
-                    )
+                    # Determine which local model size is cached
+                    model_size = "tiny"
+                    if any(WHISPER_DIR.glob("**/models--*small*")):
+                        model_size = "small"
+                    logger.info("Loading faster-whisper %s model from local cache...", model_size)
+                    try:
+                        self._whisper_model = WhisperModel(
+                            model_size,
+                            device="cpu",
+                            compute_type="int8",
+                            download_root=str(WHISPER_DIR),
+                            local_files_only=True,
+                        )
+                    except Exception as exc:
+                        logger.warning("Could not load local %s (%s), falling back to tiny...", model_size, exc)
+                        self._whisper_model = WhisperModel(
+                            "tiny",
+                            device="cpu",
+                            compute_type="int8",
+                            download_root=str(WHISPER_DIR),
+                        )
         return self._whisper_model
 
     def _get_or_load_piper_voice(self, language: str):
