@@ -27,7 +27,9 @@ import {
   VerdictBadge,
   BrassLabel,
   Divider,
+  AudioReadoutButton,
 } from "@/components/primitives";
+import { useSpeechSynthesis } from "@/lib/speech";
 import { ROLE_PERMISSIONS } from "@/lib/permissions";
 
 interface AIWorkspaceViewProps {
@@ -46,6 +48,7 @@ export function AIWorkspaceView({
   locale = "en",
 }: AIWorkspaceViewProps) {
   const t = TRANSLATIONS[locale];
+  const speech = useSpeechSynthesis();
   const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
   const [query, setQuery] = useState(
     "Analyze Reactor R-204 and determine whether the current operating condition requires engineering review."
@@ -107,6 +110,7 @@ export function AIWorkspaceView({
   ];
 
   const handleResetDemo = async () => {
+    speech.stop();
     setIsResetting(true);
     setError(null);
     try {
@@ -126,6 +130,7 @@ export function AIWorkspaceView({
   };
 
   const handleSelectScenario = (sc: (typeof demoScenarios)[0]) => {
+    speech.stop();
     setActiveScenarioId(sc.id);
     setQuery(sc.prompt);
     setSelectedImage(sc.image);
@@ -149,6 +154,7 @@ export function AIWorkspaceView({
   };
 
   const handleRunScenario = async (scenarioId: DemoScenarioId) => {
+    speech.stop();
     setIsLoading(true);
     setError(null);
     setVisionDirectResult(null);
@@ -216,6 +222,7 @@ export function AIWorkspaceView({
 
   const handleRunQuery = async () => {
     if (!query.trim()) return;
+    speech.stop();
     setIsLoading(true);
     setError(null);
     setVisionDirectResult(null);
@@ -440,17 +447,30 @@ export function AIWorkspaceView({
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
                     {t.expectedLabel} <strong style={{ color: "var(--ink)" }}>{sc.expected}</strong>
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRunScenario(sc.id);
-                    }}
-                    disabled={isLoading}
-                    className={isSelected ? "btn-brass-primary" : "btn-brass-secondary"}
-                    style={{ fontSize: "11px", padding: "4px 10px" }}
-                  >
-                    {isLoading && activeScenarioId === sc.id ? t.runningBtn : t.runBtn}
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <AudioReadoutButton
+                      id={`scenario-${sc.id}`}
+                      text={`${sc.title}. ${sc.desc}`}
+                      locale={locale}
+                      variant="compact"
+                      label={t.listenToMission}
+                      isCurrentlyPlaying={speech.speakingId === `scenario-${sc.id}`}
+                      onPlay={speech.speak}
+                      onStop={speech.stop}
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        speech.stop();
+                        handleRunScenario(sc.id);
+                      }}
+                      disabled={isLoading}
+                      className={isSelected ? "btn-brass-primary" : "btn-brass-secondary"}
+                      style={{ fontSize: "11px", padding: "4px 10px" }}
+                    >
+                      {isLoading && activeScenarioId === sc.id ? t.runningBtn : t.runBtn}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -633,7 +653,18 @@ export function AIWorkspaceView({
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
                     Policy Decision
                   </span>
-                  <VerdictBadge verdict="ACTION_BLOCKED" />
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <AudioReadoutButton
+                      id="case-03-policy"
+                      text={`${t.case03BannerTitle}. ${t.case03BannerDesc}. ${ROLE_PERMISSIONS[role].actuationExplanation}`}
+                      locale={locale}
+                      variant="banner"
+                      isCurrentlyPlaying={speech.speakingId === "case-03-policy"}
+                      onPlay={speech.speak}
+                      onStop={speech.stop}
+                    />
+                    <VerdictBadge verdict="ACTION_BLOCKED" />
+                  </div>
                 </div>
               </div>
 
@@ -728,7 +759,18 @@ export function AIWorkspaceView({
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", textTransform: "uppercase" }}>
                     Security Result
                   </span>
-                  <VerdictBadge verdict="QUARANTINED" locale={locale} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <AudioReadoutButton
+                      id="case-04-security"
+                      text={`${t.case04BannerTitle}. ${t.case04BannerDesc}. ${t.case04SubDesc}`}
+                      locale={locale}
+                      variant="banner"
+                      isCurrentlyPlaying={speech.speakingId === "case-04-security"}
+                      onPlay={speech.speak}
+                      onStop={speech.stop}
+                    />
+                    <VerdictBadge verdict="QUARANTINED" locale={locale} />
+                  </div>
                 </div>
               </div>
 
@@ -814,6 +856,22 @@ export function AIWorkspaceView({
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <AudioReadoutButton
+                    id="case-dossier-main"
+                    text={
+                      response?.final_answer ||
+                      (activeScenarioId
+                        ? `${t.findingPressureHigh}. ${t.recommendationReview}. ${t.metricCurrentCondition}: 33.0 bar, ${t.metricNormalBaseline}: 31.2 bar, ${t.metricDeviation}: plus 1.8 bar.`
+                        : (response?.query || query))
+                    }
+                    locale={locale}
+                    variant="button"
+                    label={t.readOutLoud}
+                    isCurrentlyPlaying={speech.speakingId === "case-dossier-main"}
+                    onPlay={speech.speak}
+                    onStop={speech.stop}
+                  />
+
                   <button
                     onClick={handleDownloadApprovalNote}
                     disabled={isGeneratingDoc}
@@ -865,11 +923,23 @@ export function AIWorkspaceView({
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.08em" }}>
                       EVIDENCE-GROUNDED TECHNICAL AUDIT REPORT
                     </span>
-                    {response.status === "OFFLINE_FALLBACK" && (
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", border: "1px solid var(--sage)", padding: "2px 8px", borderRadius: "var(--radius-pill)" }}>
-                        AIR-GAPPED DETERMINISTIC ROUTER
-                      </span>
-                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {response.status === "OFFLINE_FALLBACK" && (
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", border: "1px solid var(--sage)", padding: "2px 8px", borderRadius: "var(--radius-pill)" }}>
+                          AIR-GAPPED DETERMINISTIC ROUTER
+                        </span>
+                      )}
+                      <AudioReadoutButton
+                        id="technical-audit-report"
+                        text={response.final_answer}
+                        locale={locale}
+                        variant="compact"
+                        label={t.listenToAudit}
+                        isCurrentlyPlaying={speech.speakingId === "technical-audit-report"}
+                        onPlay={speech.speak}
+                        onStop={speech.stop}
+                      />
+                    </div>
                   </div>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "12.5px", color: "var(--ink)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                     {response.final_answer}
@@ -879,10 +949,22 @@ export function AIWorkspaceView({
 
               {/* Human-First Finding Banner (Judges Understand in 5 Seconds) */}
               <div style={{ background: "rgba(200, 161, 90, 0.08)", border: "1px solid var(--brass)", borderRadius: "var(--radius-panel)", padding: "18px 22px" }}>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", color: "var(--brass)", fontWeight: 500, marginBottom: 6 }}>
-                  {response?.status === "OFFLINE_FALLBACK"
-                    ? t.offlineResolvedTitle
-                    : t.findingPressureHigh}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, gap: 12 }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", color: "var(--brass)", fontWeight: 500 }}>
+                    {response?.status === "OFFLINE_FALLBACK"
+                      ? t.offlineResolvedTitle
+                      : t.findingPressureHigh}
+                  </div>
+                  <AudioReadoutButton
+                    id="finding-banner"
+                    text={`${response?.status === "OFFLINE_FALLBACK" ? t.offlineResolvedTitle : t.findingPressureHigh}. ${response?.status === "OFFLINE_FALLBACK" ? t.offlineResolvedDesc : t.recommendationReview}`}
+                    locale={locale}
+                    variant="compact"
+                    label={t.listenToFinding}
+                    isCurrentlyPlaying={speech.speakingId === "finding-banner"}
+                    onPlay={speech.speak}
+                    onStop={speech.stop}
+                  />
                 </div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "15px", color: "var(--ink)", fontWeight: 500 }}>
                   {response?.status === "OFFLINE_FALLBACK"

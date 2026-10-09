@@ -18,6 +18,7 @@ import {
   Metric,
   StatusIndicator,
   Divider,
+  AudioReadoutButton,
 } from "@/components/primitives";
 import { Locale, TRANSLATIONS } from "@/lib/i18n";
 
@@ -113,13 +114,22 @@ export function OverviewView({ onNavigateToWorkspace, locale = "en" }: OverviewV
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
             <VerdictBadge verdict="REVIEW_REQUIRED" locale={locale} />
-            <button
-              onClick={onNavigateToWorkspace}
-              className="btn-brass-primary"
-              style={{ whiteSpace: "nowrap" }}
-            >
-              {t.openWorkspaceBtn}
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <AudioReadoutButton
+                id="overview-case-brief"
+                text={`${t.caseTitle}. ${t.caseDescription}. ${t.currentCondition}: 33.0 bar, ${t.observedDeviation}: plus 1.8 bar.`}
+                locale={locale}
+                variant="button"
+                label={t.readOutLoud}
+              />
+              <button
+                onClick={onNavigateToWorkspace}
+                className="btn-brass-primary"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                {t.openWorkspaceBtn}
+              </button>
+            </div>
           </div>
         </div>
 

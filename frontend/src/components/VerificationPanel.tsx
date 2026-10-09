@@ -8,6 +8,7 @@ import {
   VerdictBadge,
   BrassLabel,
   Divider,
+  AudioReadoutButton,
 } from "@/components/primitives";
 
 interface VerificationPanelProps {
@@ -166,9 +167,18 @@ export function VerificationPanel({ verification, locale = "en" }: VerificationP
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", letterSpacing: "0.06em" }}>
             {t.assessmentSummaryLabel}
           </span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
-            Checks Evaluated: {activeChecks.length} / 7
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+              Checks Evaluated: {activeChecks.length} / 7
+            </span>
+            <AudioReadoutButton
+              id="verification-summary-audio"
+              text={summaryText}
+              locale={locale}
+              variant="compact"
+              label={t.listenToAudit}
+            />
+          </div>
         </div>
 
         <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink)", lineHeight: 1.55 }}>

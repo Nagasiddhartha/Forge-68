@@ -420,6 +420,13 @@ export interface I18nTranslations {
   visionConfidence: string;
   visionObserved: string;
   visionSeverity: string;
+  readOutLoud: string;
+  stopAudio: string;
+  readingOut: string;
+  listenToMission: string;
+  listenToAudit: string;
+  listenToFinding: string;
+  audioUnsupported: string;
 }
 
 export const TRANSLATIONS: Record<Locale, I18nTranslations> = {
@@ -837,6 +844,13 @@ export const TRANSLATIONS: Record<Locale, I18nTranslations> = {
     visionConfidence: "Confidence",
     visionObserved: "Observed",
     visionSeverity: "Severity",
+    readOutLoud: "Read Aloud",
+    stopAudio: "Stop Audio",
+    readingOut: "Reading aloud...",
+    listenToMission: "Listen to Mission Brief",
+    listenToAudit: "Listen to Technical Audit",
+    listenToFinding: "Listen to Finding Summary",
+    audioUnsupported: "Speech synthesis not supported in this browser",
   },
   hi: {
     navMissions: "अभियान (Missions)",
@@ -1252,6 +1266,13 @@ export const TRANSLATIONS: Record<Locale, I18nTranslations> = {
     visionConfidence: "विश्वास",
     visionObserved: "प्रेक्षित",
     visionSeverity: "गंभीरता",
+    readOutLoud: "जोर से सुनें (Audio)",
+    stopAudio: "ऑडियो रोकें",
+    readingOut: "पढ़ा जा रहा है...",
+    listenToMission: "मिशन विवरण सुनें",
+    listenToAudit: "तकनीकी ऑडिट रिपोर्ट सुनें",
+    listenToFinding: "निष्कर्ष सारांश सुनें",
+    audioUnsupported: "इस ब्राउज़र में स्पीच सिंथेसिस समर्थित नहीं है",
   },
   kn: {
     navMissions: "ಕಾರ್ಯಾಚರಣೆಗಳು (Missions)",
@@ -1667,5 +1688,12 @@ export const TRANSLATIONS: Record<Locale, I18nTranslations> = {
     visionConfidence: "ವಿಶ್ವಾಸಾರ್ಹತೆ",
     visionObserved: "ವೀಕ್ಷಿಸಲಾಗಿದೆ",
     visionSeverity: "ತೀವ್ರತೆ",
+    readOutLoud: "ಗಟ್ಟಿಯಾಗಿ ಕೇಳಿ (Audio)",
+    stopAudio: "ಆಡಿಯೊ ನಿಲ್ಲಿಸಿ",
+    readingOut: "ಓದಲಾಗುತ್ತಿದೆ...",
+    listenToMission: "ಮಿಷನ್ ವಿವರಣೆ ಕೇಳಿ",
+    listenToAudit: "ತಾಂತ್ರಿಕ ಆಡಿಟ್ ವರದಿ ಕೇಳಿ",
+    listenToFinding: "ತೀರ್ಮಾನದ ಸಾರಾಂಶ ಕೇಳಿ",
+    audioUnsupported: "ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಸ್ಪೀಚ್ ಸಿಂಥೆಸಿಸ್ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ",
   },
 };
