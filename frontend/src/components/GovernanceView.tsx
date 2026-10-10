@@ -2,8 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import {
+  DataClassification,
+  PolicyDecision,
+  Role,
   SecurityBoundaryReport,
+  ToolExecutionResult,
   ToolMetadata,
+  evaluatePolicy,
+  executeTool,
   fetchSecurityReport,
   fetchTools,
 } from "@/lib/api";
@@ -14,14 +20,198 @@ import { ReadAloudButton } from "@/components/ReadAloudButton";
 
 interface GovernanceViewProps {
   role?: string;
+  clearance?: string;
+  onChangeRole?: (role: Role) => void;
+  onChangeClearance?: (clearance: DataClassification) => void;
 }
 
-export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
+export function GovernanceView({
+  role = "ENGINEER",
+  clearance = "CONFIDENTIAL",
+  onChangeRole,
+  onChangeClearance,
+}: GovernanceViewProps) {
   const { t, language } = useTranslation();
   const [securityReport, setSecurityReport] = useState<SecurityBoundaryReport | null>(null);
   const [tools, setTools] = useState<ToolMetadata[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+
+  // Live Role Authority & Policy Sandbox State
+  const [sandboxRole, setSandboxRole] = useState<Role>((role as Role) || "ENGINEER");
+  const [sandboxClearance, setSandboxClearance] = useState<DataClassification>((clearance as DataClassification) || "CONFIDENTIAL");
+  const [sandboxTool, setSandboxTool] = useState<string>("equipment_history");
+  const [sandboxEquipmentId, setSandboxEquipmentId] = useState<string>("R-204");
+  const [sandboxApproval, setSandboxApproval] = useState<boolean>(false);
+  const [sandboxSetpoint, setSandboxSetpoint] = useState<number>(42.5);
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+  const [isExecuting, setIsExecuting] = useState<boolean>(false);
+  const [sandboxDecision, setSandboxDecision] = useState<PolicyDecision | null>(null);
+  const [sandboxExecutionResult, setSandboxExecutionResult] = useState<ToolExecutionResult | null>(null);
+  const [sandboxFeedback, setSandboxFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (role && ["ENGINEER", "INSPECTOR", "AI_OPERATOR", "ADMIN", "SECURITY_OFFICER", "MANAGER", "AUDITOR"].includes(role)) {
+      setSandboxRole(role as Role);
+    }
+  }, [role]);
+
+  useEffect(() => {
+    if (clearance && ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED", "CRITICAL"].includes(clearance)) {
+      setSandboxClearance(clearance as DataClassification);
+    }
+  }, [clearance]);
+
+  const handleApplyPreset = async (presetIndex: number) => {
+    setSandboxDecision(null);
+    setSandboxExecutionResult(null);
+    setSandboxFeedback(null);
+
+    let nextRole: Role = "ENGINEER";
+    let nextClearance: DataClassification = "CONFIDENTIAL";
+    let nextTool = "equipment_history";
+    let nextEquipmentId = "R-204";
+    let nextApproval = false;
+    let nextSetpoint = 42.5;
+
+    switch (presetIndex) {
+      case 1:
+        nextRole = "INSPECTOR";
+        nextClearance = "INTERNAL";
+        nextTool = "calibrate_pressure_relief_valve";
+        nextEquipmentId = "PRV-204";
+        nextApproval = false;
+        nextSetpoint = 42.5;
+        break;
+      case 2:
+        nextRole = "ADMIN";
+        nextClearance = "RESTRICTED";
+        nextTool = "calibrate_pressure_relief_valve";
+        nextEquipmentId = "PRV-204";
+        nextApproval = false;
+        nextSetpoint = 42.5;
+        break;
+      case 3:
+        nextRole = "ENGINEER";
+        nextClearance = "CONFIDENTIAL";
+        nextTool = "equipment_history";
+        nextEquipmentId = "R-204";
+        nextApproval = false;
+        break;
+      case 4:
+        nextRole = "ADMIN";
+        nextClearance = "CRITICAL";
+        nextTool = "emergency_shutdown";
+        nextEquipmentId = "R-204";
+        nextApproval = true;
+        break;
+      case 5:
+        nextRole = "ADMIN";
+        nextClearance = "CRITICAL";
+        nextTool = "arbitrary_remote_shell";
+        nextEquipmentId = "R-204";
+        nextApproval = true;
+        break;
+    }
+
+    setSandboxRole(nextRole);
+    setSandboxClearance(nextClearance);
+    setSandboxTool(nextTool);
+    setSandboxEquipmentId(nextEquipmentId);
+    setSandboxApproval(nextApproval);
+    setSandboxSetpoint(nextSetpoint);
+
+    setIsEvaluating(true);
+    try {
+      let params: Record<string, unknown> = {};
+      if (nextTool === "calibrate_pressure_relief_valve") {
+        params = { equipment_id: nextEquipmentId, target_setpoint_bar: nextSetpoint, technician_id: "TECH-VALVE-01" };
+      } else if (nextTool === "emergency_shutdown") {
+        params = { equipment_id: nextEquipmentId, reason: "Manual Emergency Trip Test", initiator_id: "CHIEF-ADMIN-01" };
+      } else if (nextTool === "equipment_history") {
+        params = { equipment_id: nextEquipmentId };
+      }
+
+      const decision = await evaluatePolicy({
+        requester: `${nextRole.toLowerCase()}_live_tester`,
+        role: nextRole,
+        tool_name: nextTool,
+        classification: nextClearance,
+        parameters: params,
+        has_approval: nextApproval,
+      });
+      setSandboxDecision(decision);
+    } catch (err: unknown) {
+      setSandboxFeedback(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  const handleEvaluatePolicy = async () => {
+    setIsEvaluating(true);
+    setSandboxFeedback(null);
+    setSandboxExecutionResult(null);
+    try {
+      let params: Record<string, unknown> = {};
+      if (sandboxTool === "calibrate_pressure_relief_valve") {
+        params = { equipment_id: sandboxEquipmentId, target_setpoint_bar: sandboxSetpoint, technician_id: "TECH-VALVE-01" };
+      } else if (sandboxTool === "emergency_shutdown") {
+        params = { equipment_id: sandboxEquipmentId, reason: "Manual Emergency Trip Test", initiator_id: "CHIEF-ADMIN-01" };
+      } else if (sandboxTool === "equipment_history") {
+        params = { equipment_id: sandboxEquipmentId };
+      }
+
+      const decision = await evaluatePolicy({
+        requester: `${sandboxRole.toLowerCase()}_live_tester`,
+        role: sandboxRole,
+        tool_name: sandboxTool,
+        classification: sandboxClearance,
+        parameters: params,
+        has_approval: sandboxApproval,
+      });
+      setSandboxDecision(decision);
+    } catch (err: unknown) {
+      setSandboxFeedback(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  const handleExecuteTool = async () => {
+    setIsExecuting(true);
+    setSandboxFeedback(null);
+    try {
+      let params: Record<string, unknown> = {};
+      if (sandboxTool === "calibrate_pressure_relief_valve") {
+        params = { equipment_id: sandboxEquipmentId, target_setpoint_bar: sandboxSetpoint, technician_id: "TECH-VALVE-01" };
+      } else if (sandboxTool === "emergency_shutdown") {
+        params = { equipment_id: sandboxEquipmentId, reason: "Manual Emergency Trip Test", initiator_id: "CHIEF-ADMIN-01" };
+      } else if (sandboxTool === "equipment_history") {
+        params = { equipment_id: sandboxEquipmentId };
+      }
+
+      const result = await executeTool({
+        requester: `${sandboxRole.toLowerCase()}_live_tester`,
+        role: sandboxRole,
+        tool_name: sandboxTool,
+        classification: sandboxClearance,
+        parameters: params,
+        has_approval: sandboxApproval,
+      });
+      setSandboxExecutionResult(result);
+      setSandboxDecision(result.decision);
+    } catch (err: unknown) {
+      setSandboxFeedback(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  const handleSyncToHeader = () => {
+    if (onChangeRole) onChangeRole(sandboxRole);
+    if (onChangeClearance) onChangeClearance(sandboxClearance);
+  };
 
   useEffect(() => {
     let active = true;
@@ -248,6 +438,525 @@ export function GovernanceView({ role = "ENGINEER" }: GovernanceViewProps) {
               })}
             </tbody>
           </table>
+        </div>
+      </EnamelSurface>
+
+      {/* 2. Live Role Authority & Policy Sandbox (Executable RBAC) */}
+      <EnamelSurface variant="base" padding="spacious">
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--brass)", letterSpacing: "0.06em" }}>
+              {t("govSandboxEyebrow")}
+            </span>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", color: "var(--ink)", margin: "4px 0" }}>
+              {t("govSandboxTitle")}
+            </h2>
+            <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "var(--ink-2)", maxWidth: "70ch" }}>
+              {t("govSandboxSubtitle")}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {onChangeRole && (
+              <button
+                onClick={handleSyncToHeader}
+                className="btn-brass-secondary"
+                style={{ fontSize: "12px", padding: "6px 14px", display: "flex", alignItems: "center", gap: 6 }}
+                title="Synchronize selected sandbox role to the top navigation header"
+              >
+                <span>↻</span>
+                <span>{t("govBtnSyncHeader")}</span>
+              </button>
+            )}
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--brass)",
+                background: "rgba(200, 161, 90, 0.1)",
+                border: "1px solid var(--brass)",
+                borderRadius: "var(--radius-pill)",
+                padding: "6px 12px",
+                fontWeight: 600,
+              }}
+            >
+              FAIL-CLOSED ENGINE
+            </div>
+          </div>
+        </div>
+
+        {/* 1-Click Verification Presets */}
+        <div style={{ marginTop: 24, padding: "16px", background: "var(--bg-1)", border: "1px solid var(--line)", borderRadius: "var(--radius-panel)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", letterSpacing: "0.05em", fontWeight: 600 }}>
+              {t("govPresetBadge")}
+            </span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)" }}>
+              ● LIVE BACKEND WIRED
+            </span>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+            <button
+              onClick={() => handleApplyPreset(1)}
+              style={{
+                background: sandboxRole === "INSPECTOR" && sandboxTool === "calibrate_pressure_relief_valve" ? "rgba(217, 105, 78, 0.12)" : "var(--bg-card)",
+                border: sandboxRole === "INSPECTOR" && sandboxTool === "calibrate_pressure_relief_valve" ? "1px solid var(--coral)" : "1px solid var(--line)",
+                borderRadius: "var(--radius-panel)",
+                padding: "10px 12px",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: "14px" }}>🛑</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 700 }}>PRESET 1</span>
+              </div>
+              <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
+                {t("govPreset1")}
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleApplyPreset(2)}
+              style={{
+                background: sandboxRole === "ADMIN" && sandboxTool === "calibrate_pressure_relief_valve" && !sandboxApproval ? "rgba(217, 105, 78, 0.12)" : "var(--bg-card)",
+                border: sandboxRole === "ADMIN" && sandboxTool === "calibrate_pressure_relief_valve" && !sandboxApproval ? "1px solid var(--coral)" : "1px solid var(--line)",
+                borderRadius: "var(--radius-panel)",
+                padding: "10px 12px",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: "14px" }}>🛑</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 700 }}>PRESET 2</span>
+              </div>
+              <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
+                {t("govPreset2")}
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleApplyPreset(3)}
+              style={{
+                background: sandboxRole === "ENGINEER" && sandboxTool === "equipment_history" ? "rgba(156, 195, 168, 0.12)" : "var(--bg-card)",
+                border: sandboxRole === "ENGINEER" && sandboxTool === "equipment_history" ? "1px solid var(--sage)" : "1px solid var(--line)",
+                borderRadius: "var(--radius-panel)",
+                padding: "10px 12px",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: "14px" }}>🟢</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 700 }}>PRESET 3</span>
+              </div>
+              <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
+                {t("govPreset3")}
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleApplyPreset(4)}
+              style={{
+                background: sandboxRole === "ADMIN" && sandboxTool === "emergency_shutdown" && sandboxApproval ? "rgba(200, 161, 90, 0.12)" : "var(--bg-card)",
+                border: sandboxRole === "ADMIN" && sandboxTool === "emergency_shutdown" && sandboxApproval ? "1px solid var(--brass)" : "1px solid var(--line)",
+                borderRadius: "var(--radius-panel)",
+                padding: "10px 12px",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: "14px" }}>⚡</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 700 }}>PRESET 4</span>
+              </div>
+              <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
+                {t("govPreset4")}
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleApplyPreset(5)}
+              style={{
+                background: sandboxTool === "arbitrary_remote_shell" ? "rgba(217, 105, 78, 0.12)" : "var(--bg-card)",
+                border: sandboxTool === "arbitrary_remote_shell" ? "1px solid var(--coral)" : "1px solid var(--line)",
+                borderRadius: "var(--radius-panel)",
+                padding: "10px 12px",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: "14px" }}>🛡️</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 700 }}>PRESET 5</span>
+              </div>
+              <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
+                {t("govPreset5")}
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* 2-Column Sandbox Workbench */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 24, marginTop: 24 }}>
+          {/* Controls Form */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Field: Role */}
+            <div>
+              <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)", marginBottom: 6 }}>
+                {t("govFieldRole")}
+              </label>
+              <select
+                value={sandboxRole}
+                onChange={(e) => setSandboxRole(e.target.value as Role)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "var(--radius-panel)",
+                  background: "var(--bg-1)",
+                  border: "1px solid var(--line-strong)",
+                  color: "var(--ink)",
+                  fontFamily: "var(--font-ui)",
+                  fontSize: "14px",
+                }}
+              >
+                <option value="INSPECTOR">Inspector (INSPECTOR) - Non-destructive inspection</option>
+                <option value="AI_OPERATOR">AI Operator (AI_OPERATOR) - Zero-write autonomous sandbox</option>
+                <option value="ENGINEER">Engineer (ENGINEER) - Read & diagnostics; approval for PRV</option>
+                <option value="MANAGER">Plant Manager (MANAGER) - Supervisory approval authority</option>
+                <option value="ADMIN">Administrator (ADMIN) - Administrative authority; approval for trips</option>
+                <option value="SECURITY_OFFICER">Security Officer (SECURITY_OFFICER) - Audit & security oversight</option>
+              </select>
+            </div>
+
+            {/* Field: Clearance */}
+            <div>
+              <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)", marginBottom: 6 }}>
+                {t("govFieldClearance")}
+              </label>
+              <select
+                value={sandboxClearance}
+                onChange={(e) => setSandboxClearance(e.target.value as DataClassification)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "var(--radius-panel)",
+                  background: "var(--bg-1)",
+                  border: "1px solid var(--line-strong)",
+                  color: "var(--ink)",
+                  fontFamily: "var(--font-ui)",
+                  fontSize: "14px",
+                }}
+              >
+                <option value="PUBLIC">PUBLIC (Unrestricted plant overview)</option>
+                <option value="INTERNAL">INTERNAL (Internal telemetry & SOPs)</option>
+                <option value="CONFIDENTIAL">CONFIDENTIAL (Operational unit data)</option>
+                <option value="RESTRICTED">RESTRICTED (Safety valve calibrations)</option>
+                <option value="CRITICAL">CRITICAL (Emergency reactor trips & overrides)</option>
+              </select>
+            </div>
+
+            {/* Field: Tool */}
+            <div>
+              <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)", marginBottom: 6 }}>
+                {t("govFieldTool")}
+              </label>
+              <select
+                value={sandboxTool}
+                onChange={(e) => setSandboxTool(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "var(--radius-panel)",
+                  background: "var(--bg-1)",
+                  border: "1px solid var(--line-strong)",
+                  color: "var(--ink)",
+                  fontFamily: "var(--font-ui)",
+                  fontSize: "14px",
+                }}
+              >
+                <option value="equipment_history">equipment_history (Low Risk · Telemetry lookup)</option>
+                <option value="calibrate_pressure_relief_valve">calibrate_pressure_relief_valve (Critical Risk · Actuation)</option>
+                <option value="emergency_shutdown">emergency_shutdown (Critical Risk · Unit isolation trip)</option>
+                <option value="arbitrary_remote_shell">arbitrary_remote_shell (Unregistered / Adversarial attack)</option>
+              </select>
+            </div>
+
+            {/* Field: Equipment Tag & Optional Setpoint */}
+            <div style={{ display: "grid", gridTemplateColumns: sandboxTool === "calibrate_pressure_relief_valve" ? "1fr 1fr" : "1fr", gap: 12 }}>
+              <div>
+                <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)", marginBottom: 6 }}>
+                  {t("govFieldEquipment")}
+                </label>
+                <select
+                  value={sandboxEquipmentId}
+                  onChange={(e) => setSandboxEquipmentId(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "var(--radius-panel)",
+                    background: "var(--bg-1)",
+                    border: "1px solid var(--line-strong)",
+                    color: "var(--ink)",
+                    fontFamily: "var(--font-ui)",
+                    fontSize: "14px",
+                  }}
+                >
+                  <option value="R-204">R-204 (Hydrocracking Fluidized Reactor)</option>
+                  <option value="PRV-204">PRV-204 (Emergency Pressure Relief Valve)</option>
+                  <option value="E-401">E-401 (Shell & Tube Heat Exchanger)</option>
+                  <option value="V-102">V-102 (Flash Separator Drum)</option>
+                </select>
+              </div>
+
+              {sandboxTool === "calibrate_pressure_relief_valve" && (
+                <div>
+                  <label style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink-2)", marginBottom: 6 }}>
+                    {t("govFieldSetpoint")}
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={sandboxSetpoint}
+                    onChange={(e) => setSandboxSetpoint(parseFloat(e.target.value) || 0)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: "var(--radius-panel)",
+                      background: "var(--bg-1)",
+                      border: "1px solid var(--line-strong)",
+                      color: "var(--ink)",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Field: Supervisor Approval Co-Signature Toggle */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "12px 16px",
+                background: sandboxApproval ? "rgba(200, 161, 90, 0.1)" : "rgba(141, 180, 214, 0.05)",
+                border: sandboxApproval ? "1px solid var(--brass)" : "1px solid var(--line)",
+                borderRadius: "var(--radius-panel)",
+                cursor: "pointer",
+              }}
+              onClick={() => setSandboxApproval(!sandboxApproval)}
+            >
+              <input
+                type="checkbox"
+                id="sandboxApprovalCheck"
+                checked={sandboxApproval}
+                onChange={(e) => setSandboxApproval(e.target.checked)}
+                style={{ width: 18, height: 18, accentColor: "var(--brass)", cursor: "pointer" }}
+              />
+              <label htmlFor="sandboxApprovalCheck" style={{ fontFamily: "var(--font-ui)", fontSize: "13.5px", color: "var(--ink)", cursor: "pointer", userSelect: "none" }}>
+                <strong>{t("govFieldApproval")}</strong>
+                <span style={{ display: "block", fontSize: "11.5px", color: "var(--ink-3)", marginTop: 2 }}>
+                  {language === "hi" ? "महत्वपूर्ण जोखिम क्रियाओं के लिए आवश्यक सुरक्षा सह-हस्ताक्षर" : language === "kn" ? "ನಿರ್ಣಾಯಕ ಅಪಾಯದ ಕ್ರಿಯೆಗಳಿಗೆ ಅಗತ್ಯವಿರುವ ಸುರಕ್ಷತಾ ಸಹ-ಸಹಿ" : "Cryptographic co-signature required for critical actuation"}
+                </span>
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+              <button
+                onClick={handleExecuteTool}
+                disabled={isExecuting || isEvaluating}
+                className="btn-brass-primary"
+                style={{
+                  flex: 1,
+                  padding: "12px 18px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <span>{isExecuting ? "⚡ EXECUTING..." : t("govBtnExecute")}</span>
+              </button>
+
+              <button
+                onClick={handleEvaluatePolicy}
+                disabled={isExecuting || isEvaluating}
+                className="btn-brass-secondary"
+                style={{
+                  padding: "12px 16px",
+                  fontSize: "13px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <span>{isEvaluating ? "..." : t("govBtnEvaluate")}</span>
+              </button>
+            </div>
+
+            {sandboxFeedback && (
+              <div
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: "var(--radius-panel)",
+                  background: "rgba(217, 105, 78, 0.1)",
+                  border: "1px solid var(--coral)",
+                  color: "var(--coral-text)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                }}
+              >
+                [ERROR] {sandboxFeedback}
+              </div>
+            )}
+          </div>
+
+          {/* Real-Time Policy & Execution Terminal */}
+          <div
+            style={{
+              background: "var(--bg-card)",
+              border: "1px solid var(--line-strong)",
+              borderRadius: "var(--radius-panel)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {/* Terminal Header */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px 16px",
+                borderBottom: "1px solid var(--line)",
+                background: "var(--bg-1)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: sandboxDecision?.decision === "ALLOW" ? "var(--sage)" : sandboxDecision?.decision === "DENY" ? "var(--coral)" : "var(--brass)" }} />
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--ink)", fontWeight: 600 }}>
+                  {t("govTerminalTitle")}
+                </span>
+              </div>
+
+              {sandboxDecision ? (
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    padding: "3px 10px",
+                    borderRadius: "var(--radius-pill)",
+                    color: sandboxDecision.decision === "ALLOW" ? "var(--sage)" : "var(--coral-text)",
+                    background: sandboxDecision.decision === "ALLOW" ? "rgba(156, 195, 168, 0.15)" : "rgba(217, 105, 78, 0.15)",
+                    border: `1px solid ${sandboxDecision.decision === "ALLOW" ? "var(--sage)" : "var(--coral)"}`,
+                  }}
+                >
+                  {sandboxDecision.decision === "ALLOW" ? "✓ ALLOW / PERMITTED" : "✕ DENY / BLOCKED"}
+                </span>
+              ) : (
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)" }}>
+                  STANDBY
+                </span>
+              )}
+            </div>
+
+            {/* Terminal Body */}
+            <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* Decision Metadata Strip */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ padding: "8px 12px", background: "var(--bg-1)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", color: "var(--ink-3)" }}>{t("govResultDecision")}</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color: sandboxDecision?.decision === "ALLOW" ? "var(--sage)" : sandboxDecision?.decision === "DENY" ? "var(--coral-text)" : "var(--ink-2)", marginTop: 2 }}>
+                    {sandboxDecision?.decision || "READY TO EVALUATE"}
+                  </div>
+                </div>
+
+                <div style={{ padding: "8px 12px", background: "var(--bg-1)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", color: "var(--ink-3)" }}>ENFORCING RULE</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 600, color: "var(--brass)", marginTop: 2 }}>
+                    {sandboxDecision?.policy_id || (sandboxDecision ? "DEFAULT-DENY (FAIL-CLOSED)" : "NONE")}
+                  </div>
+                </div>
+              </div>
+
+              {/* Policy Explanation */}
+              {sandboxDecision && (
+                <div style={{ padding: "12px", borderRadius: "var(--radius-panel)", background: sandboxDecision.decision === "ALLOW" ? "rgba(156, 195, 168, 0.08)" : "rgba(217, 105, 78, 0.08)", border: `1px solid ${sandboxDecision.decision === "ALLOW" ? "var(--sage)" : "var(--coral)"}` }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: sandboxDecision.decision === "ALLOW" ? "var(--sage)" : "var(--coral-text)", fontWeight: 600 }}>
+                    {t("govResultReason")}
+                  </div>
+                  <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", color: "var(--ink)", marginTop: 4, lineHeight: 1.45 }}>
+                    {sandboxDecision.reason}
+                  </div>
+                </div>
+              )}
+
+              {/* Audit Event ID & Timestamp */}
+              {sandboxExecutionResult && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, padding: "8px 12px", background: "var(--bg-1)", borderRadius: "var(--radius-panel)", border: "1px solid var(--line)" }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-2)" }}>
+                    <span style={{ color: "var(--ink-3)" }}>{t("govResultEvent")}: </span>
+                    <strong style={{ color: "var(--brass)" }}>{sandboxExecutionResult.event_id}</strong>
+                  </div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", color: "var(--sage)" }}>
+                    ✓ IMMUTABLE AUDIT SINK RECORDED
+                  </div>
+                </div>
+              )}
+
+              {/* Output Payload / JSON View */}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginBottom: 6 }}>
+                  {t("govResultPayload")}
+                </div>
+                <div
+                  style={{
+                    background: "var(--bg-1)",
+                    border: "1px solid var(--line-strong)",
+                    borderRadius: "var(--radius-panel)",
+                    padding: "12px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11.5px",
+                    color: "var(--ink-2)",
+                    overflowX: "auto",
+                    maxHeight: "180px",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {sandboxExecutionResult?.data ? (
+                    JSON.stringify(sandboxExecutionResult.data, null, 2)
+                  ) : sandboxExecutionResult?.error ? (
+                    `EXECUTION BLOCKED / REFUSED:\n${sandboxExecutionResult.error}`
+                  ) : sandboxDecision ? (
+                    JSON.stringify(sandboxDecision, null, 2)
+                  ) : (
+                    `// Select a preset above or configure parameters and click "⚡ Execute Industrial Action".\n// Actions are verified against Sovereign Policy Gateway in real time.`
+                  )}
+                </div>
+              </div>
+
+              {/* Mathematical Proof Footer */}
+              <div style={{ fontFamily: "var(--font-ui)", fontSize: "11.5px", color: "var(--ink-3)", borderTop: "1px solid var(--line)", paddingTop: 10 }}>
+                {t("govExecutionLiveNotice")}
+              </div>
+            </div>
+          </div>
         </div>
       </EnamelSurface>
 

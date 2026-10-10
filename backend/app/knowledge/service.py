@@ -343,6 +343,45 @@ class KnowledgeService:
         user_classification: Optional[Union[DataClassification, str]] = None,
     ) -> Tuple[str, List[str]]:
         """Synthesize an evidence-grounded engineering answer using the local sovereign model."""
+        # Check for unrecorded or unregistered equipment tags in query
+        from app.core.reasoning import KNOWN_PLANT_ASSETS, extract_plant_equipment_tags
+
+        query_tags = extract_plant_equipment_tags(query)
+        unregistered_or_missing_tags = []
+        for tag in query_tags:
+            tag_clean = tag.replace("-", "").lower()
+            tag_hyphen = tag.lower()
+            in_docs = any(
+                tag_hyphen in r.chunk.text.lower() or tag_clean in r.chunk.text.lower()
+                for r in results
+            )
+            if tag not in KNOWN_PLANT_ASSETS and not in_docs:
+                unregistered_or_missing_tags.append(tag)
+
+        if unregistered_or_missing_tags:
+            missing_str = ", ".join(unregistered_or_missing_tags)
+            logger.warning("[ZERO_ASSUMPTION_ENFORCED] Query inquired about unregistered/undocumented asset(s): %s. Refusing assumption.", missing_str)
+            if language == "kn":
+                refusal_msg = (
+                    f"⚠️ ಸಾರ್ವಭೌಮ ಶೂನ್ಯ-ಊಹೆ ಮತ್ತು ಶೂನ್ಯ-ಭ್ರಮೆ ನಿರಾಕರಣೆ: ಉಪಕರಣ ಐಡೆಂಟಿಫೈಯರ್ '{missing_str}' ಸಾರ್ವಭೌಮ ಪ್ಲಾಂಟ್ ದಾಖಲೆಗಳಲ್ಲಿ ಕಂಡುಬಂದಿಲ್ಲ.\n\n"
+                    f"FORGE ಆಡಳಿತ ನಿಯಮಗಳ ಪ್ರಕಾರ, ಸಿಸ್ಟಮ್ ಅಜ್ಞಾತ ಅಥವಾ ನೋಂದಾಯಿಸದ ಉಪಕರಣವನ್ನು ಬೇರೆ ಉಪಕರಣವೆಂದು (ಉದಾಹರಣೆಗೆ R-204) ಊಹಿಸುವುದನ್ನು (assuming) ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸಲಾಗಿದೆ.\n\n"
+                    f"ಯುನಿಟ್ 24 ರಲ್ಲಿ ನೋಂದಾಯಿಸಲಾದ ಮಾನ್ಯ ಉಪಕರಣಗಳು: R-204 (ಪಾಲಿಮರೀಕರಣ ರಿಯಾಕ್ಟರ್), P-201 (ಸ್ಲರ್ರಿ ಫೀಡ್ ಪಂಪ್), E-301 (ಕೂಲರ್), PRV-204 (ಪ್ರೆಶರ್ ರಿಲೀಫ್ ಕವಾಟ), V-102 (ಫ್ಲ್ಯಾಶ್ ಡ್ರಮ್)."
+                )
+            elif language == "hi":
+                refusal_msg = (
+                    f"⚠️ संप्रभु शून्य-धारणा एवं शून्य-भ्रम अस्वीकृति: उपकरण पहचानकर्ता '{missing_str}' संप्रभु संयंत्र रिकॉर्ड में मौजूद नहीं है।\n\n"
+                    f"FORGE शासन नियमों के अनुसार, सिस्टम किसी अज्ञात या अपंजीकृत उपकरण को किसी अन्य उपकरण (जैसे R-204) के रूप में मानने (assuming) की सख्त मनाही करता है।\n\n"
+                    f"यूनिट 24 में उपलब्ध सत्यापित पंजीकृत उपकरण: R-204 (पॉलिमराइजेशन रिएक्टर), P-201 (स्लरी फीड पंप), E-301 (कूलर), PRV-204 (प्रेशर रिलीफ वाल्व), V-102 (फ्लैश ड्रम)।"
+                )
+            else:
+                refusal_msg = (
+                    f"⚠️ SOVEREIGN ZERO-ASSUMPTION & ZERO-HALLUCINATION REFUSAL:\n"
+                    f"The requested equipment identifier '{missing_str}' is NOT documented in the plant knowledge base or registered in Unit 24.\n\n"
+                    f"Under FORGE Sovereign Governance (`AGENTS.md`), the system is strictly prohibited from assuming that an unknown or unregistered equipment is an alias of another asset (such as R-204).\n\n"
+                    f"Verified plant assets registered in Unit 24: R-204 (Reactor CSTR), P-201 (Slurry Feed Pump), E-301 (Effluent Cooler), PRV-204 (Safety Relief Valve), V-102 (Separator Drum)."
+                )
+            return refusal_msg, []
+
         if not results:
             restricted = self.find_restricted_matches(query, user_classification=user_classification)
             if restricted:
@@ -397,6 +436,7 @@ class KnowledgeService:
             "3. Cite the source document name in brackets where relevant (e.g. [SOP-R204]).\n"
             "4. Do NOT hallucinate parameters outside the provided documentation.\n"
             "5. If information is not in the text, honestly state what is documented.\n"
+            "6. ZERO ASSUMPTIONS: You must NEVER assume that a queried equipment, reactor, pump, or tag (e.g. R1522, R-304) is the same as or an alias of another piece of equipment (such as R-204). If the query asks about an asset that is NOT explicitly described in the excerpts, you must state that no documentation exists for that specific asset in the plant records, and refuse to substitute other equipment records.\n"
         )
 
         if language == "hi":
@@ -431,7 +471,26 @@ class KnowledgeService:
             )
             resp = await provider.generate(req)
             if resp.content and resp.content.strip():
-                return resp.content.strip(), cited_sources
+                ans = resp.content.strip()
+                # Zero-assumption post-sanitizer: If model made assumptions like "(assuming it is R-204)"
+                if re.search(r"\bassum(?:ing|es?|ed)\b(?:\s+\w+){0,6}\s+(?:r-?204|p-?201|e-?301)", ans, re.IGNORECASE):
+                    logger.warning("[ASSUMPTION_REJECTED] Model attempted to assume equipment identity in synthesis. Replacing with zero-assumption refusal.")
+                    if language == "kn":
+                        ans = (
+                            "⚠️ ಸಾರ್ವಭೌಮ ಶೂನ್ಯ-ಊಹೆ ಗಡಿ: ವಿನಂತಿಸಿದ ಉಪಕರಣದ ಕುರಿತು ಸಾರ್ವಭೌಮ ಜ್ಞಾನ ಭಂಡಾರದಲ್ಲಿ ಯಾವುದೇ ದಾಖಲೆಗಳು ಲಭ್ಯವಿಲ್ಲ. "
+                            "FORGE ಆಡಳಿತ ನೀತಿಯು ನೋಂದಾಯಿಸದ ಉಪಕರಣಗಳನ್ನು R-204 ಎಂದು ಊಹಿಸುವುದನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸುತ್ತದೆ."
+                        )
+                    elif language == "hi":
+                        ans = (
+                            "⚠️ संप्रभु शून्य-अनुमान सीमा: अनुरोधित उपकरण के बारे में संप्रभु ज्ञानकोश में कोई रिकॉर्ड उपलब्ध नहीं है। "
+                            "FORGE शासन नीति अपंजीकृत उपकरणों को R-204 मानने की सख्त मनाही करती है।"
+                        )
+                    else:
+                        ans = (
+                            "⚠️ SOVEREIGN ZERO-ASSUMPTION BOUNDARY: No verified documentation exists for the requested equipment in plant records. "
+                            "FORGE Governance strictly prohibits assuming or substituting other equipment (such as R-204) for unrecorded assets."
+                        )
+                return ans, cited_sources
         except Exception as exc:
             logger.warning("[KNOWLEDGE_SYNTHESIS_MODEL_FAILED] Model synthesis fallback: %s", exc)
 

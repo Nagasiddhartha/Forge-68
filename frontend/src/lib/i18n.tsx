@@ -473,6 +473,30 @@ export interface TranslationDictionary {
   govPolicyGatewayLabel: string;
   govActiveEnforcing: string;
   govYouBadge: string;
+  govSandboxEyebrow: string;
+  govSandboxTitle: string;
+  govSandboxSubtitle: string;
+  govPresetBadge: string;
+  govPreset1: string;
+  govPreset2: string;
+  govPreset3: string;
+  govPreset4: string;
+  govPreset5: string;
+  govFieldRole: string;
+  govFieldClearance: string;
+  govFieldTool: string;
+  govFieldEquipment: string;
+  govFieldApproval: string;
+  govFieldSetpoint: string;
+  govBtnEvaluate: string;
+  govBtnExecute: string;
+  govBtnSyncHeader: string;
+  govTerminalTitle: string;
+  govResultDecision: string;
+  govResultReason: string;
+  govResultEvent: string;
+  govResultPayload: string;
+  govExecutionLiveNotice: string;
   roleEngineerName: string;
   roleEngineerSummary: string;
   roleEngineerActuation: string;
@@ -1150,6 +1174,30 @@ export const translations: Record<Language, TranslationDictionary> = {
     govPolicyGatewayLabel: "Policy Gateway:",
     govActiveEnforcing: "ACTIVE & ENFORCING",
     govYouBadge: "YOU",
+    govSandboxEyebrow: "LIVE ROLE AUTHORITY & POLICY SANDBOX",
+    govSandboxTitle: "Test Live RBAC & Industrial Tool Execution",
+    govSandboxSubtitle: "Interact with live Sovereign Policy Gateways. Test default-deny enforcement, role boundaries, and supervisor co-signatures in real time.",
+    govPresetBadge: "QUICK 1-CLICK PRESETS",
+    govPreset1: "Inspector Valve Actuation (ROLE BLOCKED)",
+    govPreset2: "Admin Unapproved Actuation (APPROVAL BLOCKED)",
+    govPreset3: "Engineer Telemetry Lookup (ALLOWED)",
+    govPreset4: "Admin Emergency Trip (ALLOWED WITH CO-SIGNATURE)",
+    govPreset5: "Arbitrary Shell Injection (DEFAULT-DENY)",
+    govFieldRole: "Test Persona / Role",
+    govFieldClearance: "Security Clearance",
+    govFieldTool: "Target Industrial Tool",
+    govFieldEquipment: "Target Equipment Tag",
+    govFieldApproval: "Supervisor Co-Signature Verified",
+    govFieldSetpoint: "Relief Setpoint (bar gauge)",
+    govBtnEvaluate: "Evaluate Policy (Dry Run)",
+    govBtnExecute: "⚡ Execute Industrial Action",
+    govBtnSyncHeader: "Apply Persona to Header",
+    govTerminalTitle: "Live Gateway Policy & Execution Ledger",
+    govResultDecision: "DECISION",
+    govResultReason: "POLICY REASON",
+    govResultEvent: "AUDIT EVENT ID",
+    govResultPayload: "OUTPUT DATA PAYLOAD",
+    govExecutionLiveNotice: "LIVE AIR-GAPPED BOUNDARY: Dispatches real HTTP requests to /api/v1/policy/evaluate and /api/v1/tools/execute.",
     roleEngineerName: "Engineer",
     roleEngineerSummary: "Standard operational role. Runs investigations and read-only tools. Critical valve actuation requires approval.",
     roleEngineerActuation: "Engineers can investigate and read sensors, but cannot calibrate critical valves without secondary approval.",
@@ -1827,6 +1875,30 @@ export const translations: Record<Language, TranslationDictionary> = {
     govPolicyGatewayLabel: "नीति गेटवे:",
     govActiveEnforcing: "सक्रिय एवं लागू",
     govYouBadge: "आप",
+    govSandboxEyebrow: "सजीव भूमिका अधिकार एवं नीति सैंडबॉक्स",
+    govSandboxTitle: "लाइव RBAC और औद्योगिक उपकरण निष्पादन का परीक्षण करें",
+    govSandboxSubtitle: "सॉवरेन पॉलिसी गेटवे के साथ वास्तविक समय में बातचीत करें। डिफ़ॉल्ट-अस्वीकार, भूमिका सीमाओं और पर्यवेक्षक अनुमोदन का तुरंत परीक्षण करें।",
+    govPresetBadge: "त्वरित 1-क्लिक परिदृश्य",
+    govPreset1: "निरीक्षक द्वारा वाल्व सक्रियण (भूमिका अवरुद्ध)",
+    govPreset2: "प्रशासक द्वारा अननुमोदित सक्रियण (अनुमोदन अवरुद्ध)",
+    govPreset3: "इंजीनियर टेलीमेट्री निरीक्षण (अनुमत)",
+    govPreset4: "प्रशासक आपातकालीन ट्रिप (पर्यवेक्षक हस्ताक्षर सहित अनुमत)",
+    govPreset5: "मनमाना शेल इंजेक्शन (डिफ़ॉल्ट-अस्वीकार)",
+    govFieldRole: "परीक्षण व्यक्तित्व / भूमिका",
+    govFieldClearance: "सुरक्षा मंजूरी",
+    govFieldTool: "लक्षित औद्योगिक उपकरण",
+    govFieldEquipment: "उपकरण पहचानकर्ता",
+    govFieldApproval: "पर्यवेक्षक सह-हस्ताक्षर सत्यापित",
+    govFieldSetpoint: "राहत दबाव सेटपॉइंट (bar gauge)",
+    govBtnEvaluate: "नीति का मूल्यांकन करें (ड्राई रन)",
+    govBtnExecute: "⚡ औद्योगिक कार्रवाई निष्पादित करें",
+    govBtnSyncHeader: "शीर्षलेख पर व्यक्तित्व लागू करें",
+    govTerminalTitle: "सजीव नीति एवं निष्पादन खाता",
+    govResultDecision: "निर्णय",
+    govResultReason: "नीति कारण",
+    govResultEvent: "ऑडिट घटना आईडी",
+    govResultPayload: "आउटपुट डेटा पेलोड",
+    govExecutionLiveNotice: "लाइव एयर-गैप्ड सीमा: वास्तविक HTTP अनुरोध /api/v1/policy/evaluate और /api/v1/tools/execute पर भेजे जाते हैं।",
     roleEngineerName: "इंजीनियर",
     roleEngineerSummary: "मानक परिचालन भूमिका। जांच और केवल-पठन उपकरण चलाता है। महत्वपूर्ण वाल्व सक्रियण के लिए अनुमोदन आवश्यक है।",
     roleEngineerActuation: "इंजीनियर जांच कर सकते हैं और सेंसर पढ़ सकते हैं, लेकिन द्वितीयक अनुमोदन के बिना महत्वपूर्ण वाल्वों को कैलिब्रेट नहीं कर सकते।",
@@ -2504,6 +2576,30 @@ export const translations: Record<Language, TranslationDictionary> = {
     govPolicyGatewayLabel: "ನೀತಿ ಗೇಟ್‌ವೇ:",
     govActiveEnforcing: "ಸಕ್ರಿಯ ಮತ್ತು ಜಾರಿಯಲ್ಲಿದೆ",
     govYouBadge: "ನೀವು",
+    govSandboxEyebrow: "ಲೈವ್ ಪಾತ್ರ ಪ್ರಾಧಿಕಾರ ಮತ್ತು ನೀತಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್",
+    govSandboxTitle: "ಲೈವ್ RBAC ಮತ್ತು ಕೈಗಾರಿಕಾ ಉಪಕರಣ ಕಾರ್ಯಾಚರಣೆಯನ್ನು ಪರೀಕ್ಷಿಸಿ",
+    govSandboxSubtitle: "ಸಾವರಿನ್ ನೀತಿ ಗೇಟ್‌ವೇಗಳೊಂದಿಗೆ ನೈಜ ಸಮಯದಲ್ಲಿ ಪರೀಕ್ಷಿಸಿ. ಡೀಫಾಲ್ಟ್-ನಿರಾಕರಣೆ ಜಾರಿ, ಪಾತ್ರದ ಗಡಿಗಳು ಮತ್ತು ಮೇಲ್ವಿಚಾರಕರ ಅನುಮೋದನೆಯನ್ನು ತಕ್ಷಣವೇ ಪರೀಕ್ಷಿಸಿ.",
+    govPresetBadge: "ತ್ವರಿತ 1-ಕ್ಲಿಕ್ ಪೂರ್ವನಿಗದಿಗಳು",
+    govPreset1: "ಇನ್ಸ್‌ಪೆಕ್ಟರ್ ವಾಲ್ವ್ ಕಾರ್ಯಾಚರಣೆ (ಪಾತ್ರ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ)",
+    govPreset2: "ನಿರ್ವಾಹಕ ಅನುಮೋದನೆಯಿಲ್ಲದ ಕಾರ್ಯಾಚರಣೆ (ಅನುಮೋದನೆ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ)",
+    govPreset3: "ಇಂಜಿನಿಯರ್ ಟೆಲಿಮೆಟ್ರಿ ಹುಡುಕಾಟ (ಅನುಮತಿಸಲಾಗಿದೆ)",
+    govPreset4: "ನಿರ್ವಾಹಕ ತುರ್ತು ಸ್ಥಗಿತ (ಅನುಮೋದನೆಯೊಂದಿಗೆ ಅನುಮತಿಸಲಾಗಿದೆ)",
+    govPreset5: "ಅನಧಿಕೃತ ಶೆಲ್ ಇಂಜೆಕ್ಷನ್ (ಡೀಫಾಲ್ಟ್-ನಿರಾಕರಣೆ)",
+    govFieldRole: "ಪರೀಕ್ಷಾ ಪಾತ್ರ / ವ್ಯಕ್ತಿತ್ವ",
+    govFieldClearance: "ಭದ್ರತಾ ಕ್ಲಿಯರೆನ್ಸ್",
+    govFieldTool: "ಗುರಿ ಕೈಗಾರಿಕಾ ಉಪಕರಣ",
+    govFieldEquipment: "ಉಪಕರಣದ ಟ್ಯಾಗ್",
+    govFieldApproval: "ಮೇಲ್ವಿಚಾರಕರ ಸಹ-ಸಹಿ ಪರಿಶೀಲಿಸಲಾಗಿದೆ",
+    govFieldSetpoint: "ಸೆಟ್‌ಪಾಯಿಂಟ್ (ಬಾರ್ ಗೇಜ್)",
+    govBtnEvaluate: "ನೀತಿಯನ್ನು ಮೌಲ್ಯಮಾಪನ ಮಾಡಿ (ಡ್ರೈ ರನ್)",
+    govBtnExecute: "⚡ ಕೈಗಾರಿಕಾ ಕ್ರಿಯೆಯನ್ನು ಕಾರ್ಯಗತಗೊಳಿಸಿ",
+    govBtnSyncHeader: "ಹೆಡರ್‌ಗೆ ಪಾತ್ರವನ್ನು ಅನ್ವಯಿಸಿ",
+    govTerminalTitle: "ಲೈವ್ ಗೇಟ್‌ವೇ ನೀತಿ ಮತ್ತು ಕಾರ್ಯಾಚರಣಾ ಲೆಡ್ಜರ್",
+    govResultDecision: "ನಿರ್ಧಾರ",
+    govResultReason: "ನೀತಿ ಕಾರಣ",
+    govResultEvent: "ಆಡಿಟ್ ಈವೆಂಟ್ ಐಡಿ",
+    govResultPayload: "ಔಟ್‌ಪುಟ್ ಡೇಟಾ ಪೇಲೋಡ್",
+    govExecutionLiveNotice: "ಲೈವ್ ಏರ್-ಗ್ಯಾಪ್ಡ್ ಗಡಿ: ನೈಜ HTTP ವಿನಂತಿಗಳನ್ನು /api/v1/policy/evaluate ಮತ್ತು /api/v1/tools/execute ಗೆ ಕಳುಹಿಸುತ್ತದೆ.",
     roleEngineerName: "ಇಂಜಿನಿಯರ್",
     roleEngineerSummary: "ಪ್ರಮಾಣಿತ ಕಾರ್ಯಾಚರಣೆಯ ಪಾತ್ರ. ತನಿಖೆಗಳು ಮತ್ತು ಓದಲು-ಮಾತ್ರ ಟೂಲ್‌ಗಳನ್ನು ಚಲಾಯಿಸುತ್ತದೆ. ನಿರ್ಣಾಯಕ ವಾಲ್ವ್ ಕಾರ್ಯಾಚರಣೆಗೆ ಅನುಮೋದನೆ ಅಗತ್ಯವಿದೆ.",
     roleEngineerActuation: "ಇಂಜಿನಿಯರ್‌ಗಳು ತನಿಖೆ ಮಾಡಬಹುದು ಮತ್ತು ಸಂವೇದಕಗಳನ್ನು ಓದಬಹುದು, ಆದರೆ ದ್ವಿತೀಯ ಅನುಮೋದನೆಯಿಲ್ಲದೆ ನಿರ್ಣಾಯಕ ವಾಲ್ವ್‌ಗಳನ್ನು ಕ್ಯಾಲಿಬ್ರೇಟ್ ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ.",

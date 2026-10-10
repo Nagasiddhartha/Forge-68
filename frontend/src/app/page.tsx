@@ -319,7 +319,12 @@ export default function Home() {
             3. GOVERNANCE DESTINATION
             ========================================================================= */}
         {destination === "governance" && (
-          <GovernanceView role={role} />
+          <GovernanceView
+            role={role}
+            clearance={clearance}
+            onChangeRole={setRole}
+            onChangeClearance={setClearance}
+          />
         )}
 
         {/* =========================================================================

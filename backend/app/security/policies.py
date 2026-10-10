@@ -54,5 +54,16 @@ DEFAULT_POLICIES: List[PolicyRule] = [
         max_risk_level=RiskLevel.CRITICAL,
         require_approval=True,
     ),
+    # POL-004: Emergency reactor loop shutdown
+    PolicyRule(
+        rule_id="POL-CRIT-003",
+        name="Emergency Reactor Trip Policy",
+        description="Enforces mandatory supervisor co-signature and CRITICAL classification for initiating emergency reactor loop trip (R-204). Restricted to Admins and Security Officers.",
+        target_tool="emergency_shutdown",
+        allowed_roles={Role.ADMIN, Role.SECURITY_OFFICER},
+        allowed_classifications={DataClassification.CRITICAL},
+        max_risk_level=RiskLevel.CRITICAL,
+        require_approval=True,
+    ),
 ]
 

@@ -11,7 +11,11 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import ValidationError
 
 from app.tools.base import BaseTool, ToolDefinition, ToolMetadata
-from app.tools.industrial.equipment import EquipmentHistoryTool, PressureReliefCalibrationTool
+from app.tools.industrial.equipment import (
+    EmergencyShutdownTool,
+    EquipmentHistoryTool,
+    PressureReliefCalibrationTool,
+)
 
 
 class ToolRegistry:
@@ -64,4 +68,5 @@ class ToolRegistry:
 tool_registry = ToolRegistry()
 tool_registry.register(EquipmentHistoryTool())
 tool_registry.register(PressureReliefCalibrationTool())
+tool_registry.register(EmergencyShutdownTool())
 

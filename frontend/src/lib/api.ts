@@ -18,7 +18,10 @@ export interface PolicyDecision {
   role: Role;
   tool: string;
   classification: DataClassification;
-  timestamp: string;
+  risk?: string;
+  approval_required?: boolean;
+  approved?: boolean;
+  timestamp?: string;
 }
 
 export interface KnowledgeQueryPlan {
@@ -442,6 +445,71 @@ export async function fetchSovereigntyStatus(): Promise<SovereigntyStatusRespons
 
 export async function fetchTools(): Promise<ToolMetadata[]> {
   return apiFetch<ToolMetadata[]>("/api/v1/tools");
+}
+
+export interface PolicyEvaluationRequest {
+  requester: string;
+  role: Role;
+  tool_name: string;
+  classification?: DataClassification;
+  parameters?: Record<string, unknown>;
+  has_approval?: boolean;
+}
+
+export interface ToolInvocationRequest {
+  requester: string;
+  role: Role;
+  tool_name: string;
+  classification?: DataClassification;
+  parameters?: Record<string, unknown>;
+  has_approval?: boolean;
+}
+
+export interface ToolExecutionResult {
+  success: boolean;
+  decision: PolicyDecision;
+  event_id: string;
+  data?: unknown;
+  error?: string;
+}
+
+export async function evaluatePolicy(request: PolicyEvaluationRequest): Promise<PolicyDecision> {
+  return apiFetch<PolicyDecision>("/api/v1/policy/evaluate", {
+    method: "POST",
+    body: JSON.stringify(request),
+    timeoutMs: 15000,
+  });
+}
+
+export async function executeTool(request: ToolInvocationRequest): Promise<ToolExecutionResult> {
+  const url = `${BACKEND_URL}/api/v1/tools/execute`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    });
+    const data = await res.json();
+    return data as ToolExecutionResult;
+  } catch (err: unknown) {
+    return {
+      success: false,
+      decision: {
+        decision: "DENY",
+        reason: err instanceof Error ? err.message : String(err),
+        requester: request.requester,
+        role: request.role,
+        tool: request.tool_name,
+        classification: request.classification || "INTERNAL",
+        timestamp: new Date().toISOString(),
+      },
+      event_id: "err-network-fail",
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
 
 export async function fetchAuditEvents(limit: number = 100): Promise<AuditEventsResponse> {

@@ -8,6 +8,9 @@ from app.tools.execution import (
 )
 from app.tools.industrial.equipment import (
     CALIBRATION_EXECUTION_COUNTER,
+    EmergencyShutdownInput,
+    EmergencyShutdownOutput,
+    EmergencyShutdownTool,
     EquipmentHistoryInput,
     EquipmentHistoryOutput,
     EquipmentHistoryTool,
@@ -31,6 +34,9 @@ __all__ = [
     "PressureReliefCalibrationTool",
     "PressureReliefCalibrationInput",
     "PressureReliefCalibrationOutput",
+    "EmergencyShutdownTool",
+    "EmergencyShutdownInput",
+    "EmergencyShutdownOutput",
     "CALIBRATION_EXECUTION_COUNTER",
     "ToolInvocationRequest",
     "ToolExecutionResult",

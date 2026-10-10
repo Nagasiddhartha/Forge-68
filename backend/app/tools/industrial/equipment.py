@@ -291,3 +291,51 @@ class PressureReliefCalibrationTool(BaseTool):
             handler=execute_pressure_relief_calibration,
         )
 
+
+class EmergencyShutdownInput(BaseModel):
+    """Input payload for emergency plant loop trip."""
+    equipment_id: str = Field(..., description="Target industrial loop or reactor tag (e.g. R-204)")
+    initiator_id: Optional[str] = Field(default="OPERATOR-EMERGENCY", description="Initiating operator badge ID")
+    reason: Optional[str] = Field(default="Critical parameter excursion", description="Operational trip justification")
+
+
+class EmergencyShutdownOutput(BaseModel):
+    """Output confirmation of emergency trip actuation."""
+    equipment_id: str
+    status: str
+    trip_timestamp: str
+    isolated_valves: List[str]
+    message: str
+
+
+def execute_emergency_shutdown(input_data: EmergencyShutdownInput) -> EmergencyShutdownOutput:
+    """Execute emergency reaction loop trip (Critical risk)."""
+    from datetime import datetime, timezone
+    return EmergencyShutdownOutput(
+        equipment_id=input_data.equipment_id,
+        status="EMERGENCY_SHUTDOWN_EXECUTED",
+        trip_timestamp=datetime.now(timezone.utc).isoformat(),
+        isolated_valves=["QCV-204A", "XV-204A", "XV-204B", "BDV-204"],
+        message=f"Emergency trip initiated for {input_data.equipment_id}. Monomer feed isolated, reaction quench activated, blowdown valve BDV-204 opened.",
+    )
+
+
+class EmergencyShutdownTool(BaseTool):
+    """Critical-risk industrial actuation tool requiring supervisor approval and restricted roles."""
+
+    @property
+    def definition(self) -> ToolDefinition:
+        return ToolDefinition(
+            name="emergency_shutdown",
+            version="1.0.0",
+            description="Initiate emergency plant loop trip for Reactor R-204. Isolate monomer feed and trip reaction loop. Requires ADMIN or SECURITY_OFFICER with supervisor approval.",
+            risk_level=RiskLevel.CRITICAL,
+            allowed_roles=[Role.SECURITY_OFFICER, Role.ADMIN],
+            allowed_classifications=[DataClassification.CRITICAL],
+            approval_required=True,
+            input_model=EmergencyShutdownInput,
+            output_model=EmergencyShutdownOutput,
+            handler=execute_emergency_shutdown,
+        )
+
+
