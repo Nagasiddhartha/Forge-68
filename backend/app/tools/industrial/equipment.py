@@ -99,6 +99,62 @@ SYNTHETIC_EQUIPMENT_DATA: Dict[str, Dict[str, Any]] = {
         ],
         "notes": "Cools reactor effluent stream before separation column C-401.",
     },
+    "V-102": {
+        "equipment_id": "V-102",
+        "equipment_type": "High-Pressure Gas/Liquid Flash Separator Drum",
+        "operating_status": "OPERATIONAL",
+        "last_inspection_date": "2026-08-10",
+        "inspection_dates": ["2025-01-14", "2025-07-20", "2026-01-18", "2026-08-10"],
+        "maintenance_events": [
+            {
+                "event_id": "MNT-2025-042",
+                "date": "2025-07-22",
+                "type": "INSPECTION",
+                "description": "Demister pad internal inspection and ultrasonic thickness survey of vessel head.",
+                "technician": "INSP-08 (Vessel Inspector)",
+            },
+            {
+                "event_id": "MNT-2026-055",
+                "date": "2026-08-11",
+                "type": "CALIBRATION",
+                "description": "Level transmitter LT-102 multi-point wet calibration verified against sight glass.",
+                "technician": "TECH-14 (Instrumentation Specialist)",
+            },
+        ],
+        "previous_findings": [
+            "Demister pad clean with zero hydrocarbon wax foulant",
+            "Vessel shell wall thickness 48.2 mm (>44.0 mm retirement minimum)",
+        ],
+        "notes": "Separates unreacted hydrogen gas recycle stream from liquid cracked hydrocarbon bottoms.",
+    },
+    "PRV-204": {
+        "equipment_id": "PRV-204",
+        "equipment_type": "Pilot-Operated Safety Relief Valve",
+        "operating_status": "OPERATIONAL",
+        "last_inspection_date": "2026-06-15",
+        "inspection_dates": ["2024-06-12", "2025-06-14", "2026-06-15"],
+        "maintenance_events": [
+            {
+                "event_id": "MNT-2025-078",
+                "date": "2025-06-14",
+                "type": "BENCH_TEST",
+                "description": "Off-line deadweight pop test verification; pop pressure 42.5 bar certified.",
+                "technician": "TECH-03 (Valve Shop Lead)",
+            },
+            {
+                "event_id": "MNT-2026-061",
+                "date": "2026-06-15",
+                "type": "SEAL_VERIFICATION",
+                "description": "Car-seal replacement and physical tamper-lock verified. Dual rupture disc PSE-204 intact.",
+                "technician": "INSP-01 (Chief Safety Inspector)",
+            },
+        ],
+        "previous_findings": [
+            "Zero seat leakage detected at 38.0 bar hold pressure",
+            "ASME Section VIII UV Stamp certification current through 2027",
+        ],
+        "notes": "Critical overpressure protection for R-204. Setpoint 42.5 bar gauge. Software actuation strictly blocked.",
+    },
 }
 
 
@@ -114,8 +170,8 @@ class EquipmentHistoryInput(BaseModel):
     """Input payload to query equipment history."""
     equipment_id: str = Field(
         ...,
-        description="Target industrial equipment tag (e.g. R-204, P-201, E-301)",
-        pattern=r"^[A-Z]-[0-9]{3}$"
+        description="Target industrial equipment tag (e.g. R-204, P-201, E-301, V-102, PRV-204)",
+        pattern=r"^[A-Z]{1,3}-[0-9]{3}$"
     )
 
 

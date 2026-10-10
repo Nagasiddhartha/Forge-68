@@ -457,6 +457,32 @@ async def list_vision_sample_images() -> Dict[str, Any]:
     return {"samples": samples}
 
 
+@app.get("/api/v1/vision/image/{filename}", tags=["Vision"])
+async def get_vision_image(filename: str):
+    """Serve local synthetic engineering imagery with strict path traversal prevention."""
+    base_dir = Path(settings.IMAGE_BASE_DIR).resolve()
+    if not base_dir.exists():
+        base_dir = (Path(__file__).resolve().parent.parent / "data" / "demo" / "images").resolve()
+
+    clean_filename = Path(filename).name
+    target_path = (base_dir / clean_filename).resolve()
+
+    if not target_path.is_relative_to(base_dir) or not target_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Image file '{clean_filename}' not found.",
+        )
+
+    mime_types = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }
+    media_type = mime_types.get(target_path.suffix.lower(), "application/octet-stream")
+    return FileResponse(path=str(target_path), media_type=media_type)
+
+
 # =========================================================================
 # Milestone 8: Sovereign Audit & Event Introspection APIs
 # =========================================================================

@@ -25,7 +25,7 @@
       "Agitator seal micro-weep observed during Q3-2025 (rectified)",
       "Minor jacket scale accumulation detected; chemical flushes scheduled"
     ],
-    "notes": "Primary polymerization vessel. Rated design pressure 16.5 bar at 220°C."
+    "notes": "Primary polymerization vessel. Rated design pressure 16.5 bar at 220°C (MAWP 42.5 bar hydrocracker specification)."
   },
   "P-201": {
     "equipment_id": "P-201",
@@ -53,7 +53,7 @@
       "Drive-end bearing temperature elevated during high-throughput runs",
       "Cavitation wear on suction flange"
     ],
-    "notes": "Suction flow from storage vessel T-102. Critical path pump with cold standby P-202 available."
+    "notes": "Suction flow from storage vessel T-102. Critical path pump with auto-standby P-201B available."
   },
   "E-301": {
     "equipment_id": "E-301",
@@ -81,6 +81,62 @@
       "Tube sheet joint weeping detected during 2025 turnaround (retorqued to 350 Nm)",
       "Thermal duty efficiency maintained at 94.2% of design baseline"
     ],
-    "notes": "Cools reactor effluent stream before separation column C-401."
+    "notes": "Cools reactor effluent stream before high-pressure flash drum V-102."
+  },
+  "V-102": {
+    "equipment_id": "V-102",
+    "equipment_type": "High-Pressure Gas/Liquid Flash Separator Drum",
+    "operating_status": "OPERATIONAL",
+    "last_inspection_date": "2026-08-10",
+    "inspection_dates": ["2025-01-14", "2025-07-20", "2026-01-18", "2026-08-10"],
+    "maintenance_events": [
+      {
+        "event_id": "MNT-2025-042",
+        "date": "2025-07-22",
+        "type": "INSPECTION",
+        "description": "Demister pad internal inspection and ultrasonic thickness survey of vessel head.",
+        "technician": "INSP-08 (Vessel Inspector)"
+      },
+      {
+        "event_id": "MNT-2026-055",
+        "date": "2026-08-11",
+        "type": "CALIBRATION",
+        "description": "Level transmitter LT-102 multi-point wet calibration verified against sight glass.",
+        "technician": "TECH-14 (Instrumentation Specialist)"
+      }
+    ],
+    "previous_findings": [
+      "Demister pad clean with zero hydrocarbon wax foulant",
+      "Vessel shell wall thickness 48.2 mm (>44.0 mm retirement minimum)"
+    ],
+    "notes": "Separates unreacted hydrogen gas recycle stream from liquid cracked hydrocarbon bottoms."
+  },
+  "PRV-204": {
+    "equipment_id": "PRV-204",
+    "equipment_type": "Pilot-Operated Safety Relief Valve",
+    "operating_status": "OPERATIONAL",
+    "last_inspection_date": "2026-06-15",
+    "inspection_dates": ["2024-06-12", "2025-06-14", "2026-06-15"],
+    "maintenance_events": [
+      {
+        "event_id": "MNT-2025-078",
+        "date": "2025-06-14",
+        "type": "BENCH_TEST",
+        "description": "Off-line deadweight pop test verification; pop pressure 42.5 bar certified.",
+        "technician": "TECH-03 (Valve Shop Lead)"
+      },
+      {
+        "event_id": "MNT-2026-061",
+        "date": "2026-06-15",
+        "type": "SEAL_VERIFICATION",
+        "description": "Car-seal replacement and physical tamper-lock verified. Dual rupture disc PSE-204 intact.",
+        "technician": "INSP-01 (Chief Safety Inspector)"
+      }
+    ],
+    "previous_findings": [
+      "Zero seat leakage detected at 38.0 bar hold pressure",
+      "ASME Section VIII UV Stamp certification current through 2027"
+    ],
+    "notes": "Critical overpressure protection for R-204. Setpoint 42.5 bar gauge. Software actuation strictly blocked."
   }
 }

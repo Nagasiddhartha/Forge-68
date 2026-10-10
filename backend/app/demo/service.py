@@ -158,6 +158,21 @@ SCENARIO_METADATA: Dict[DemoScenarioId, DemoScenarioMetadata] = {
 }
 
 
+DEMO_INGEST_MAP = {
+    "r204_operating_sop.md": (DataClassification.INTERNAL, "SOP", ["R-204", "P-201", "E-301"]),
+    "r204_equipment_specification.md": (DataClassification.INTERNAL, "SPECIFICATION", ["R-204"]),
+    "r204_inspection_report.md": (DataClassification.CONFIDENTIAL, "INSPECTION", ["R-204"]),
+    "r204_maintenance_history.md": (DataClassification.INTERNAL, "MAINTENANCE", ["R-204"]),
+    "r204_safety_procedure.md": (DataClassification.RESTRICTED, "SAFETY", ["R-204"]),
+    "r204_adversarial_maintenance_bulletin.md": (DataClassification.INTERNAL, "ADVISORY", ["R-204"]),
+    "sop_r204_reactor_startup.md": (DataClassification.INTERNAL, "SOP", ["R-204", "P-201", "E-301", "V-102"]),
+    "sop_p201_feed_pump_cavitation.md": (DataClassification.INTERNAL, "SOP", ["P-201", "R-204"]),
+    "sop_e301_effluent_cooler_loss.md": (DataClassification.INTERNAL, "SOP", ["E-301", "R-204", "V-102"]),
+    "sop_prv204_relief_valve_security.md": (DataClassification.RESTRICTED, "SAFETY", ["PRV-204", "R-204"]),
+    "hazop_reaction_loop_200.md": (DataClassification.CONFIDENTIAL, "HAZOP", ["R-204", "P-201", "E-301", "V-102", "PRV-204"]),
+}
+
+
 class DemoOrchestrationService:
     """Orchestrates deterministic industrial mission runs through real FORGE services."""
 
@@ -178,7 +193,7 @@ class DemoOrchestrationService:
 
     async def ensure_demo_knowledge_ingested(self) -> int:
         """Ingest synthetic offline R-204 knowledge documents into local vector index."""
-        if self._knowledge_initialized and len(self.knowledge_service.list_documents()) >= 4:
+        if self._knowledge_initialized and len(self.knowledge_service.list_documents()) >= len(DEMO_INGEST_MAP):
             return len(self.knowledge_service.list_documents())
 
         base_dir = Path(__file__).resolve().parent.parent.parent / "data" / "demo" / "knowledge"
@@ -189,14 +204,7 @@ class DemoOrchestrationService:
             logger.warning("[DEMO_KNOWLEDGE_MISSING] Knowledge directory not found: %s", base_dir)
             return 0
 
-        ingest_map = {
-            "r204_operating_sop.md": (DataClassification.INTERNAL, "SOP", ["R-204", "P-201", "E-301"]),
-            "r204_equipment_specification.md": (DataClassification.INTERNAL, "SPECIFICATION", ["R-204"]),
-            "r204_inspection_report.md": (DataClassification.CONFIDENTIAL, "INSPECTION", ["R-204"]),
-            "r204_maintenance_history.md": (DataClassification.INTERNAL, "MAINTENANCE", ["R-204"]),
-            "r204_safety_procedure.md": (DataClassification.RESTRICTED, "SAFETY", ["R-204"]),
-            "r204_adversarial_maintenance_bulletin.md": (DataClassification.INTERNAL, "ADVISORY", ["R-204"]),
-        }
+        ingest_map = DEMO_INGEST_MAP
 
         ingested_count = 0
         for filename, (classification, doc_type, eq_ids) in ingest_map.items():

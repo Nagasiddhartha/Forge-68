@@ -75,6 +75,7 @@ export interface TranslationDictionary {
   consoleImageContext: string;
   consoleImageNone: string;
   consoleImageGauge: string;
+  consoleImagePid: string;
   consoleImageCorrosion: string;
   consoleImageCustom: string;
   consoleUploadButton: string;
@@ -753,7 +754,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     consoleImageContext: "Image Context:",
     consoleImageNone: "None (Text-only)",
     consoleImageGauge: "r204_pressure_gauge.png (Analog Dial ~33.0 bar)",
-    consoleImageCorrosion: "r204_inspection_corrosion.png (Shell Wall ~2.2mm)",
+    consoleImagePid: "pid_reactor_r204_loop.png (P&ID Diagram · Reaction Loop 200)",
+    consoleImageCorrosion: "r204_inspection_corrosion.png (NDT PAUT Scan ~72.8mm)",
     consoleImageCustom: "Custom uploaded image",
     consoleUploadButton: "Upload Image...",
     consoleAnalyzeImageOnly: "Analyze Image Only",
@@ -1429,7 +1431,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     consoleImageContext: "छवि संदर्भ:",
     consoleImageNone: "कोई नहीं (केवल पाठ)",
     consoleImageGauge: "r204_pressure_gauge.png (एनालॉग डायल ~33.0 bar)",
-    consoleImageCorrosion: "r204_inspection_corrosion.png (दीवार मोटाई ~2.2mm)",
+    consoleImagePid: "pid_reactor_r204_loop.png (P&ID आरेख · रिएक्शन लूप 200)",
+    consoleImageCorrosion: "r204_inspection_corrosion.png (NDT PAUT स्कैन ~72.8mm)",
     consoleImageCustom: "कस्टम अपलोड की गई छवि",
     consoleUploadButton: "छवि अपलोड करें...",
     consoleAnalyzeImageOnly: "केवल छवि का विश्लेषण करें",
@@ -2105,7 +2108,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     consoleImageContext: "ಚಿತ್ರದ ಸಂದರ್ಭ:",
     consoleImageNone: "ಯಾವುದೂ ಇಲ್ಲ (ಪಠ್ಯ ಮಾತ್ರ)",
     consoleImageGauge: "r204_pressure_gauge.png (ಅನಲಾಗ್ ಡಯಲ್ ~33.0 bar)",
-    consoleImageCorrosion: "r204_inspection_corrosion.png (ಗೋಡೆ ದಪ್ಪ ~2.2mm)",
+    consoleImagePid: "pid_reactor_r204_loop.png (P&ID ರೇಖಾಚಿತ್ರ · ರಿಯಾಕ್ಷನ್ ಲೂಪ್ 200)",
+    consoleImageCorrosion: "r204_inspection_corrosion.png (NDT PAUT ಸ್ಕ್ಯಾನ್ ~72.8mm)",
     consoleImageCustom: "ಕಸ್ಟಮ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ಚಿತ್ರ",
     consoleUploadButton: "ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ...",
     consoleAnalyzeImageOnly: "ಚಿತ್ರವನ್ನು ಮಾತ್ರ ವಿಶ್ಲೇಷಿಸಿ",

@@ -660,6 +660,7 @@ export function AIWorkspaceView({
             >
               <option value="none">{t("consoleImageNone")}</option>
               <option value="r204_pressure_gauge.png">{t("consoleImageGauge")}</option>
+              <option value="pid_reactor_r204_loop.png">{t("consoleImagePid")}</option>
               <option value="r204_inspection_corrosion.png">{t("consoleImageCorrosion")}</option>
               <option value="sample_jpeg.jpg">{t("consoleImageSampleJpeg")}</option>
               <option value="sample_webp.webp">{t("consoleImageSampleWebp")}</option>
@@ -747,6 +748,70 @@ export function AIWorkspaceView({
             {isLoading ? t("consoleRunningPipeline") : t("consoleExecuteLoopBtn")}
           </button>
         </div>
+
+        {selectedImage !== "none" && (
+          <div
+            style={{
+              marginTop: "10px",
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+              background: "var(--bg-1)",
+              border: "1px solid var(--line-strong)",
+              padding: "8px 12px",
+              borderRadius: "var(--radius-sm)",
+            }}
+          >
+            <div
+              style={{
+                width: "58px",
+                height: "44px",
+                borderRadius: "var(--radius-xs)",
+                overflow: "hidden",
+                border: "1px solid var(--line)",
+                background: "#0a1220",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <img
+                src={selectedImage === "custom" ? (customBase64 ? `data:image/png;base64,${customBase64}` : "") : `/demo_images/${selectedImage}`}
+                alt={selectedImage}
+                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                onError={(e) => {
+                  if (selectedImage !== "custom") {
+                    (e.target as HTMLImageElement).src = `http://localhost:8000/api/v1/vision/image/${selectedImage}`;
+                  }
+                }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {selectedImage === "custom" ? customFilename : selectedImage}
+              </div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {selectedImage.includes("pid")
+                  ? (language === "hi" ? "P&ID इंजीनियरिंग CAD ब्लूप्रिंट (ISA-5.1 रिएक्शन लूप 200)" : language === "kn" ? "P&ID ಎಂಜಿನಿಯರಿಂಗ್ CAD ನೀಲನಕ್ಷೆ (ISA-5.1 ರಿಯಾಕ್ಷನ್ ಲೂಪ್ 200)" : "Piping & Instrumentation CAD Blueprint (ISA-5.1 Reaction Loop 200)")
+                  : selectedImage.includes("gauge")
+                  ? (language === "hi" ? "सटीक बॉर्डन डायल (33.0 BAR · WIKA 232.50 · ASME B40.100)" : language === "kn" ? "ನಿಖರ ಬೋರ್ಡನ್ ಡಯಲ್ (33.0 BAR · WIKA 232.50 · ASME B40.100)" : "High-Precision Bourdon Dial (33.0 BAR · WIKA 232.50 · ASME B40.100)")
+                  : selectedImage.includes("corrosion")
+                  ? (language === "hi" ? "फेज्ड ऐरे अल्ट्रासोनिक B-स्कैन (दीवार मोटाई 72.8mm · API 510)" : language === "kn" ? "ಫೇಸ್ಡ್ ಅರೇ ಅಲ್ಟ್ರಾಸಾನಿಕ್ B-ಸ್ಕ್ಯಾನ್ (ಗೋಡೆ ದಪ್ಪ 72.8mm · API 510)" : "Phased Array Ultrasonic UT B-Scan (Shell Wall Thickness · API 510)")
+                  : "Sovereign Engineering Asset Context"}
+              </div>
+            </div>
+            <a
+              href={selectedImage === "custom" ? (customBase64 ? `data:image/png;base64,${customBase64}` : "#") : `/demo_images/${selectedImage}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-brass-secondary"
+              style={{ fontSize: "11px", padding: "4px 8px", textDecoration: "none", flexShrink: 0 }}
+            >
+              {language === "hi" ? "पूर्ण चित्र देखें ↗" : language === "kn" ? "ಪೂರ್ಣ ಚಿತ್ರ ವೀಕ್ಷಿಸಿ ↗" : "View Full Asset ↗"}
+            </a>
+          </div>
+        )}
 
         {error && (
           <div
