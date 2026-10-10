@@ -1998,7 +1998,7 @@ export function AIWorkspaceView({
                       {t("pictorialGraphTitle")}
                     </span>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginLeft: 8 }}>
-                      · R-204 · P-201 · PRV-204 · E-301 · V-102
+                      · R-204 · Topology Flow · Precision Gauge & Operating Thresholds · CAD Blueprint
                     </span>
                   </div>
                 </div>

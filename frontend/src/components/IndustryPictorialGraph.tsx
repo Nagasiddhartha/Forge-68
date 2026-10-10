@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { DemoScenarioId, AgentQueryResponse, DemoRunResponse } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { EnamelSurface, BrassLabel } from "./primitives";
+import { EngineeringThresholdsVisualizer } from "./EngineeringThresholdsVisualizer";
 
 interface IndustryPictorialGraphProps {
   activeScenarioId?: DemoScenarioId | null;
@@ -34,7 +35,7 @@ export function IndustryPictorialGraph({
 }: IndustryPictorialGraphProps) {
   const { t, language } = useTranslation();
   const [selectedEquipment, setSelectedEquipment] = useState<string>("R-204");
-  const [viewMode, setViewMode] = useState<"TOPOLOGY" | "BLUEPRINT">("TOPOLOGY");
+  const [viewMode, setViewMode] = useState<"TOPOLOGY" | "THRESHOLDS" | "BLUEPRINT" | "ALL">("TOPOLOGY");
   const [isFlowActive, setIsFlowActive] = useState<boolean>(true);
 
   // Dynamic values grounded in scenario context
@@ -226,6 +227,7 @@ export function IndustryPictorialGraph({
               border: "1px solid var(--line)",
               borderRadius: "var(--radius-pill)",
               padding: "2px",
+              gap: 2,
             }}
           >
             <button
@@ -235,7 +237,7 @@ export function IndustryPictorialGraph({
                 color: viewMode === "TOPOLOGY" ? "#000" : "var(--ink-2)",
                 border: "none",
                 borderRadius: "var(--radius-pill)",
-                padding: "4px 12px",
+                padding: "4px 10px",
                 fontFamily: "var(--font-mono)",
                 fontSize: "11px",
                 fontWeight: viewMode === "TOPOLOGY" ? 700 : 500,
@@ -246,13 +248,30 @@ export function IndustryPictorialGraph({
               {language === "hi" ? "टोपोलॉजी आरेख" : language === "kn" ? "ಟೋಪೋಲಜಿ ಗ್ರಾಫ್" : "TOPOLOGY FLOW"}
             </button>
             <button
+              onClick={() => setViewMode("THRESHOLDS")}
+              style={{
+                background: viewMode === "THRESHOLDS" ? "var(--brass)" : "transparent",
+                color: viewMode === "THRESHOLDS" ? "#000" : "var(--ink-2)",
+                border: "none",
+                borderRadius: "var(--radius-pill)",
+                padding: "4px 10px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                fontWeight: viewMode === "THRESHOLDS" ? 700 : 500,
+                cursor: "pointer",
+                transition: "all var(--dur-fast) var(--ease-out)",
+              }}
+            >
+              {language === "hi" ? "ऑपरेटिंग थ्रेशोल्ड" : language === "kn" ? "ಕಾರ್ಯಾಚರಣಾ ಮಿತಿಗಳು" : "OPERATING THRESHOLDS"}
+            </button>
+            <button
               onClick={() => setViewMode("BLUEPRINT")}
               style={{
                 background: viewMode === "BLUEPRINT" ? "var(--brass)" : "transparent",
                 color: viewMode === "BLUEPRINT" ? "#000" : "var(--ink-2)",
                 border: "none",
                 borderRadius: "var(--radius-pill)",
-                padding: "4px 12px",
+                padding: "4px 10px",
                 fontFamily: "var(--font-mono)",
                 fontSize: "11px",
                 fontWeight: viewMode === "BLUEPRINT" ? 700 : 500,
@@ -262,12 +281,29 @@ export function IndustryPictorialGraph({
             >
               {language === "hi" ? "P&ID ब्लूप्रिंट" : language === "kn" ? "P&ID ಬ್ಲೂಪ್ರಿಂಟ್" : "P&ID BLUEPRINT"}
             </button>
+            <button
+              onClick={() => setViewMode("ALL")}
+              style={{
+                background: viewMode === "ALL" ? "var(--brass)" : "transparent",
+                color: viewMode === "ALL" ? "#000" : "var(--ink-2)",
+                border: "none",
+                borderRadius: "var(--radius-pill)",
+                padding: "4px 10px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                fontWeight: viewMode === "ALL" ? 700 : 500,
+                cursor: "pointer",
+                transition: "all var(--dur-fast) var(--ease-out)",
+              }}
+            >
+              {language === "hi" ? "सभी दृश्य" : language === "kn" ? "ಎಲ್ಲಾ ನೋಟಗಳು" : "ALL VIEWS"}
+            </button>
           </div>
         </div>
       </div>
 
       {/* Main Visual Display */}
-      {viewMode === "TOPOLOGY" ? (
+      {(viewMode === "TOPOLOGY" || viewMode === "ALL") && (
         <div
           style={{
             background: "var(--bg-0)",
@@ -713,8 +749,15 @@ export function IndustryPictorialGraph({
             })}
           </div>
         </div>
-      ) : (
-        /* P&ID CAD Engineering Blueprint View */
+      )}
+
+      {/* Engineering Visualizations & Operating Thresholds (Gauges, Pressure Boundary Track, Shell Thickness) */}
+      {(viewMode === "TOPOLOGY" || viewMode === "THRESHOLDS" || viewMode === "ALL") && (
+        <EngineeringThresholdsVisualizer activeScenarioId={activeScenarioId} />
+      )}
+
+      {/* P&ID CAD Engineering Blueprint View */}
+      {(viewMode === "BLUEPRINT" || viewMode === "ALL") && (
         <div
           style={{
             background: "var(--bg-0)",

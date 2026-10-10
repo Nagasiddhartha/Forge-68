@@ -452,6 +452,26 @@ export interface TranslationDictionary {
   missionTabPictorialGraph: string;
   pictorialGraphTitle: string;
   pictorialGraphSubtitle: string;
+  engVisualizationsTitle: string;
+  statusElevatedWithinMargin: string;
+  statusCriticalVariance: string;
+  pressureBoundaryTrackTitle: string;
+  baselineNormal: string;
+  highAlarm: string;
+  safetyTrip: string;
+  metricDeviation: string;
+  metricHeadroom: string;
+  metricTripMargin: string;
+  shellThicknessTitle: string;
+  corrosionAllowanceLabel: string;
+  retirementLimitLabel: string;
+  currentMeasuredLabel: string;
+  designSpecLabel: string;
+  deterministicMatrixTitle: string;
+  deterministicMatrixSub: string;
+  verifiedPill: string;
+  viewModeThresholds: string;
+  viewModeAll: string;
   missionExecutionTiming: string;
   missionTimingTotal: string;
   missionTimingPlan: string;
@@ -1162,6 +1182,26 @@ export const translations: Record<Language, TranslationDictionary> = {
     missionTabPictorialGraph: "Industry Pictorial Graph",
     pictorialGraphTitle: "Reaction Loop 200 Industrial Process Flow & Telemetry Topology",
     pictorialGraphSubtitle: "Real-time sensor telemetry and equipment topology grounded in verified plant records",
+    engVisualizationsTitle: "ENGINEERING VISUALIZATIONS & OPERATING THRESHOLDS",
+    statusElevatedWithinMargin: "ELEVATED (WITHIN MARGIN)",
+    statusCriticalVariance: "ALERT: HIGH MARGIN EXCEEDED",
+    pressureBoundaryTrackTitle: "Reactor R-204 Pressure Boundary Track",
+    baselineNormal: "Baseline Normal",
+    highAlarm: "High Alarm",
+    safetyTrip: "Safety Trip",
+    metricDeviation: "Deviation",
+    metricHeadroom: "Headroom to Alarm",
+    metricTripMargin: "Remaining Trip Margin",
+    shellThicknessTitle: "Reactor Shell Wall Thickness (PAUT Ultrasonic Inspection)",
+    corrosionAllowanceLabel: "Remaining Corrosion Allowance",
+    retirementLimitLabel: "Retirement Limit (t_min)",
+    currentMeasuredLabel: "Current Measured",
+    designSpecLabel: "Design Spec",
+    deterministicMatrixTitle: "Deterministic Verification Matrix",
+    deterministicMatrixSub: "Independent deterministic safety checks recorded in audit log",
+    verifiedPill: "7/7 VERIFIED",
+    viewModeThresholds: "OPERATING THRESHOLDS",
+    viewModeAll: "ALL VIEWS",
     missionExecutionTiming: "EXECUTION TIMING:",
     missionTimingTotal: "Total:",
     missionTimingPlan: "Plan:",
@@ -1872,6 +1912,26 @@ export const translations: Record<Language, TranslationDictionary> = {
     missionTabPictorialGraph: "औद्योगिक सचित्र आरेख",
     pictorialGraphTitle: "अभिक्रिया लूप 200 औद्योगिक प्रक्रिया प्रवाह एवं टेलीमेट्री टोपोलॉजी",
     pictorialGraphSubtitle: "सत्यापित संयंत्र रिकॉर्ड पर आधारित रीयल-टाइम सेंसर टेलीमेट्री और उपकरण टोपोलॉजी",
+    engVisualizationsTitle: "इंजीनियरिंग विज़ुअलाइज़ेशन और परिचालन थ्रेशोल्ड",
+    statusElevatedWithinMargin: "उन्नत (मार्जिन के भीतर)",
+    statusCriticalVariance: "अलार्म: उच्च मार्जिन पार हुआ",
+    pressureBoundaryTrackTitle: "रिएक्टर R-204 दबाव सीमा ट्रैक",
+    baselineNormal: "बेसलाइन सामान्य",
+    highAlarm: "उच्च अलार्म",
+    safetyTrip: "सुरक्षा ट्रिप",
+    metricDeviation: "विचलन",
+    metricHeadroom: "अलार्म के लिए हेडरूम",
+    metricTripMargin: "शेष ट्रिप मार्जिन",
+    shellThicknessTitle: "रिएक्टर शेल दीवार की मोटाई (PAUT अल्ट्रासोनिक निरीक्षण)",
+    corrosionAllowanceLabel: "शेष संक्षारण भत्ता",
+    retirementLimitLabel: "सेवानिवृत्ति सीमा (t_min)",
+    currentMeasuredLabel: "वर्तमान मापा गया",
+    designSpecLabel: "डिज़ाइन विनिर्देश",
+    deterministicMatrixTitle: "निश्चयात्मक सत्यापन मैट्रिक्स",
+    deterministicMatrixSub: "ऑडिट लॉग में दर्ज स्वतंत्र निश्चयात्मक सुरक्षा जांच",
+    verifiedPill: "7/7 सत्यापित",
+    viewModeThresholds: "परिचालन थ्रेशोल्ड",
+    viewModeAll: "सभी दृश्य",
     missionExecutionTiming: "निष्पादन समय:",
     missionTimingTotal: "कुल:",
     missionTimingPlan: "योजना:",
@@ -2582,6 +2642,26 @@ export const translations: Record<Language, TranslationDictionary> = {
     missionTabPictorialGraph: "ಕೈಗಾರಿಕಾ ಚಿತ್ರಾತ್ಮಕ ಗ್ರಾಫ್",
     pictorialGraphTitle: "ಪ್ರತಿಕ್ರಿಯೆ ಲೂಪ್ 200 ಕೈಗಾರಿಕಾ ಪ್ರಕ್ರಿಯೆ ಹರಿವು ಮತ್ತು ಟೆಲಿಮೆಟ್ರಿ ಟೋಪೋಲಜಿ",
     pictorialGraphSubtitle: "ಪರಿಶೀಲಿಸಿದ ಘಟಕ ದಾಖಲೆಗಳ ಆಧಾರದ ಮೇಲೆ ನೈಜ-ಸಮಯದ ಸಂವೇದಕ ಟೆಲಿಮೆಟ್ರಿ ಮತ್ತು ಉಪಕರಣ ಟೋಪೋಲಜಿ",
+    engVisualizationsTitle: "ಇಂಜಿನಿಯರಿಂಗ್ ದೃಶ್ಯೀಕರಣ ಮತ್ತು ಕಾರ್ಯಾಚರಣೆಯ ಮಿತಿಗಳು",
+    statusElevatedWithinMargin: "ಹೆಚ್ಚಾಗಿದೆ (ಮಿತಿಯೊಳಗೆ)",
+    statusCriticalVariance: "ಎಚ್ಚರಿಕೆ: ಹೆಚ್ಚಿನ ಮಿತಿ ಮೀರಿದೆ",
+    pressureBoundaryTrackTitle: "ರಿಯಾಕ್ಟರ್ R-204 ಒತ್ತಡ ಗಡಿ ಟ್ರ್ಯಾಕ್",
+    baselineNormal: "ಮೂಲ ಸಾಮಾನ್ಯ",
+    highAlarm: "ಉನ್ನತ ಎಚ್ಚರಿಕೆ",
+    safetyTrip: "ಸುರಕ್ಷತಾ ಟ್ರಿಪ್",
+    metricDeviation: "ವ್ಯತ್ಯಾಸ",
+    metricHeadroom: "ಎಚ್ಚರಿಕೆಗೆ ಅಂತರ",
+    metricTripMargin: "ಉಳಿದ ಟ್ರಿಪ್ ಮಾರ್ಜಿನ್",
+    shellThicknessTitle: "ರಿಯಾಕ್ಟರ್ ಶೆಲ್ ಗೋಡೆಯ ದಪ್ಪ (PAUT ಅಲ್ಟ್ರಾಸಾನಿಕ್ ತಪಾಸಣೆ)",
+    corrosionAllowanceLabel: "ಉಳಿದ ತುಕ್ಕು ಸಹಿಷ್ಣುತೆ",
+    retirementLimitLabel: "ನಿವೃತ್ತಿ ಮಿತಿ (t_min)",
+    currentMeasuredLabel: "ಪ್ರಸ್ತುತ ಅಳತೆ",
+    designSpecLabel: "ವಿನ್ಯಾಸ ವಿವರಣೆ",
+    deterministicMatrixTitle: "ಖಚಿತ ಪರಿಶೀಲನಾ ಮ್ಯಾಟ್ರಿಕ್ಸ್",
+    deterministicMatrixSub: "ಆಡಿಟ್ ಲಾಗ್‌ನಲ್ಲಿ ದಾಖಲಿಸಲಾದ ಸ್ವತಂತ್ರ ಖಚಿತ ಸುರಕ್ಷತಾ ತಪಾಸಣೆಗಳು",
+    verifiedPill: "7/7 ಪರಿಶೀಲಿಸಲಾಗಿದೆ",
+    viewModeThresholds: "ಕಾರ್ಯಾಚರಣಾ ಮಿತಿಗಳು",
+    viewModeAll: "ಎಲ್ಲಾ ನೋಟಗಳು",
     missionExecutionTiming: "ಕಾರ್ಯಗತಗೊಳಿಸುವ ಸಮಯ:",
     missionTimingTotal: "ಒಟ್ಟು:",
     missionTimingPlan: "ಯೋಜನೆ:",
