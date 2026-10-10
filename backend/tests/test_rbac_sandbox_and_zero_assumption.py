@@ -9,7 +9,8 @@ from app.tools.industrial.equipment import CALIBRATION_EXECUTION_COUNTER
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 def test_zero_assumption_unknown_asset_rejection(client):
@@ -169,3 +170,83 @@ def test_rbac_sandbox_preset_5_arbitrary_tool_default_deny(client):
     assert data["success"] is False
     assert data["decision"]["decision"] == "DENY"
     assert "unregistered" in data["error"].lower()
+
+
+def test_rbac_viewer_knowledge_allowed_but_tools_blocked(client):
+    """Verify VIEWER role: knowledge search permitted, but all tools blocked."""
+    # 1. Knowledge search is allowed
+    k_resp = client.post(
+        "/api/v1/knowledge/search",
+        json={
+            "query": "What is reactor R-204?",
+            "synthesize": True,
+            "language": "en",
+            "classification": "INTERNAL",
+        },
+    )
+    assert k_resp.status_code == 200
+    assert len(k_resp.json()["results"]) > 0
+
+    # 2. Tool execution is strictly blocked
+    t_resp = client.post(
+        "/api/v1/tools/execute",
+        json={
+            "requester": "viewer_user",
+            "role": "VIEWER",
+            "tool_name": "equipment_history",
+            "classification": "PUBLIC",
+            "parameters": {"equipment_id": "R-204"},
+            "has_approval": False,
+        },
+    )
+    assert t_resp.status_code == 403
+    data = t_resp.json()
+    assert data["success"] is False
+    assert "read-only knowledge" in data["error"].lower()
+
+
+def test_rbac_intern_requires_approval_for_all_tools(client):
+    """Verify INTERN role: requires approval for all tools, but allowed when approved."""
+    # 1. Knowledge search is allowed
+    k_resp = client.post(
+        "/api/v1/knowledge/search",
+        json={
+            "query": "What is reactor R-204?",
+            "synthesize": True,
+            "language": "en",
+            "classification": "INTERNAL",
+        },
+    )
+    assert k_resp.status_code == 200
+
+    # 2. Equipment history without approval -> DENIED
+    unapproved_resp = client.post(
+        "/api/v1/tools/execute",
+        json={
+            "requester": "intern_user",
+            "role": "INTERN",
+            "tool_name": "equipment_history",
+            "classification": "INTERNAL",
+            "parameters": {"equipment_id": "R-204"},
+            "has_approval": False,
+        },
+    )
+    assert unapproved_resp.status_code == 403
+    assert "supervisor approval" in unapproved_resp.json()["error"].lower()
+
+    # 3. Equipment history with approval -> ALLOWED
+    approved_resp = client.post(
+        "/api/v1/tools/execute",
+        json={
+            "requester": "intern_user",
+            "role": "INTERN",
+            "tool_name": "equipment_history",
+            "classification": "INTERNAL",
+            "parameters": {"equipment_id": "R-204"},
+            "has_approval": True,
+        },
+    )
+    assert approved_resp.status_code == 200
+    assert approved_resp.json()["success"] is True
+    assert approved_resp.json()["data"]["equipment_id"] == "R-204"
+

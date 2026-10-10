@@ -33,6 +33,42 @@ export const ROLE_PERMISSIONS: Record<Role, RolePermissionConfig> = {
     ],
     actuationExplanation: "Engineers can investigate and read sensors, but cannot calibrate critical valves without secondary approval.",
   },
+  VIEWER: {
+    role: "VIEWER",
+    label: "Viewer",
+    defaultClearance: "PUBLIC",
+    summary: "Read-only operational viewer. Knowledge plant search permitted; all tooling, actuation, and admin actions are strictly blocked.",
+    read: "ALLOWED",
+    investigate: "BLOCKED",
+    actuate: "BLOCKED",
+    admin: "BLOCKED",
+    bulletPoints: [
+      "Read plant documentation, operating manuals, and SOPs",
+      "Inspect public plant records and equipment specifications",
+      "Operational tool investigation strictly blocked",
+      "Physical machinery actuation strictly blocked",
+      "Administrative system overrides strictly blocked",
+    ],
+    actuationExplanation: "Viewers maintain read-only observation clearance. All tool invocations and physical actuations are blocked.",
+  },
+  INTERN: {
+    role: "INTERN",
+    label: "Intern",
+    defaultClearance: "INTERNAL",
+    summary: "Junior operational role. Knowledge search permitted; all investigative queries, tool executions, and actuations require supervisor approval.",
+    read: "ALLOWED",
+    investigate: "NEEDS_APPROVAL",
+    actuate: "NEEDS_APPROVAL",
+    admin: "BLOCKED",
+    bulletPoints: [
+      "Read plant documentation, drawings, and knowledge guides",
+      "Investigative tool queries require supervisor approval",
+      "Equipment telemetry inspections require supervisor approval",
+      "Physical valve calibration and actuation require co-signature",
+      "Administrative system overrides strictly blocked",
+    ],
+    actuationExplanation: "Interns require supervisor cryptographic approval for all operational investigation and plant actuation workflows.",
+  },
   INSPECTOR: {
     role: "INSPECTOR",
     label: "Inspector",
@@ -149,6 +185,20 @@ export function getLocalizedRolePermission(role: Role, t: (k: any) => string): R
         label: t("roleEngineerName") || base.label,
         summary: t("roleEngineerSummary") || base.summary,
         actuationExplanation: t("roleEngineerActuation") || base.actuationExplanation,
+      };
+    case "VIEWER":
+      return {
+        ...base,
+        label: t("roleViewerName") || base.label,
+        summary: t("roleViewerSummary") || base.summary,
+        actuationExplanation: t("roleViewerActuation") || base.actuationExplanation,
+      };
+    case "INTERN":
+      return {
+        ...base,
+        label: t("roleInternName") || base.label,
+        summary: t("roleInternSummary") || base.summary,
+        actuationExplanation: t("roleInternActuation") || base.actuationExplanation,
       };
     case "INSPECTOR":
       return {

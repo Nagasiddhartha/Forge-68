@@ -351,8 +351,8 @@ export function Header({
               </div>
 
               {/* 1-Click Role Selection Cards */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
-                {(["ENGINEER", "INSPECTOR", "AI_OPERATOR", "ADMIN", "SECURITY_OFFICER"] as Role[]).map((r) => {
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 340, overflowY: "auto" }}>
+                {(["ENGINEER", "VIEWER", "INTERN", "ADMIN"] as Role[]).map((r) => {
                   const cfg = getLocalizedRolePermission(r, t);
                   const isCurrent = role === r;
                   return (
@@ -393,9 +393,11 @@ export function Header({
 
                       <div style={{ display: "flex", gap: 10, fontSize: "10.5px", fontFamily: "var(--font-mono)", color: "var(--ink-3)", marginTop: 2 }}>
                         <span>{t("govColRead")}: <strong style={{ color: "var(--sage)" }}>✓</strong></span>
-                        <span>{t("govColInvestigate")}: <strong style={{ color: "var(--sage)" }}>✓</strong></span>
+                        <span>{t("govColInvestigate")}: <strong style={{ color: cfg.investigate === "ALLOWED" ? "var(--sage)" : cfg.investigate === "NEEDS_APPROVAL" ? "var(--brass)" : "var(--coral-text)" }}>
+                          {cfg.investigate === "ALLOWED" ? "✓" : cfg.investigate === "NEEDS_APPROVAL" ? (language === "hi" ? "⚠ स्वीकृति" : language === "kn" ? "⚠ ಅನುಮೋದನೆ" : "⚠ Req.") : (language === "hi" ? "✕ अवरुद्ध" : language === "kn" ? "✕ ನಿರ್ಬಂಧಿತ" : "✕ Blocked")}
+                        </strong></span>
                         <span>{t("govColActuate")}: <strong style={{ color: cfg.actuate === "ALLOWED" ? "var(--sage)" : cfg.actuate === "NEEDS_APPROVAL" ? "var(--brass)" : "var(--coral-text)" }}>
-                          {cfg.actuate === "ALLOWED" ? "✓" : cfg.actuate === "NEEDS_APPROVAL" ? (language === "hi" ? "⚠ स्वीकृति आवश्यक" : language === "kn" ? "⚠ ಅನುಮೋದನೆ ಅಗತ್ಯ" : "⚠ Req. Approval") : (language === "hi" ? "✕ अवरुद्ध" : language === "kn" ? "✕ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ" : "✕ Blocked")}
+                          {cfg.actuate === "ALLOWED" ? "✓" : cfg.actuate === "NEEDS_APPROVAL" ? (language === "hi" ? "⚠ स्वीकृति" : language === "kn" ? "⚠ ಅನುಮೋದನೆ" : "⚠ Req.") : (language === "hi" ? "✕ अवरुद्ध" : language === "kn" ? "✕ ನಿರ್ಬಂಧಿತ" : "✕ Blocked")}
                         </strong></span>
                         <span>{t("govColAdmin")}: <strong style={{ color: cfg.admin === "ALLOWED" ? "var(--sage)" : "var(--mist)" }}>
                           {cfg.admin === "ALLOWED" ? "✓" : "✕"}

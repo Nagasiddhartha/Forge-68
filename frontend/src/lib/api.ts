@@ -3,7 +3,7 @@
  * Strictly consumes real sovereign backend endpoints without external cloud dependencies.
  */
 
-export type Role = "ADMIN" | "ENGINEER" | "INSPECTOR" | "MANAGER" | "AUDITOR" | "AI_OPERATOR" | "SECURITY_OFFICER";
+export type Role = "ENGINEER" | "VIEWER" | "INTERN" | "ADMIN" | "INSPECTOR" | "MANAGER" | "AUDITOR" | "AI_OPERATOR" | "SECURITY_OFFICER";
 export type DataClassification = "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "RESTRICTED" | "CRITICAL";
 export type PolicyDecisionType = "ALLOW" | "DENY";
 export type VerificationStatus = "VERIFIED" | "PARTIALLY_VERIFIED" | "INSUFFICIENT_EVIDENCE" | "NEEDS_REVIEW" | "FAILED";

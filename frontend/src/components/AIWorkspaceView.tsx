@@ -30,6 +30,7 @@ import { ROLE_PERMISSIONS, getLocalizedRolePermission } from "@/lib/permissions"
 import { useTranslation } from "@/lib/i18n";
 import { ReadAloudButton } from "@/components/ReadAloudButton";
 import { OcrModal } from "@/components/OcrModal";
+import { IndustryPictorialGraph } from "@/components/IndustryPictorialGraph";
 
 interface AIWorkspaceViewProps {
   role: Role;
@@ -67,7 +68,7 @@ export function AIWorkspaceView({
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<AgentQueryResponse | DemoRunResponse | null>(lastResponse);
   const [visionDirectResult, setVisionDirectResult] = useState<VisionAnalyzeResponse | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<"FINDINGS" | "TRACE" | "EVIDENCE" | "CHECKS" | "VISION">("FINDINGS");
+  const [activeSubTab, setActiveSubTab] = useState<"FINDINGS" | "GRAPH" | "TRACE" | "EVIDENCE" | "CHECKS" | "VISION">("FINDINGS");
   const [isResetting, setIsResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [isExportingReport, setIsExportingReport] = useState<boolean>(false);
@@ -1943,6 +1944,7 @@ export function AIWorkspaceView({
             </span>
             {[
               { id: "FINDINGS", label: t("missionTabSummary") },
+              { id: "GRAPH", label: t("missionTabPictorialGraph") },
               { id: "TRACE", label: t("missionTabTimeline") },
               { id: "EVIDENCE", label: `${t("missionTabEvidence")} (${totalEvidenceCount})` },
               { id: "CHECKS", label: t("missionTabChecks") },
@@ -1974,6 +1976,38 @@ export function AIWorkspaceView({
           {/* Sub-tab view renderers */}
           {activeSubTab === "FINDINGS" && response && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Quick Visual Topology Banner */}
+              <div
+                onClick={() => setActiveSubTab("GRAPH")}
+                style={{
+                  background: "var(--bg-0)",
+                  border: "1px solid var(--line-strong)",
+                  borderRadius: "var(--radius-panel)",
+                  padding: "12px 18px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                  transition: "all var(--dur-fast) var(--ease-out)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: "16px" }}>🏭</span>
+                  <div>
+                    <span style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: "var(--ink)" }}>
+                      {t("pictorialGraphTitle")}
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--ink-3)", marginLeft: 8 }}>
+                      · R-204 · P-201 · PRV-204 · E-301 · V-102
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--brass)", fontFamily: "var(--font-mono)", fontSize: "11px" }}>
+                  <span>{language === "hi" ? "सचित्र आरेख खोलें" : language === "kn" ? "ಚಿತ್ರಾತ್ಮಕ ಗ್ರಾಫ್ ತೆರೆಯಿರಿ" : "Inspect Pictorial Graph"}</span>
+                  <span>→</span>
+                </div>
+              </div>
+
               {/* Technical Synthesized Answer Card */}
               <div style={{ background: "var(--bg-0)", border: "1px solid var(--line)", borderRadius: "var(--radius-panel)", padding: "18px 22px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -2067,6 +2101,13 @@ export function AIWorkspaceView({
                 </div>
               ) : null)}
             </div>
+          )}
+
+          {activeSubTab === "GRAPH" && (
+            <IndustryPictorialGraph
+              activeScenarioId={activeScenarioId}
+              response={response}
+            />
           )}
 
           {activeSubTab === "TRACE" && response && <ExecutionTrace response={response} />}

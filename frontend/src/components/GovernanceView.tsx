@@ -51,7 +51,7 @@ export function GovernanceView({
   const [sandboxFeedback, setSandboxFeedback] = useState<string | null>(null);
 
   useEffect(() => {
-    if (role && ["ENGINEER", "INSPECTOR", "AI_OPERATOR", "ADMIN", "SECURITY_OFFICER", "MANAGER", "AUDITOR"].includes(role)) {
+    if (role && ["ENGINEER", "VIEWER", "INTERN", "ADMIN", "INSPECTOR", "AI_OPERATOR", "SECURITY_OFFICER", "MANAGER", "AUDITOR"].includes(role)) {
       setSandboxRole(role as Role);
     }
   }, [role]);
@@ -76,36 +76,47 @@ export function GovernanceView({
 
     switch (presetIndex) {
       case 1:
-        nextRole = "INSPECTOR";
-        nextClearance = "INTERNAL";
-        nextTool = "calibrate_pressure_relief_valve";
-        nextEquipmentId = "PRV-204";
+        // Preset 1: Viewer blocked from tool execution
+        nextRole = "VIEWER";
+        nextClearance = "PUBLIC";
+        nextTool = "equipment_history";
+        nextEquipmentId = "R-204";
         nextApproval = false;
-        nextSetpoint = 42.5;
         break;
       case 2:
-        nextRole = "ADMIN";
-        nextClearance = "RESTRICTED";
-        nextTool = "calibrate_pressure_relief_valve";
-        nextEquipmentId = "PRV-204";
+        // Preset 2: Intern unapproved tool execution (requires approval)
+        nextRole = "INTERN";
+        nextClearance = "INTERNAL";
+        nextTool = "equipment_history";
+        nextEquipmentId = "R-204";
         nextApproval = false;
-        nextSetpoint = 42.5;
         break;
       case 3:
+        // Preset 3: Intern approved tool execution (permitted)
+        nextRole = "INTERN";
+        nextClearance = "INTERNAL";
+        nextTool = "equipment_history";
+        nextEquipmentId = "R-204";
+        nextApproval = true;
+        break;
+      case 4:
+        // Preset 4: Engineer telemetry lookup (permitted)
         nextRole = "ENGINEER";
         nextClearance = "CONFIDENTIAL";
         nextTool = "equipment_history";
         nextEquipmentId = "R-204";
         nextApproval = false;
         break;
-      case 4:
+      case 5:
+        // Preset 5: Admin emergency trip with approval
         nextRole = "ADMIN";
         nextClearance = "CRITICAL";
         nextTool = "emergency_shutdown";
         nextEquipmentId = "R-204";
         nextApproval = true;
         break;
-      case 5:
+      case 6:
+        // Preset 6: Arbitrary unregistered tool (Default-Deny)
         nextRole = "ADMIN";
         nextClearance = "CRITICAL";
         nextTool = "arbitrary_remote_shell";
@@ -233,14 +244,16 @@ export function GovernanceView({
     };
   }, []);
 
-  const permissionMatrix = Object.values(ROLE_PERMISSIONS).map((p) => {
+  const activeRoles: Role[] = ["ENGINEER", "VIEWER", "INTERN", "ADMIN"];
+  const permissionMatrix = activeRoles.map((r) => {
+    const p = ROLE_PERMISSIONS[r];
     const loc = getLocalizedRolePermission(p.role, t);
     return {
       role: p.role,
       roleLabel: loc.label,
       clearance: p.defaultClearance,
       read: p.read === "ALLOWED" ? "ALLOWED" : "BLOCKED",
-      investigate: p.investigate === "ALLOWED" ? "ALLOWED" : "BLOCKED",
+      investigate: p.investigate === "ALLOWED" ? "ALLOWED" : p.investigate === "NEEDS_APPROVAL" ? "NEEDS_APPROVAL" : "BLOCKED",
       actuate: p.actuate === "ALLOWED" ? "ALLOWED" : p.actuate === "NEEDS_APPROVAL" ? "NEEDS_APPROVAL" : "BLOCKED",
       admin: p.admin === "ALLOWED" ? "ALLOWED" : p.admin === "NEEDS_APPROVAL" ? "NEEDS_APPROVAL" : "BLOCKED",
       summary: loc.summary,
@@ -500,8 +513,8 @@ export function GovernanceView({
             <button
               onClick={() => handleApplyPreset(1)}
               style={{
-                background: sandboxRole === "INSPECTOR" && sandboxTool === "calibrate_pressure_relief_valve" ? "rgba(217, 105, 78, 0.12)" : "var(--bg-card)",
-                border: sandboxRole === "INSPECTOR" && sandboxTool === "calibrate_pressure_relief_valve" ? "1px solid var(--coral)" : "1px solid var(--line)",
+                background: sandboxRole === "VIEWER" ? "rgba(217, 105, 78, 0.12)" : "var(--bg-card)",
+                border: sandboxRole === "VIEWER" ? "1px solid var(--coral)" : "1px solid var(--line)",
                 borderRadius: "var(--radius-panel)",
                 padding: "10px 12px",
                 textAlign: "left",
@@ -514,15 +527,15 @@ export function GovernanceView({
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 700 }}>PRESET 1</span>
               </div>
               <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
-                {t("govPreset1")}
+                {language === "hi" ? "दर्शक उपकरण निष्पादन (अवरुद्ध - केवल ज्ञान)" : language === "kn" ? "ವೀಕ್ಷಕ ಟೂಲ್ ಕಾರ್ಯಾಚರಣೆ (ನಿರ್ಬಂಧಿತ - ಕೇವಲ ಜ್ಞಾನ)" : "Viewer Tool Execution (Blocked - Knowledge Only)"}
               </div>
             </button>
 
             <button
               onClick={() => handleApplyPreset(2)}
               style={{
-                background: sandboxRole === "ADMIN" && sandboxTool === "calibrate_pressure_relief_valve" && !sandboxApproval ? "rgba(217, 105, 78, 0.12)" : "var(--bg-card)",
-                border: sandboxRole === "ADMIN" && sandboxTool === "calibrate_pressure_relief_valve" && !sandboxApproval ? "1px solid var(--coral)" : "1px solid var(--line)",
+                background: sandboxRole === "INTERN" && !sandboxApproval ? "rgba(217, 105, 78, 0.12)" : "var(--bg-card)",
+                border: sandboxRole === "INTERN" && !sandboxApproval ? "1px solid var(--coral)" : "1px solid var(--line)",
                 borderRadius: "var(--radius-panel)",
                 padding: "10px 12px",
                 textAlign: "left",
@@ -531,19 +544,19 @@ export function GovernanceView({
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: "14px" }}>🛑</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 700 }}>PRESET 2</span>
+                <span style={{ fontSize: "14px" }}>⚠️</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 700 }}>PRESET 2</span>
               </div>
               <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
-                {t("govPreset2")}
+                {language === "hi" ? "इंटर्न अननुमोदित उपकरण (अनुमोदन आवश्यक)" : language === "kn" ? "ಇಂಟರ್ನ್ ಅನುಮೋದನೆಯಿಲ್ಲದ ಟೂಲ್ (ಅನುಮೋದನೆ ಅಗತ್ಯ)" : "Intern Unapproved Tool (Needs Approval)"}
               </div>
             </button>
 
             <button
               onClick={() => handleApplyPreset(3)}
               style={{
-                background: sandboxRole === "ENGINEER" && sandboxTool === "equipment_history" ? "rgba(156, 195, 168, 0.12)" : "var(--bg-card)",
-                border: sandboxRole === "ENGINEER" && sandboxTool === "equipment_history" ? "1px solid var(--sage)" : "1px solid var(--line)",
+                background: sandboxRole === "INTERN" && sandboxApproval ? "rgba(156, 195, 168, 0.12)" : "var(--bg-card)",
+                border: sandboxRole === "INTERN" && sandboxApproval ? "1px solid var(--sage)" : "1px solid var(--line)",
                 borderRadius: "var(--radius-panel)",
                 padding: "10px 12px",
                 textAlign: "left",
@@ -556,12 +569,33 @@ export function GovernanceView({
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 700 }}>PRESET 3</span>
               </div>
               <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
-                {t("govPreset3")}
+                {language === "hi" ? "इंटर्न अनुमोदित उपकरण (अनुमत)" : language === "kn" ? "ಇಂಟರ್ನ್ ಅನುಮೋದಿತ ಟೂಲ್ (ಅನುಮತಿಸಲಾಗಿದೆ)" : "Intern Approved Tool (Permitted)"}
               </div>
             </button>
 
             <button
               onClick={() => handleApplyPreset(4)}
+              style={{
+                background: sandboxRole === "ENGINEER" && sandboxTool === "equipment_history" ? "rgba(156, 195, 168, 0.12)" : "var(--bg-card)",
+                border: sandboxRole === "ENGINEER" && sandboxTool === "equipment_history" ? "1px solid var(--sage)" : "1px solid var(--line)",
+                borderRadius: "var(--radius-panel)",
+                padding: "10px 12px",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: "14px" }}>🟢</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--sage)", fontWeight: 700 }}>PRESET 4</span>
+              </div>
+              <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
+                {language === "hi" ? "इंजीनियर टेलीमेट्री निरीक्षण (अनुमत)" : language === "kn" ? "ಇಂಜಿನಿಯರ್ ಟೆಲಿಮೆಟ್ರಿ ತಪಾಸಣೆ (ಅನುಮತಿಸಲಾಗಿದೆ)" : "Engineer Telemetry Inspection (Permitted)"}
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleApplyPreset(5)}
               style={{
                 background: sandboxRole === "ADMIN" && sandboxTool === "emergency_shutdown" && sandboxApproval ? "rgba(200, 161, 90, 0.12)" : "var(--bg-card)",
                 border: sandboxRole === "ADMIN" && sandboxTool === "emergency_shutdown" && sandboxApproval ? "1px solid var(--brass)" : "1px solid var(--line)",
@@ -574,15 +608,15 @@ export function GovernanceView({
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: "14px" }}>⚡</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 700 }}>PRESET 4</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--brass)", fontWeight: 700 }}>PRESET 5</span>
               </div>
               <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
-                {t("govPreset4")}
+                {language === "hi" ? "प्रशासक आपातकालीन शटडाउन (सह-हस्ताक्षर सहित अनुमत)" : language === "kn" ? "ನಿರ್ವಾಹಕ ತುರ್ತು ಸ್ಥಗಿತ (ಅನುಮೋದನೆಯೊಂದಿಗೆ)" : "Admin Emergency Trip (Approved Co-signature)"}
               </div>
             </button>
 
             <button
-              onClick={() => handleApplyPreset(5)}
+              onClick={() => handleApplyPreset(6)}
               style={{
                 background: sandboxTool === "arbitrary_remote_shell" ? "rgba(217, 105, 78, 0.12)" : "var(--bg-card)",
                 border: sandboxTool === "arbitrary_remote_shell" ? "1px solid var(--coral)" : "1px solid var(--line)",
@@ -595,10 +629,10 @@ export function GovernanceView({
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: "14px" }}>🛡️</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 700 }}>PRESET 5</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--coral-text)", fontWeight: 700 }}>PRESET 6</span>
               </div>
               <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "var(--ink)", fontWeight: 500, marginTop: 4 }}>
-                {t("govPreset5")}
+                {language === "hi" ? "अज्ञात शेल इंजेक्शन (डिफ़ॉल्ट-अस्वीकार)" : language === "kn" ? "ಅನಧಿಕೃತ ಶೆಲ್ ಇಂಜೆಕ್ಷನ್ (ಡೀಫಾಲ್ಟ್-ನಿರಾಕರಣೆ)" : "Unknown Shell Injection (Default-Deny Blocked)"}
               </div>
             </button>
           </div>
@@ -627,12 +661,10 @@ export function GovernanceView({
                   fontSize: "14px",
                 }}
               >
-                <option value="INSPECTOR">Inspector (INSPECTOR) - Non-destructive inspection</option>
-                <option value="AI_OPERATOR">AI Operator (AI_OPERATOR) - Zero-write autonomous sandbox</option>
-                <option value="ENGINEER">Engineer (ENGINEER) - Read & diagnostics; approval for PRV</option>
-                <option value="MANAGER">Plant Manager (MANAGER) - Supervisory approval authority</option>
-                <option value="ADMIN">Administrator (ADMIN) - Administrative authority; approval for trips</option>
-                <option value="SECURITY_OFFICER">Security Officer (SECURITY_OFFICER) - Audit & security oversight</option>
+                <option value="ENGINEER">{t("roleEngineerName")} (ENGINEER) - Read & diagnostics; approval for PRV</option>
+                <option value="VIEWER">{t("roleViewerName")} (VIEWER) - Knowledge search only; all tools blocked</option>
+                <option value="INTERN">{t("roleInternName")} (INTERN) - Knowledge allowed; tools require approval</option>
+                <option value="ADMIN">{t("roleAdminName")} (ADMIN) - Administrative authority; approval for trips</option>
               </select>
             </div>
 

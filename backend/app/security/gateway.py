@@ -75,9 +75,42 @@ class PolicyGateway:
 
         tool_meta = tool.to_metadata()
         risk = tool_meta.risk_level
-        approval_required = tool_meta.approval_required or (risk == RiskLevel.CRITICAL)
+        approval_required = tool_meta.approval_required or (risk == RiskLevel.CRITICAL) or (request.role == Role.INTERN)
 
-        # 2. Check Tool-level allowed roles
+        # 2. Check Role-specific boundaries
+        if request.role == Role.VIEWER:
+            decision = PolicyDecision(
+                decision=PolicyDecisionType.DENY,
+                reason=f"Role 'VIEWER' is restricted to read-only knowledge access. Execution of '{tool_meta.name}' is strictly blocked.",
+                policy_id=None,
+                requester=request.requester,
+                role=request.role,
+                tool=tool_meta.name,
+                classification=request.classification,
+                risk=risk,
+                approval_required=False,
+                approved=request.has_approval,
+            )
+            self._record_evaluation_event(request, decision, tool_meta.version)
+            return decision
+
+        if request.role == Role.INTERN and not request.has_approval:
+            decision = PolicyDecision(
+                decision=PolicyDecisionType.DENY,
+                reason=f"Role 'INTERN' requires supervisor approval for all tool operations, but none was provided for '{tool_meta.name}'.",
+                policy_id="POL-INTERN-GATE",
+                requester=request.requester,
+                role=request.role,
+                tool=tool_meta.name,
+                classification=request.classification,
+                risk=risk,
+                approval_required=True,
+                approved=False,
+            )
+            self._record_evaluation_event(request, decision, tool_meta.version)
+            return decision
+
+        # Check Tool-level allowed roles
         if request.role not in tool_meta.allowed_roles:
             decision = PolicyDecision(
                 decision=PolicyDecisionType.DENY,

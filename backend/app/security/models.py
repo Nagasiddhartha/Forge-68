@@ -9,6 +9,8 @@ class Role(str, Enum):
     """Sovereign Industrial System Roles."""
     ADMIN = "ADMIN"
     ENGINEER = "ENGINEER"
+    INTERN = "INTERN"
+    VIEWER = "VIEWER"
     INSPECTOR = "INSPECTOR"
     MANAGER = "MANAGER"
     AUDITOR = "AUDITOR"

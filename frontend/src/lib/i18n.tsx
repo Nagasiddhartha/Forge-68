@@ -449,6 +449,9 @@ export interface TranslationDictionary {
   missionTabEvidence: string;
   missionTabChecks: string;
   missionTabVision: string;
+  missionTabPictorialGraph: string;
+  pictorialGraphTitle: string;
+  pictorialGraphSubtitle: string;
   missionExecutionTiming: string;
   missionTimingTotal: string;
   missionTimingPlan: string;
@@ -500,6 +503,12 @@ export interface TranslationDictionary {
   roleEngineerName: string;
   roleEngineerSummary: string;
   roleEngineerActuation: string;
+  roleViewerName: string;
+  roleViewerSummary: string;
+  roleViewerActuation: string;
+  roleInternName: string;
+  roleInternSummary: string;
+  roleInternActuation: string;
   roleInspectorName: string;
   roleInspectorSummary: string;
   roleInspectorActuation: string;
@@ -1150,6 +1159,9 @@ export const translations: Record<Language, TranslationDictionary> = {
     missionTabEvidence: "Supporting Evidence",
     missionTabChecks: "Why Trust This? (7 Checks)",
     missionTabVision: "Camera / Gauge Observations",
+    missionTabPictorialGraph: "Industry Pictorial Graph",
+    pictorialGraphTitle: "Reaction Loop 200 Industrial Process Flow & Telemetry Topology",
+    pictorialGraphSubtitle: "Real-time sensor telemetry and equipment topology grounded in verified plant records",
     missionExecutionTiming: "EXECUTION TIMING:",
     missionTimingTotal: "Total:",
     missionTimingPlan: "Plan:",
@@ -1201,6 +1213,12 @@ export const translations: Record<Language, TranslationDictionary> = {
     roleEngineerName: "Engineer",
     roleEngineerSummary: "Standard operational role. Runs investigations and read-only tools. Critical valve actuation requires approval.",
     roleEngineerActuation: "Engineers can investigate and read sensors, but cannot calibrate critical valves without secondary approval.",
+    roleViewerName: "Viewer",
+    roleViewerSummary: "Read-only operational viewer. Knowledge plant search permitted; all tooling, actuation, and admin actions are strictly blocked.",
+    roleViewerActuation: "Viewers maintain read-only observation clearance. All tool invocations and physical actuations are blocked.",
+    roleInternName: "Intern",
+    roleInternSummary: "Junior operational role. Knowledge search permitted; all investigative queries, tool executions, and actuations require supervisor approval.",
+    roleInternActuation: "Interns require supervisor cryptographic approval for all operational investigation and plant actuation workflows.",
     roleInspectorName: "Inspector",
     roleInspectorSummary: "Auditing & inspection role. Reviews ultrasonic surveys, inspection logs, and gauge readings. Actuation blocked.",
     roleInspectorActuation: "Inspectors have read-only diagnostic clearance. Physical machinery actuation is strictly blocked.",
@@ -1851,6 +1869,9 @@ export const translations: Record<Language, TranslationDictionary> = {
     missionTabEvidence: "सहायक साक्ष्य",
     missionTabChecks: "इस पर विश्वास क्यों करें? (7 जांच)",
     missionTabVision: "कैमरा / गेज अवलोकन",
+    missionTabPictorialGraph: "औद्योगिक सचित्र आरेख",
+    pictorialGraphTitle: "अभिक्रिया लूप 200 औद्योगिक प्रक्रिया प्रवाह एवं टेलीमेट्री टोपोलॉजी",
+    pictorialGraphSubtitle: "सत्यापित संयंत्र रिकॉर्ड पर आधारित रीयल-टाइम सेंसर टेलीमेट्री और उपकरण टोपोलॉजी",
     missionExecutionTiming: "निष्पादन समय:",
     missionTimingTotal: "कुल:",
     missionTimingPlan: "योजना:",
@@ -1902,6 +1923,12 @@ export const translations: Record<Language, TranslationDictionary> = {
     roleEngineerName: "इंजीनियर",
     roleEngineerSummary: "मानक परिचालन भूमिका। जांच और केवल-पठन उपकरण चलाता है। महत्वपूर्ण वाल्व सक्रियण के लिए अनुमोदन आवश्यक है।",
     roleEngineerActuation: "इंजीनियर जांच कर सकते हैं और सेंसर पढ़ सकते हैं, लेकिन द्वितीयक अनुमोदन के बिना महत्वपूर्ण वाल्वों को कैलिब्रेट नहीं कर सकते।",
+    roleViewerName: "दर्शक (व्यूअर)",
+    roleViewerSummary: "केवल-पठन परिचालन दर्शक। ज्ञान संयंत्र खोज की अनुमति है; सभी उपकरण, सक्रियण और व्यवस्थापक क्रियाएं पूरी तरह अवरुद्ध हैं।",
+    roleViewerActuation: "दर्शकों के पास केवल-पठन अवलोकन मंजूरी है। सभी उपकरण निष्पादन और भौतिक सक्रियण अवरुद्ध हैं।",
+    roleInternName: "प्रशिक्षु (इंटर्न)",
+    roleInternSummary: "कनिष्ठ परिचालन भूमिका। ज्ञान खोज अनुमत; सभी खोजी प्रश्न, उपकरण निष्पादन और सक्रियण के लिए पर्यवेक्षक अनुमोदन आवश्यक है।",
+    roleInternActuation: "इंटर्न को सभी परिचालन जांच और संयंत्र सक्रियण वर्कफ़्लो के लिए पर्यवेक्षक क्रिप्टोग्राफ़िक अनुमोदन की आवश्यकता होती है।",
     roleInspectorName: "निरीक्षक",
     roleInspectorSummary: "ऑडिटिंग एवं निरीक्षण भूमिका। अल्ट्रासोनिक सर्वेक्षण, निरीक्षण लॉग और गेज रीडिंग की समीक्षा करता है। सक्रियण अवरुद्ध।",
     roleInspectorActuation: "निरीक्षकों के पास केवल-पठन नैदानिक मंजूरी है। भौतिक मशीनरी सक्रियण पूरी तरह से अवरुद्ध है।",
@@ -2552,6 +2579,9 @@ export const translations: Record<Language, TranslationDictionary> = {
     missionTabEvidence: "ಬೆಂಬಲಿತ ಸಾಕ್ಷ್ಯ",
     missionTabChecks: "ಇದನ್ನು ಏಕೆ ನಂಬಬೇಕು? (7 ತಪಾಸಣೆಗಳು)",
     missionTabVision: "ಕ್ಯಾಮೆರಾ / ಗೇಜ್ ಅವಲೋಕನಗಳು",
+    missionTabPictorialGraph: "ಕೈಗಾರಿಕಾ ಚಿತ್ರಾತ್ಮಕ ಗ್ರಾಫ್",
+    pictorialGraphTitle: "ಪ್ರತಿಕ್ರಿಯೆ ಲೂಪ್ 200 ಕೈಗಾರಿಕಾ ಪ್ರಕ್ರಿಯೆ ಹರಿವು ಮತ್ತು ಟೆಲಿಮೆಟ್ರಿ ಟೋಪೋಲಜಿ",
+    pictorialGraphSubtitle: "ಪರಿಶೀಲಿಸಿದ ಘಟಕ ದಾಖಲೆಗಳ ಆಧಾರದ ಮೇಲೆ ನೈಜ-ಸಮಯದ ಸಂವೇದಕ ಟೆಲಿಮೆಟ್ರಿ ಮತ್ತು ಉಪಕರಣ ಟೋಪೋಲಜಿ",
     missionExecutionTiming: "ಕಾರ್ಯಗತಗೊಳಿಸುವ ಸಮಯ:",
     missionTimingTotal: "ಒಟ್ಟು:",
     missionTimingPlan: "ಯೋಜನೆ:",
@@ -2603,6 +2633,12 @@ export const translations: Record<Language, TranslationDictionary> = {
     roleEngineerName: "ಇಂಜಿನಿಯರ್",
     roleEngineerSummary: "ಪ್ರಮಾಣಿತ ಕಾರ್ಯಾಚರಣೆಯ ಪಾತ್ರ. ತನಿಖೆಗಳು ಮತ್ತು ಓದಲು-ಮಾತ್ರ ಟೂಲ್‌ಗಳನ್ನು ಚಲಾಯಿಸುತ್ತದೆ. ನಿರ್ಣಾಯಕ ವಾಲ್ವ್ ಕಾರ್ಯಾಚರಣೆಗೆ ಅನುಮೋದನೆ ಅಗತ್ಯವಿದೆ.",
     roleEngineerActuation: "ಇಂಜಿನಿಯರ್‌ಗಳು ತನಿಖೆ ಮಾಡಬಹುದು ಮತ್ತು ಸಂವೇದಕಗಳನ್ನು ಓದಬಹುದು, ಆದರೆ ದ್ವಿತೀಯ ಅನುಮೋದನೆಯಿಲ್ಲದೆ ನಿರ್ಣಾಯಕ ವಾಲ್ವ್‌ಗಳನ್ನು ಕ್ಯಾಲಿಬ್ರೇಟ್ ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ.",
+    roleViewerName: "ವೀಕ್ಷಕ (ವ್ಯೂವರ್)",
+    roleViewerSummary: "ಓದಲು-ಮಾತ್ರ ಕಾರ್ಯಾಚರಣೆಯ ವೀಕ್ಷಕ. ಜ್ಞಾನ ಹುಡುಕಾಟಕ್ಕೆ ಅನುಮತಿಯಿದೆ; ಎಲ್ಲಾ ಪರಿಕರಗಳು, ಕಾರ್ಯಾಚರಣೆಗಳು ಮತ್ತು ಆಡಳಿತಾತ್ಮಕ ಕ್ರಿಯೆಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ.",
+    roleViewerActuation: "ವೀಕ್ಷಕರಿಗೆ ಓದಲು-ಮಾತ್ರ ವೀಕ್ಷಣಾ ಕ್ಲಿಯರೆನ್ಸ್ ಇದೆ. ಎಲ್ಲಾ ಪರಿಕರ ಆಹ್ವಾನಗಳು ಮತ್ತು ಭೌತಿಕ ಕಾರ್ಯಾಚರಣೆಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ.",
+    roleInternName: "ತರಬೇತಿದಾರ (ಇಂಟರ್ನ್)",
+    roleInternSummary: "ಕಿರಿಯ ಕಾರ್ಯಾಚರಣಾ ಪಾತ್ರ. ಜ್ಞಾನ ಹುಡುಕಾಟಕ್ಕೆ ಅನುಮತಿಸಲಾಗಿದೆ; ಎಲ್ಲಾ ತನಿಖಾ ಪ್ರಶ್ನೆಗಳು, ಪರಿಕರಗಳ ಚಾಲನೆ ಮತ್ತು ಕಾರ್ಯಾಚರಣೆಗಳಿಗೆ ಮೇಲ್ವಿಚಾರಕರ ಅನುಮೋದನೆ ಅಗತ್ಯವಿದೆ.",
+    roleInternActuation: "ಇಂಟರ್ನ್‌ಗಳಿಗೆ ಎಲ್ಲಾ ಕಾರ್ಯಾಚರಣಾ ತನಿಖೆ ಮತ್ತು ಪ್ಲಾಂಟ್ ಕಾರ್ಯಾಚರಣೆಯ ಕೆಲಸದ ಹರಿವಿಗೆ ಮೇಲ್ವಿಚಾರಕರ ಕ್ರಿಪ್ಟೋಗ್ರಾಫಿಕ್ ಅನುಮೋದನೆ ಕಡ್ಡಾಯವಾಗಿದೆ.",
     roleInspectorName: "ಇನ್ಸ್‌ಪೆಕ್ಟರ್",
     roleInspectorSummary: "ಆಡಿಟಿಂಗ್ ಮತ್ತು ತಪಾಸಣಾ ಪಾತ್ರ. ಅಲ್ಟ್ರಾಸಾನಿಕ್ ಸಮೀಕ್ಷೆಗಳು, ತಪಾಸಣಾ ಲಾಗ್‌ಗಳು ಮತ್ತು ಗೇಜ್ ರೀಡಿಂಗ್‌ಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ. ಕಾರ್ಯಾಚರಣೆ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ.",
     roleInspectorActuation: "ಇನ್ಸ್‌ಪೆಕ್ಟರ್‌ಗಳಿಗೆ ಓದಲು-ಮಾತ್ರ ರೋಗನಿರ್ಣಯದ ಅನುಮತಿ ಇದೆ. ಭೌತಿಕ ಯಂತ್ರೋಪಕರಣಗಳ ಕಾರ್ಯಾಚರಣೆಯನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ.",
