@@ -24,6 +24,7 @@ from app.security import (
 )
 from app.tools import tool_registry
 from app.verification.evidence import EvidenceRecord
+from app.verification.models import VerificationStatus
 
 client = TestClient(app)
 
@@ -306,3 +307,95 @@ def test_api_agent_query_endpoint_exists():
     resp = client.post("/api/v1/agent/query", json=payload)
     # Any 2xx or 422 (validation) is acceptable; 404 means endpoint is missing
     assert resp.status_code != 404, "Agent query endpoint must be registered"
+
+
+# ===========================================================================
+# Zero-Hallucination & Plant Registry Boundary Tests
+# ===========================================================================
+
+@pytest.mark.asyncio
+async def test_zero_hallucination_unregistered_asset_english():
+    """Verify system strictly refuses to speculate on unregistered asset R-304 in English."""
+    provider = MockModelProvider(responses=["Should never be called"])
+    service = AgentReasoningService(model_provider=provider)
+
+    req = AgentQueryRequest(
+        query="What is the operating pressure and status of reactor R-304?",
+        role=Role.ENGINEER,
+        classification=DataClassification.INTERNAL,
+        locale="en",
+    )
+    result = await service.process_query(req)
+
+    assert result.status == AgentQueryStatus.SUCCESS
+    assert "ZERO-HALLUCINATION BOUNDARY ENFORCED" in result.final_answer
+    assert "R-304" in result.final_answer
+    assert "R-204" in result.final_answer
+    assert "Unit 24" in result.final_answer
+    # MockModelProvider was NEVER called because refusal was deterministic
+    assert len(provider.responses) == 1
+    assert result.verification is not None
+    assert result.verification.status == VerificationStatus.VERIFIED
+
+
+@pytest.mark.asyncio
+async def test_zero_hallucination_unregistered_asset_kannada():
+    """Verify system strictly refuses to speculate on unregistered asset R-304 in Kannada."""
+    provider = MockModelProvider(responses=["Should never be called"])
+    service = AgentReasoningService(model_provider=provider)
+
+    req = AgentQueryRequest(
+        query="ರಿಯಾಕ್ಟರ್ r304 ರ ಸ್ಥಿತಿ ಮತ್ತು ಒತ್ತಡ ಮಿತಿ ಏನು?",
+        role=Role.ENGINEER,
+        classification=DataClassification.INTERNAL,
+        locale="kn",
+    )
+    result = await service.process_query(req)
+
+    assert result.status == AgentQueryStatus.SUCCESS
+    assert "ಶೂನ್ಯ-ಭ್ರಮೆ ಗಡಿ ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ" in result.final_answer
+    assert "R-304" in result.final_answer
+    assert "R-204" in result.final_answer
+    assert len(provider.responses) == 1
+
+
+@pytest.mark.asyncio
+async def test_zero_hallucination_unregistered_asset_hindi():
+    """Verify system strictly refuses to speculate on unregistered asset R-304 in Hindi."""
+    provider = MockModelProvider(responses=["Should never be called"])
+    service = AgentReasoningService(model_provider=provider)
+
+    req = AgentQueryRequest(
+        query="रिएक्टर R-304 की परिचालन स्थिति और दबाव क्या है?",
+        role=Role.ENGINEER,
+        classification=DataClassification.INTERNAL,
+        locale="hi",
+    )
+    result = await service.process_query(req)
+
+    assert result.status == AgentQueryStatus.SUCCESS
+    assert "शून्य-भ्रम सीमा लागू" in result.final_answer
+    assert "R-304" in result.final_answer
+    assert "R-204" in result.final_answer
+    assert len(provider.responses) == 1
+
+
+@pytest.mark.asyncio
+async def test_zero_hallucination_unregistered_pump():
+    """Verify system intercepts unlisted pump P-901."""
+    provider = MockModelProvider(responses=["Should never be called"])
+    service = AgentReasoningService(model_provider=provider)
+
+    req = AgentQueryRequest(
+        query="Check telemetry and vibration for pump P-901",
+        role=Role.ENGINEER,
+        classification=DataClassification.INTERNAL,
+        locale="en",
+    )
+    result = await service.process_query(req)
+
+    assert result.status == AgentQueryStatus.SUCCESS
+    assert "P-901" in result.final_answer
+    assert "ZERO-HALLUCINATION BOUNDARY ENFORCED" in result.final_answer
+    assert len(provider.responses) == 1
+

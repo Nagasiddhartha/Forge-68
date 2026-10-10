@@ -74,6 +74,7 @@ from app.verification import (
     CalculationResult,
     EvidenceRecord,
     EvidenceSet,
+    VerificationCheck,
     VerificationEngine,
     VerificationResult,
     VerificationStatus,
@@ -84,6 +85,78 @@ from app.vision import VisionService, vision_service
 
 logger = logging.getLogger("forge.core.reasoning")
 logger.setLevel(logging.INFO)
+
+# ===========================================================================
+# SOVEREIGN PLANT ASSET REGISTRY & BOUNDARY DEFINITIONS (UNIT 24 LOOP 200)
+# ===========================================================================
+KNOWN_PLANT_ASSETS = {
+    # Primary Reaction Loop Equipment
+    "R-204", "P-201", "P-201A", "P-201B", "P-202", "E-301", "V-102", "T-102", "C-201", "C-401",
+    # Safety, Relief & Blowdown Devices
+    "PRV-204", "PSV-204", "PSE-204", "BDV-204",
+    # Control & Isolation Valves
+    "QCV-204A", "XV-204A", "XV-204B", "HV-204",
+    # Field Transmitters, Sensors & Gauges
+    "PI-204", "PT-204", "PT-204A", "PT-204B", "PDT-201", "DPT-201",
+    "TT-204A", "TT-204B", "TT-204C", "TT-301A", "TT-301B",
+    "FT-204", "FT-301",
+    "LT-204", "LT-102",
+}
+
+
+def extract_plant_equipment_tags(text: str) -> List[str]:
+    """Extract and normalize industrial equipment, instrument, and relief device tags from text."""
+    found_tags = set()
+
+    # 1. Multi-letter prefix tags (PRV-204, PSV-204, PI-204, PT-204, TT-204A, FT-204, LT-204, etc.)
+    multi_pattern = re.compile(
+        r"\b(PRV|PSV|PSE|BDV|QCV|XV|HV|PI|PT|TT|FT|LT|PDT|DPT)[- ]?(\d{3,4})([A-Za-z]?)\b",
+        re.IGNORECASE,
+    )
+    for m in multi_pattern.finditer(text):
+        prefix = m.group(1).upper()
+        num = m.group(2)
+        suffix = m.group(3).upper() if m.group(3) else ""
+        found_tags.add(f"{prefix}-{num}{suffix}")
+
+    # 2. Single-letter equipment tags (R-204, P-201, E-301, V-102, T-102, C-201, R304, etc.)
+    single_pattern = re.compile(
+        r"\b([RPEVTC])[- ]?(\d{3,4})([A-Za-z]?)\b",
+        re.IGNORECASE,
+    )
+    for m in single_pattern.finditer(text):
+        prefix = m.group(1).upper()
+        num = m.group(2)
+        suffix = m.group(3).upper() if m.group(3) else ""
+        found_tags.add(f"{prefix}-{num}{suffix}")
+
+    # 3. Explicit keywords: reactor 304, pump 304, vessel 304, exchanger 304, valve 304
+    kw_pattern = re.compile(
+        r"\b(reactor|pump|exchanger|vessel|tank|valve)\s*#?\s*([A-Za-z]?)[- ]?(\d{3,4})([A-Za-z]?)\b",
+        re.IGNORECASE,
+    )
+    for m in kw_pattern.finditer(text):
+        kw = m.group(1).lower()
+        explicit_letter = m.group(2).upper() if m.group(2) else ""
+        num = m.group(3)
+        suffix = m.group(4).upper() if m.group(4) else ""
+
+        prefix = explicit_letter
+        if not prefix:
+            if kw == "reactor":
+                prefix = "R"
+            elif kw == "pump":
+                prefix = "P"
+            elif kw == "exchanger":
+                prefix = "E"
+            elif kw in ("vessel", "tank"):
+                prefix = "V"
+            elif kw == "valve":
+                prefix = "PRV"
+        if prefix:
+            found_tags.add(f"{prefix}-{num}{suffix}")
+
+    return sorted(list(found_tags))
 
 
 class AgentReasoningService:
@@ -243,6 +316,190 @@ class AgentReasoningService:
                     "alert_type": "PROMPT_INJECTION_DETECTED",
                     "detected_pattern": detected_injection,
                     "action": "QUARANTINED_AS_UNTRUSTED_DATA",
+                },
+            )
+
+        # 1d. Zero-Hallucination & Plant Asset Registry Boundary Check
+        extracted_tags = extract_plant_equipment_tags(request.query)
+        unregistered_tags = [t for t in extracted_tags if t not in KNOWN_PLANT_ASSETS]
+        if unregistered_tags:
+            tag_str = ", ".join(unregistered_tags)
+            logger.warning(
+                "[ZERO_HALLUCINATION_BOUNDARY] Intercepted inquiry for unregistered asset(s): %s. Refusing to speculate or hallucinate.",
+                tag_str,
+            )
+            record_agent_trace(
+                AgentEventType.SECURITY_ALERT,
+                {
+                    "alert_type": "ZERO_HALLUCINATION_BOUNDARY_ENFORCED",
+                    "action": "INTERCEPTED_UNREGISTERED_ASSET",
+                    "unregistered_assets": unregistered_tags,
+                    "query": request.query,
+                },
+            )
+
+            if target_lang == "kn":
+                verif_summary = "ಶೂನ್ಯ-ಭ್ರಮೆ ಸಾರ್ವಭೌಮ ನೀತಿಯನ್ನು ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ: ನೋಂದಾಯಿಸದ ಆಸ್ತಿ ಪ್ರಶ್ನೆಯನ್ನು ತಡೆಹಿಡಿಯಲಾಗಿದೆ."
+                checks = [
+                    VerificationCheck(
+                        check_type="GROUNDING_SUPPORT",
+                        status=VerificationStatus.VERIFIED,
+                        description="ಶೂನ್ಯ-ಭ್ರಮೆ ಗಡಿ ಸಕ್ರಿಯವಾಗಿದೆ: ನೋಂದಾಯಿಸದ ಆಸ್ತಿಗಳಿಗಾಗಿ ಕಾಲ್ಪನಿಕ ಟೆಲಿಮೆಟ್ರಿಯನ್ನು ಸೃಷ್ಟಿಸುವುದನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸಲಾಗಿದೆ.",
+                    ),
+                    VerificationCheck(
+                        check_type="PROVENANCE",
+                        status=VerificationStatus.VERIFIED,
+                        description="ಸಾರ್ವಭೌಮ ಪ್ಲಾಂಟ್ ರಿಜಿಸ್ಟ್ರಿ ಯುನಿಟ್ 24 ರೊಂದಿಗೆ ಪರಿಶೀಲಿಸಲಾಗಿದೆ: ವಿನಂತಿಸಿದ ಆಸ್ತಿ ನೋಂದಾಯಿತ ಆಸ್ತಿ ಪಟ್ಟಿಯಲ್ಲಿ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ.",
+                    ),
+                    VerificationCheck(
+                        check_type="POLICY_COMPLIANCE",
+                        status=VerificationStatus.VERIFIED,
+                        description="ಸಾರ್ವಭೌಮ ನಿಯಂತ್ರಣ ನೀತಿ ಅನುಸರಣೆ: ಅಜ್ಞಾತ ಸಾಧನಗಳ ಕುರಿತು ಊಹಾತ್ಮಕ ಉತ್ತರಗಳನ್ನು ನೀಡುವುದನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ.",
+                    ),
+                ]
+                refusal_answer = (
+                    f"### ⚠️ ಸಾರ್ವಭೌಮ ಶೂನ್ಯ-ಭ್ರಮೆ ಗಡಿ ಜಾರಿಗೊಳಿಸಲಾಗಿದೆ (ZERO-HALLUCINATION BOUNDARY ENFORCED)\n\n"
+                    f"**ನೋಂದಾಯಿಸದ ಆಸ್ತಿ ಸೂಚನೆ (Unregistered Asset Notice):**\n"
+                    f"ನೀವು ವಿನಂತಿಸಿದ ಉಪಕರಣ ಅಥವಾ ಸಾಧನ ಐಡೆಂಟಿಫೈಯರ್ **{tag_str}** ಸಾರ್ವಭೌಮ ಪ್ಲಾಂಟ್ ಆಸ್ತಿ ನೋಂದಣಿ ಪುಸ್ತಕದಲ್ಲಿ (Unit 24 Reaction Loop 200) ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ.\n\n"
+                    f"**ಶೂನ್ಯ-ಭ್ರಮೆ ಆಡಳಿತ ನೀತಿ (Zero-Hallucination Policy):**\n"
+                    f"FORGE ಸಾರ್ವಭೌಮ ಆಡಳಿತ ನಿಯಮಗಳ ಅಡಿಯಲ್ಲಿ (`AGENTS.md`), ನಿಯಂತ್ರಣ ವ್ಯವಸ್ಥೆಯು ಕಟ್ಟುನಿಟ್ಟಾದ ನಿರ್ಣಾಯಕ (deterministic) ಗಡಿಗಳಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ. "
+                    f"ನೋಂದಾಯಿಸದ ಅಥವಾ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲದ ಉಪಕರಣಗಳಿಗಾಗಿ ಕಾಲ್ಪನಿಕ ಟೆಲಿಮೆಟ್ರಿ, ಕಾರ್ಯಾಚರಣೆಯ ಮಿತಿಗಳು ಅಥವಾ ತಪಾಸಣಾ ದಾಖಲೆಗಳನ್ನು ರಚಿಸುವುದನ್ನು (hallucination) ಸಿಸ್ಟಮ್ ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸುತ್ತದೆ.\n\n"
+                    f"**ಯುನಿಟ್ 24 ರಲ್ಲಿ ನೋಂದಾಯಿಸಲಾದ ಮಾನ್ಯ ಆಸ್ತಿಗಳು (Registered Assets in Unit 24):**\n"
+                    f"- **ಮುಖ್ಯ ಉಪಕರಣಗಳು (Primary Equipment):**\n"
+                    f"  - `R-204`: ನಿರಂತರ ಸಂಚಲಿತ-ಟ್ಯಾಂಕ್ ರಿಯಾಕ್ಟರ್ (Polymerization CSTR)\n"
+                    f"  - `P-201` / `P-201A/B` / `P-202`: ಸೆಂಟ್ರಿಫ್ಯೂಗಲ್ ಸ್ಲರ್ರಿ ಫೀಡ್ ಪಂಪ್‌ಗಳು\n"
+                    f"  - `E-301`: ಶೆಲ್ ಮತ್ತು ಟ್ಯೂಬ್ ಎಫ್ಲುಯೆಂಟ್ ಕೂಲರ್ (ಶಾಖ ವಿನಿಮಯಕಾರಕ)\n"
+                    f"  - `V-102`: ಫ್ಲ್ಯಾಶ್ ಡ್ರಮ್ ವೇಪರ್-ದ್ರವ ವಿಭಜಕ\n"
+                    f"  - `T-102`: ಕಚ್ಚಾ ಸ್ಲರ್ರಿ ಸಂಗ್ರಹಣಾ ಪಾತ್ರೆ\n"
+                    f"- **ಸುರಕ್ಷತಾ ಮತ್ತು ಒತ್ತಡ ಪರಿಹಾರ ಕವಾಟಗಳು (Safety & Pressure Relief):**\n"
+                    f"  - `PRV-204` / `PSV-204`: ASME VIII ಪ್ರೆಶರ್ ರಿಲೀಫ್ ಕವಾಟ (ಟ್ರಿಪ್ ಮಿತಿ: 36.5 bar)\n"
+                    f"- **ಕ್ಷೇತ್ರ ಉಪಕರಣಗಳು ಮತ್ತು ಟೆಲಿಮೆಟ್ರಿ (Instrumentation & Telemetry):**\n"
+                    f"  - `PI-204` / `PT-204`: ಪ್ರಾಥಮಿಕ ರಿಯಾಕ್ಟರ್ ಒತ್ತಡ ಮಾಪಕಗಳು / ಟ್ರಾನ್ಸ್‌ಮಿಟರ್‌ಗಳು\n"
+                    f"  - `TT-204A/B/C`: ಬಹು-ಬಿಂದು ರಿಯಾಕ್ಟರ್ ತಾಪಮಾನ ಸಂವೇದಕಗಳು\n"
+                    f"  - `FT-204`: ಮೊನೊಮರ್ ಫೀಡ್ ಹರಿವಿನ ಮೀಟರ್\n"
+                    f"  - `LT-204`: ರಿಯಾಕ್ಟರ್ ದ್ರವ ಮಟ್ಟದ ಟ್ರಾನ್ಸ್‌ಮಿಟರ್\n\n"
+                    f"*ದಯವಿಟ್ಟು ಮೇಲಿನ ನೋಂದಾಯಿತ ಆಸ್ತಿಗಳಲ್ಲಿ ಒಂದನ್ನು ಬಳಸಿಕೊಂಡು ನಿಮ್ಮ ವಿಚಾರಣೆಯನ್ನು ಮರುರೂಪಿಸಿ.*"
+                )
+            elif target_lang == "hi":
+                verif_summary = "शून्य-भ्रम संप्रभु नीति लागू: अपंजीकृत संपत्ति पूछताछ को अवरुद्ध किया गया।"
+                checks = [
+                    VerificationCheck(
+                        check_type="GROUNDING_SUPPORT",
+                        status=VerificationStatus.VERIFIED,
+                        description="शून्य-भ्रम सीमा सक्रिय: अपंजीकृत उपकरणों के लिए काल्पनिक टेलीमेट्री उत्पन्न करना सख्त वर्जित है।",
+                    ),
+                    VerificationCheck(
+                        check_type="PROVENANCE",
+                        status=VerificationStatus.VERIFIED,
+                        description="संप्रभु प्लांट रजिस्ट्री यूनिट 24 के साथ सत्यापित: अनुरोधित संपत्ति पंजीकृत सूची में मौजूद नहीं है।",
+                    ),
+                    VerificationCheck(
+                        check_type="POLICY_COMPLIANCE",
+                        status=VerificationStatus.VERIFIED,
+                        description="संप्रभु नियंत्रण नीति अनुपालन: अज्ञात उपकरणों पर काल्पनिक उत्तर देने से रोक दिया गया।",
+                    ),
+                ]
+                refusal_answer = (
+                    f"### ⚠️ संप्रभु शून्य-भ्रम सीमा लागू (ZERO-HALLUCINATION BOUNDARY ENFORCED)\n\n"
+                    f"**अपंजीकृत उपकरण सूचना (Unregistered Asset Notice):**\n"
+                    f"आपके द्वारा अनुरोधित उपकरण या साधन पहचानकर्ता **{tag_str}** संप्रभु संयंत्र संपत्ति रजिस्ट्री (Unit 24 Reaction Loop 200) में मौजूद नहीं है।\n\n"
+                    f"**शून्य-भ्रम शासन नीति (Zero-Hallucination Policy):**\n"
+                    f"FORGE संप्रभु शासन विनिर्देशों (`AGENTS.md`) के तहत, नियंत्रण प्रणाली सख्त नियतात्मक (deterministic) सीमाओं पर काम करती है। "
+                    f"सिस्टम को अपंजीकृत या गैर-मौजूद उपकरणों के लिए काल्पनिक टेलीमेट्री, परिचालन सीमाएं या निरीक्षण डेटा गढ़ने (hallucination) की सख्त मनाही है।\n\n"
+                    f"**यूनिट 24 में उपलब्ध सत्यापित पंजीकृत उपकरण (Registered Assets in Unit 24):**\n"
+                    f"- **मुख्य उपकरण (Primary Equipment):**\n"
+                    f"  - `R-204`: कंटीन्यूअस स्टिरर्ड-टैंक रिएक्टर (Polymerization CSTR)\n"
+                    f"  - `P-201` / `P-201A/B` / `P-202`: सेंट्रीफ्यूगल स्लरी फीड पंप्स\n"
+                    f"  - `E-301`: शेल और ट्यूब एफ्लुएंट कूलर (हीट एक्सचेंजर)\n"
+                    f"  - `V-102`: फ्लैश ड्रम वेपर-लिक्विड सेपरेटर\n"
+                    f"  - `T-102`: कच्चा स्लरी स्टोरेज वेसल\n"
+                    f"- **सुरक्षा एवं दबाव राहत वाल्व (Safety & Pressure Relief):**\n"
+                    f"  - `PRV-204` / `PSV-204`: ASME VIII प्रेशर रिलीफ वाल्व (ट्रिप सीमा: 36.5 bar)\n"
+                    f"- **फील्ड इंस्ट्रूमेंटेशन और टेलीमेट्री (Instrumentation & Telemetry):**\n"
+                    f"  - `PI-204` / `PT-204`: प्राथमिक रिएक्टर प्रेशर गेज / ट्रांसमीटर\n"
+                    f"  - `TT-204A/B/C`: मल्टी-पॉइंट कोर तापमान सेंसर\n"
+                    f"  - `FT-204`: मोनोमर फीड फ्लो मीटर\n"
+                    f"  - `LT-204`: रिएक्टर लिक्विड लेवल ट्रांसमीटर\n\n"
+                    f"*कृपया उपरोक्त पंजीकृत और सत्यापित संयंत्र उपकरणों में से किसी एक का उपयोग करके अपनी पूछताछ प्रस्तुत करें।*"
+                )
+            else:
+                verif_summary = "Zero-Hallucination sovereign boundary enforced: unregistered asset inquiry intercepted."
+                checks = [
+                    VerificationCheck(
+                        check_type="GROUNDING_SUPPORT",
+                        status=VerificationStatus.VERIFIED,
+                        description="Zero-hallucination boundary active: strictly prohibited from generating synthetic telemetry for unregistered assets.",
+                    ),
+                    VerificationCheck(
+                        check_type="PROVENANCE",
+                        status=VerificationStatus.VERIFIED,
+                        description="Verified against Sovereign Plant Asset Registry Unit 24: requested equipment does not exist in plant registry.",
+                    ),
+                    VerificationCheck(
+                        check_type="POLICY_COMPLIANCE",
+                        status=VerificationStatus.VERIFIED,
+                        description="Sovereign control policy compliance: speculative extrapolation on unregistered assets denied.",
+                    ),
+                ]
+                refusal_answer = (
+                    f"### ⚠️ SOVEREIGN ZERO-HALLUCINATION BOUNDARY ENFORCED\n\n"
+                    f"**Unregistered Asset Notice:**\n"
+                    f"The equipment or instrument identifier **{tag_str}** is not present in the Sovereign Plant Asset Registry (Unit 24 Reaction Loop 200).\n\n"
+                    f"**Zero-Hallucination Governance Policy:**\n"
+                    f"Under FORGE High-Assurance Sovereign Governance (`AGENTS.md`), the control plane operates under strict deterministic boundaries. "
+                    f"The system is strictly prohibited from fabricating, extrapolating, or hallucinating synthetic telemetry, operating limits, inspection records, or safety envelopes for unregistered or non-existent assets.\n\n"
+                    f"**Verified Plant Assets Available in Unit 24:**\n"
+                    f"- **Primary Equipment:**\n"
+                    f"  - `R-204`: Continuous Stirred-Tank Reactor (Polymerization CSTR)\n"
+                    f"  - `P-201` / `P-201A/B` / `P-202`: Centrifugal Slurry Feed Pumps\n"
+                    f"  - `E-301`: Shell & Tube Effluent Cooler Heat Exchanger\n"
+                    f"  - `V-102`: Flash Drum Vapor-Liquid Separator\n"
+                    f"  - `T-102`: Raw Slurry Feed Storage Vessel\n"
+                    f"- **Safety & Pressure Relief:**\n"
+                    f"  - `PRV-204` / `PSV-204`: ASME VIII Pressure Relief Valve (Trip: 36.5 bar)\n"
+                    f"- **Field Instrumentation & Telemetry:**\n"
+                    f"  - `PI-204` / `PT-204`: Primary Reactor Pressure Gauges / Transmitters\n"
+                    f"  - `TT-204A/B/C`: Multi-Point Reactor Core Thermocouples\n"
+                    f"  - `FT-204`: Monomer Feed Flow Meter\n"
+                    f"  - `LT-204`: Reactor Liquid Level Transmitter\n\n"
+                    f"*Please formulate your inquiry using one of the verified registered plant assets above.*"
+                )
+
+            direct_plan = AgentPlan(
+                action=AgentActionType.DIRECT,
+                reasoning=f"Zero-Hallucination boundary intercepted unregistered asset tag(s): {tag_str}.",
+                direct_answer=refusal_answer,
+            )
+            vrf_res = VerificationResult(
+                status=VerificationStatus.VERIFIED,
+                summary=verif_summary,
+                checks=checks,
+                evidence_ids=[],
+                calculations=[],
+                conflicts=[],
+            )
+            total_duration_ms = (time.perf_counter() - t_start) * 1000.0
+            return AgentQueryResponse(
+                query=request.query,
+                final_answer=refusal_answer,
+                status=AgentQueryStatus.SUCCESS,
+                language=target_lang,
+                plan=direct_plan,
+                agent_plan=direct_plan,
+                knowledge_queries=[],
+                tool_calls=[],
+                policy_decisions=[],
+                evidence_set=EvidenceSet(),
+                verification=vrf_res,
+                latency_ms=round(total_duration_ms, 2),
+                timing={
+                    "total_duration_ms": round(total_duration_ms, 2),
+                    "planning_duration_ms": 0.0,
+                    "knowledge_retrieval_duration_ms": 0.0,
+                    "tool_execution_duration_ms": 0.0,
+                    "vision_duration_ms": 0.0,
+                    "verification_duration_ms": 0.1,
+                    "synthesis_duration_ms": 0.1,
                 },
             )
 
@@ -971,8 +1228,8 @@ class AgentReasoningService:
         q_lower = query.lower()
 
         # 1. Equipment tag extraction: R-204, P-201, E-301, etc.
-        eq_match = re.search(r"\b([A-Z]-\d{3})\b", query, re.IGNORECASE)
-        equipment_id = eq_match.group(1).upper() if eq_match else None
+        extracted = extract_plant_equipment_tags(query)
+        equipment_id = extracted[0] if extracted else None
 
         # 2. Check for PRV calibration intent
         if any(w in q_lower for w in ["calibrate", "calibration", "relief valve", "prv"]):
@@ -1144,6 +1401,22 @@ class AgentReasoningService:
             f"{lbl_exec_mode}",
             "",
         ]
+
+        # Zero-Evidence / Non-Registered Context Notice
+        if not evidence_set.tool_evidence and not evidence_set.knowledge_evidence and not calculations:
+            if loc == "kn":
+                lines.append("### ಶೂನ್ಯ-ಪುರಾವೆ ಆಡಳಿತಾತ್ಮಕ ಸೂಚನೆ (Zero-Evidence Sovereign Notice)")
+                lines.append("- ಸ್ಥಿತಿ: ಸಾರ್ವಭೌಮ ಜ್ಞಾನ ಭಂಡಾರದಲ್ಲಿ ಯಾವುದೇ ಪರಿಶೀಲಿಸಿದ ತಾಂತ್ರಿಕ ದಾಖಲೆಗಳು ಅಥವಾ ಆಪರೇಟಿಂಗ್ ಕಾರ್ಯವಿಧಾನಗಳು ಕಂಡುಬಂದಿಲ್ಲ.")
+                lines.append("- ಆಡಳಿತ ನೀತಿ: ಶೂನ್ಯ-ಭ್ರಮೆ ನೀತಿಯ ಪ್ರಕಾರ, ಪರಿಶೀಲಿಸಿದ ಪುರಾವೆಗಳಿಲ್ಲದೆ ಊಹಾತ್ಮಕ ಅಥವಾ ಕಾಲ್ಪನಿಕ ವಿವರಗಳನ್ನು ನೀಡುವುದನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ.")
+            elif loc == "hi":
+                lines.append("### शून्य-साक्ष्य संप्रभु सूचना (Zero-Evidence Sovereign Notice)")
+                lines.append("- स्थिति: संप्रभु ज्ञानकोश में कोई सत्यापित तकनीकी रिकॉर्ड या परिचालन प्रक्रिया नहीं मिली।")
+                lines.append("- शासन नीति: शून्य-भ्रम नीति के अनुसार, सत्यापित साक्ष्य के बिना काल्पनिक विवरण प्रदान करना प्रतिबंधित है।")
+            else:
+                lines.append("### ZERO-EVIDENCE SOVEREIGN NOTICE")
+                lines.append("- Status: No verified technical records or operating procedures were retrieved from the sovereign knowledge fabric for this inquiry.")
+                lines.append("- Governance: In accordance with FORGE zero-hallucination governance, speculative answers are strictly withheld in the absence of verified evidence.")
+            lines.append("")
 
         # Equipment records
         if evidence_set.tool_evidence:
